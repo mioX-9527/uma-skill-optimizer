@@ -18,6 +18,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 from pathlib import Path
+from typing import Callable
 
 # 等级符号 → 价格序(数字越大越贵)。只收技能名里真实会用到的。
 SYMBOL_RANK: dict[str, int] = {"×": 0, "○": 1, "◎": 2}
@@ -278,4 +279,35 @@ def to_plan_skills(matches: list[Match]) -> list[dict]:
             continue
         seen.add(m.skill.id)
         out.append({"id": m.skill.id, "name": m.skill.name, "pt": m.price})
+    return out
+
+
+def evolutions_of(matches: list[Match], index: "SkillIndex",
+                  note: "Callable[[str], None] | None" = None) -> list[dict]:
+    """把「进化 ⓘ」弹窗读到的**进化目标名**解析成技能 id。
+
+    进化后的技能**不在候选列表里**(它是金技能免费变来的,不用单独买),所以必须回全量技能库查。
+    一个技能可能有多条进化方向,每条各占一行 —— 优化器会逐个方向算收益再择优(见 optimizer.ts)。
+
+    返回格式与 plan.json 的 `evolutions` 一致:
+        {"fromId", "from", "toId", "to", "conditionMet"}
+    `conditionMet=false` 的方向也照样输出:网页上要能显示"这个方向这局达不成本局条件",
+    比直接消失更有用(用户会问"我明明看到有进化")。
+    """
+    out: list[dict] = []
+    for m in matches:
+        evo = getattr(m.base, "evolve", None)
+        if evo is None or m.skill is None:
+            continue
+        for t in evo.targets:
+            hits = index.exact(t.name) or [r for r, _ in index.fuzzy(t.name, threshold=0.8, limit=3)]
+            if len(hits) != 1:
+                if note is not None:
+                    note(f"进化技能「{t.name}」匹配到 {len(hits)} 个候选,该方向跳过")
+                continue
+            out.append({
+                "fromId": m.skill.id, "from": m.skill.name,
+                "toId": hits[0].id, "to": hits[0].name,
+                "conditionMet": t.condition_met,
+            })
     return out

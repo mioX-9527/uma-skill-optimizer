@@ -89,6 +89,11 @@ export interface ChosenSkill {
   readonly evolvesTo: string | null;
   /** 不进化时这个技能单独的收益,用于对照(未进化时等于 soloBody) */
   readonly soloBodyBefore: number;
+  /**
+   * 多条进化方向时的逐方向单项马身(按收益降序;第一条 = 主方案)。
+   * 用户要求"全部列出来分别算收益",这里就是那个列表;只有一个方向时不给。
+   */
+  readonly evolveOptions?: readonly { id: string; name: string; soloBody: number }[];
   /** 在最终组合内的边际马身(leave-one-out 口径) */
   readonly finalMarginalBody: number;
   /** 在最终组合内的边际时间收益(秒) */
@@ -108,6 +113,8 @@ export interface RejectedSkill {
   readonly reason: 'unaffordable' | 'inapplicable' | 'no-gain' | 'outbid';
   /** 原因的具体说明(reason 为 inapplicable 时必填,如「仅限逃马」) */
   readonly detail: string;
+  /** 进化后的技能名(有进化关系时才给,供名字列标注「→」) */
+  readonly evolvesTo?: string | null;
   /** 还差多少 PT 能上车(仅 outbid 时,预算用尽后有意义的字段) */
   readonly missingPt: number;
   readonly lastMarginalBody: number;
@@ -132,15 +139,21 @@ interface Cand {
   readonly id: string;
   readonly skill: SkillEntry;
   /** 显示价(未买前置时它包含前置的价) */
-  readonly pt: number;
-  /** 买这个技能时会一并装入的技能:自己 + 未买的下位技能 */
-  readonly withSkills: readonly SkillConfig[];
+  pt: number;
+  /** 买这个技能时会一并装入的技能:自己(+未买的前置)+ 择优后的进化形态 */
+  withSkills: readonly SkillConfig[];
   /** 下位技能 id 列表(为空表示没有前置) */
   readonly requires: readonly string[];
   /** 下位技能的显示价之和:当前置已在组合里时,可抵扣掉这么多 */
   readonly requiresPt: number;
-  /** 进化后的技能(条件已达成时才有);模拟用它,PT 不变 */
-  readonly evolved: SkillEntry | undefined;
+  /** 会一并装入的前置技能(可能为空) */
+  readonly preSkills: readonly SkillConfig[];
+  /** 进化后的技能(条件已达成时才有);模拟用它,PT 不变。多条方向时 = 择优结果 */
+  evolved: SkillEntry | undefined;
+  /** 所有进化方向;≥2 时逐个方向算单项收益再择优(用户要求全部列出来) */
+  readonly evoCands: readonly SkillEntry[];
+  /** 每个方向单独购买的时间收益(秒),key = 方向技能 id */
+  readonly evoSecs: Map<string, number>;
   /** 未进化时的单项收益(秒),用来对照进化带来多少 */
   soloSecBefore: number;
   /** 单独购买时的时间收益(秒) */
@@ -329,14 +342,18 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     ].filter((id, i, a) => a.indexOf(id) === i);
     const evoCands = evoIds.map(id => SKILL_INDEX.get(id)).filter((s): s is SkillEntry => s !== undefined);
     const evolved = evoCands[0];
+    const preSkills: readonly SkillConfig[] = preListed ? [pre!] : [];
     return {
       id: c.id,
       skill,
       pt: c.pt,
-      withSkills: preListed ? [pre!, evolved ?? skill] : [evolved ?? skill],
+      withSkills: [...preSkills, evolved ?? skill],
       requires: preListed ? [c.requires!] : [],
       requiresPt: prePt,
+      preSkills,
       evolved,
+      evoCands,
+      evoSecs: new Map(),
       soloSec: 0,
       soloSecBefore: 0,
       lastMarginal: 0,
@@ -380,8 +397,22 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const baseSim = sim([]);
   for (const c of cands) {
     if (c.state === 'blocked') continue;
-    // 带前置的候选,单独买等于把前置一起买了,所以按 withSkills 算单项收益
-    c.soloSec = baseSim.finishTimeSec - simExpected(c.withSkills).finishTimeSec;
+    if (c.evoCands.length > 0) {
+      // 多条进化方向:**逐个方向都算一遍**,取收益最高的当主方案,其余在结果里列出对比。
+      // (进化是免费的,方向之间互斥 —— 只能变其中一种,所以这里取 max 而不是求和。)
+      let best = c.evoCands[0]!;
+      for (const dir of c.evoCands) {
+        const sec = baseSim.finishTimeSec - simExpected([...c.preSkills, dir]).finishTimeSec;
+        c.evoSecs.set(dir.id, sec);
+        if (sec > (c.evoSecs.get(best.id) ?? -Infinity)) best = dir;
+      }
+      c.evolved = best;
+      c.withSkills = [...c.preSkills, best];
+      c.soloSec = c.evoSecs.get(best.id)!;
+    } else {
+      // 带前置的候选,单独买等于把前置一起买了,所以按 withSkills 算单项收益
+      c.soloSec = baseSim.finishTimeSec - simExpected(c.withSkills).finishTimeSec;
+    }
     // 进化前的对照值:只看这个技能本身,不含前置
     c.soloSecBefore = c.evolved === undefined
       ? c.soloSec
@@ -485,6 +516,13 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     const t = simExpected(skillsOf(chosen.filter(x => x !== a))).finishTimeSec;
     finalMarginals.set(a.id, t - finalSim.finishTimeSec);
   }
+  /** 多方向时的逐方向单项马身,按收益降序(只有一个方向时不给,免得刷屏) */
+  const evolveOptionsOf = (c: Cand) =>
+    c.evoCands.length > 1
+      ? [...c.evoSecs.entries()]
+          .map(([id, sec]) => ({ id, name: SKILL_INDEX.get(id)?.name ?? id, soloBody: sec * bodyPerSec }))
+          .sort((a, b) => b.soloBody - a.soloBody)
+      : undefined;
 
   const rejected: RejectedSkill[] = [];
   const chosenSet = new Set(chosen.map(c => c.id));
@@ -510,6 +548,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       soloBody: c.soloSec * bodyPerSec,
       reason,
       detail: c.blockedDetail ?? healIdle,
+      ...(c.evolved !== undefined ? { evolvesTo: c.evolved.name } : {}),
       missingPt: Math.max(0, costOf(c, chosenSet) - remaining()),
       lastMarginalBody: c.lastMarginal * bodyPerSec,
     });
@@ -546,6 +585,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         soloBody: c.soloSec * bodyPerSec,
         evolvesTo: c.evolved?.name ?? null,
         soloBodyBefore: c.soloSecBefore * bodyPerSec,
+        ...(evolveOptionsOf(c) !== undefined ? { evolveOptions: evolveOptionsOf(c) } : {}),
         finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
         finalMarginalSec: finalMarginals.get(c.id) ?? 0,
       };

@@ -7,7 +7,7 @@ import {
   type OptimizerResult, type PlanSkill, type PlanState,
 } from './api.js';
 import {
-  applyCapture, captureSummary, deviceLabel, pickDevice, waitForDesktopBridge,
+  applyCapture, applyEvolutions, captureSummary, deviceLabel, pickDevice, waitForDesktopBridge,
   type AdbDevice, type CapturedSkill, type DesktopBridge,
 } from './desktop.js';
 
@@ -174,9 +174,20 @@ export default function App() {
         };
         return skill;
       });
-      patch({ skills: merged.skills, budget: merged.budget, chains: resp.chains ?? [] });
+      // 进化关系必须挂到候选上:进化后的技能不在候选列表里(金技能免费变来的),
+      // 不挂的话优化器只会按进化前的数值算 —— 表现就是"怎么还是只有迅速果断"。
+      const evo = applyEvolutions(merged.skills, resp.evolutions);
+      patch({ skills: evo.skills, budget: merged.budget, chains: resp.chains ?? [] });
       setResult(null);
       if (merged.dropped > 0) setReadLog(prev => [...prev, `有 ${merged.dropped} 条未能对应到技能库,已丢弃`]);
+      if (evo.evolved.length > 0) {
+        setReadLog(prev => [...prev,
+          `可进化 ${evo.evolved.length} 个:${evo.evolved.map(e => `${e.from}→${e.to}`).join('、')}`]);
+      }
+      if (evo.skipped.length > 0) {
+        setReadLog(prev => [...prev,
+          `条件未达成 ${evo.skipped.length} 个(按进化前算):${evo.skipped.map(e => `${e.from}→${e.to}`).join('、')}`]);
+      }
     } catch (e) {
       setReadLog([`读取失败:${(e as Error).message}`]);
     } finally {
@@ -205,7 +216,16 @@ export default function App() {
           const req = chain !== undefined && plan.skills.some(x => x.id === chain.prereqId)
             ? chain.prereqId
             : undefined;
-          return req !== undefined ? { id: s.id, pt: s.pt, requires: req } : { id: s.id, pt: s.pt };
+          return {
+            id: s.id,
+            pt: s.pt,
+            ...(req !== undefined ? { requires: req } : {}),
+            // 进化方向也要一起传:进化是免费的,优化器会按进化后的数值算收益并择优
+            ...(s.evolvesTo !== undefined ? { evolvesTo: s.evolvesTo } : {}),
+            ...(s.evolveAlternatives !== undefined && s.evolveAlternatives.length > 0
+              ? { evolveAlternatives: s.evolveAlternatives }
+              : {}),
+          };
         }),
       });
       setResult(r);
@@ -449,9 +469,21 @@ export default function App() {
               {result.chosen.map((c, i) => (
                 <tr key={c.id}>
                   <td>{i + 1}</td>
-                  <td>{c.name}</td>
+                  <td>
+                    {c.name}
+                    {c.evolvesTo !== null && <span className="dim"> → {c.evolvesTo}</span>}
+                    {c.evolveOptions !== undefined && (
+                      <div className="dim">
+                        方向:{c.evolveOptions.map(o => `${o.name} ${o.soloBody.toFixed(2)}`).join(' / ')}
+                      </div>
+                    )}
+                  </td>
                   <td className="num">{c.pt}</td>
-                  <td className="num">{c.soloBody.toFixed(2)}</td>
+                  <td className="num">
+                    {c.soloBodyBefore !== c.soloBody
+                      ? <>{c.soloBodyBefore.toFixed(2)} → <b>{c.soloBody.toFixed(2)}</b></>
+                      : c.soloBody.toFixed(2)}
+                  </td>
                   <td className="num good">{c.finalMarginalBody.toFixed(2)}</td>
                   <td className="num">{c.finalMarginalSec.toFixed(3)}</td>
                 </tr>
@@ -472,7 +504,10 @@ export default function App() {
                 <tbody>
                   {result.rejected.map(r => (
                     <tr key={r.id}>
-                      <td>{r.name}</td>
+                      <td>
+                        {r.name}
+                        {r.evolvesTo != null && <span className="dim"> → {r.evolvesTo}</span>}
+                      </td>
                       <td className="num">{r.pt}</td>
                       <td className="num">{r.soloBody.toFixed(2)}</td>
                       <td>{REASON_LABEL[r.reason]}</td>

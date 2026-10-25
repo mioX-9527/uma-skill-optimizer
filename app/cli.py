@@ -19,7 +19,7 @@ from PIL import Image, ImageDraw, ImageFont
 from .adb import Adb, AdbError, dedupe_devices, describe, list_devices, probe, resolve_serial
 from .capture import capture_all, frame_diff
 from .layout import LAYOUT_DIR, load_profile
-from .match import SkillIndex, resolve_rows, to_plan_skills
+from .match import SkillIndex, evolutions_of, resolve_rows, to_plan_skills
 
 DEBUG_DIR = Path(__file__).resolve().parent / "_debug"
 FONT_CANDIDATES = (r"C:\Windows\Fonts\msyh.ttc", r"C:\Windows\Fonts\simhei.ttf")
@@ -217,24 +217,9 @@ def cmd_capture(args: argparse.Namespace) -> int:
     chain_map = load_chains()
     pairs = pairs_within(cand_ids, chain_map)
 
-    # 可进化关系:点开「进化 ⓘ」读到的。
-    # 进化后的技能**不在候选列表里**(它不用单独买),必须从全量技能库查
-    evolutions = []
-    for m in matches:
-        evo = getattr(m.base, "evolve", None)
-        if evo is None or m.skill is None:
-            continue
-        # 一个技能可能有多条进化方向,每条都记下来分别计价
-        for t in evo.targets:
-            hits = index.exact(t.name) or [r for r, _ in index.fuzzy(t.name, threshold=0.8, limit=3)]
-            if len(hits) != 1:
-                _say(f"[注意] 进化技能「{t.name}」匹配到 {len(hits)} 个候选,该方向跳过")
-                continue
-            evolutions.append({
-                "fromId": m.skill.id, "from": m.skill.name,
-                "toId": hits[0].id, "to": hits[0].name,
-                "conditionMet": t.condition_met,
-            })
+    # 可进化关系:点开「进化 ⓘ」读到的。进化后的技能不在候选里(金技能免费变来的),
+    # 必须回全量技能库把名字解析成 id —— 和桌面壳共用 evolutions_of。
+    evolutions = evolutions_of(matches, index, note=lambda m: _say(f"[注意] {m}"))
 
     plan = {
         "course": args.course or "东京 草 2400m",

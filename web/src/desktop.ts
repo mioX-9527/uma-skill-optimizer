@@ -12,6 +12,22 @@ export interface CapturedSkill {
   readonly pt: number;
 }
 
+/**
+ * 一条「可进化」关系(从游戏里点开「进化 ⓘ」弹窗读到)。
+ *
+ * 进化后的技能**不在候选列表里** —— 它是金技能达成条件后**免费**变来的,不用单独买。
+ * 所以必须单独传:只发候选技能的话,优化器只会按进化前的数值算,用户看到的就是
+ * 「怎么还是只有迅速果断」。一个技能可能有多条进化方向,每条一行。
+ */
+export interface EvolutionRow {
+  readonly fromId: string;
+  readonly from: string;
+  readonly toId: string;
+  readonly to: string;
+  /** 本局条件是否达成;false 也要列出来(说明"有这个方向但本局不行") */
+  readonly conditionMet: boolean;
+}
+
 export interface CaptureResponse {
   readonly ok: boolean;
   readonly error?: string;
@@ -19,6 +35,8 @@ export interface CaptureResponse {
   readonly skills?: readonly CapturedSkill[];
   /** 下位技能关系(金技能的列表价已含前置价),两端都在 skills 里才有效 */
   readonly chains?: readonly { skillId: string; prereqId: string }[];
+  /** 进化关系;conditionMet=true 的会参与择优 */
+  readonly evolutions?: readonly EvolutionRow[];
   readonly pt_balance?: number | null;
   readonly pages?: number;
   readonly frames?: number;
@@ -142,6 +160,34 @@ export function applyCapture<T>(
     budget: resp.pt_balance && resp.pt_balance > 0 ? resp.pt_balance : current.budget,
     dropped: converted.length - skills.length,
   };
+}
+
+/**
+ * 把 `evolutions` 挂到对应的候选技能上。
+ *
+ * 只认 `conditionMet=true` 的方向 —— 条件没达成的话这局变不了,按进化后数值算会高估。
+ * 但**记账要留痕**:返回 `skipped`,前端可以提示"这个技能有进化方向,但本局条件没达成",
+ * 否则用户只会看到"进化后的技能没出现"。
+ */
+export function applyEvolutions<T extends { id: string; evolvesTo?: string; evolveAlternatives?: readonly string[] }>(
+  skills: readonly T[],
+  evolutions: readonly EvolutionRow[] | undefined,
+): { skills: T[]; evolved: EvolutionRow[]; skipped: EvolutionRow[] } {
+  const met = (evolutions ?? []).filter(e => e.conditionMet);
+  const skipped = (evolutions ?? []).filter(e => !e.conditionMet);
+  const byFrom = new Map<string, EvolutionRow[]>();
+  for (const e of met) {
+    const list = byFrom.get(e.fromId) ?? [];
+    list.push(e);
+    byFrom.set(e.fromId, list);
+  }
+  const out = skills.map(s => {
+    const list = byFrom.get(s.id);
+    if (list === undefined || list.length === 0) return s;
+    const ids = list.map(e => e.toId).filter((id, i, a) => a.indexOf(id) === i);
+    return { ...s, evolvesTo: ids[0], evolveAlternatives: ids.slice(1) };
+  });
+  return { skills: out, evolved: met, skipped };
 }
 
 /** 把抓取结果整理成人能读的几行提示。 */

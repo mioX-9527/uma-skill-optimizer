@@ -22,7 +22,7 @@ from pathlib import Path
 from .adb import Adb, AdbError, dedupe_devices, describe, list_devices, resolve_serial
 from .capture import capture_all
 from .layout import load_profile
-from .match import SkillIndex, resolve_rows, to_plan_skills
+from .match import SkillIndex, evolutions_of, resolve_rows, to_plan_skills
 
 ROOT = Path(__file__).resolve().parent.parent
 STANDALONE_HTML = ROOT / "打开规划器.html"
@@ -117,6 +117,10 @@ class Bridge:
 
             pairs = pairs_within({s["id"] for s in skills}, load_chains())
 
+            # 进化关系:进化后的技能不在候选里(金技能免费变来的),得单独告诉前端
+            warning_lines: list[str] = []
+            evolutions = evolutions_of(matches, self.index, note=warning_lines.append)
+
             confirm = [
                 {"row": str(m), "alternatives": [a.name for a in m.alternatives]}
                 for m in matches if m.needs_confirm
@@ -126,10 +130,12 @@ class Bridge:
                 warnings.append("版式未校准,结果可能串行")
             if result.stop_reason and "上限" in result.stop_reason:
                 warnings.append(result.stop_reason)
+            warnings.extend(warning_lines)
             return {
                 "ok": True,
                 "skills": skills,
                 "chains": [{"skillId": g, "prereqId": p} for g, p in pairs],
+                "evolutions": evolutions,
                 "pt_balance": result.pt_balance,
                 "pages": result.pages,
                 "frames": result.frames,

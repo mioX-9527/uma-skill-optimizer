@@ -190,4 +190,60 @@ describe('区段随机取位技能按期望计价', () => {
     });
     expect(senko.rejected.find(x => x.id === quick.id)!.reason).toBe('inapplicable');
   });
+
+  /**
+   * 进化要参与计价:进化是金技能**免费**变的,不额外占 PT 也不单独出现在候选里。
+   * 候选申报 `evolvesTo` 后,单项收益必须按进化后的数值算 —— 不然用户看到的就是
+   * 「怎么还是只有迅速果断」(2026-10-25 真实踩坑:网页链路把进化字段弄丢了)。
+   *
+   * 用真实关系:迅速果断(200591, +0.35 速度 2.4s)→ 盛夏的奋力一搏(100102111, 同值但 **4s**)。
+   * 同赛道上未进化期望 ~1.11 马身,进化后 ~2.2(持续时间 2.4s→4s,≈×1.67)。
+   */
+  it('申报 evolvesTo 后:按进化后的数值算收益,且给出进化前对照值', () => {
+    const quick = SKILLS.find(s => s.id === '200591')!;
+    const evolved = SKILLS.find(s => s.id === '100102111')!;
+    const withEvo = optimize({
+      course: nakayama, runner: sashi,
+      candidates: [{ id: quick.id, pt: 180, evolvesTo: evolved.id }],
+      budget: 900,
+    });
+    const row = withEvo.chosen.find(c => c.id === quick.id)!;
+    expect(row).toBeDefined();
+    expect(row.evolvesTo).toBe(evolved.name);
+    expect(row.soloBody).toBeGreaterThan(row.soloBodyBefore); // 进化确实更强
+    expect(row.soloBodyBefore).toBeGreaterThan(0.9);          // 对照值 = 未进化的期望口径
+
+    // 不申报进化时必须是未进化的数值(防止"反正都会进化"的想当然)
+    const without = optimize({
+      course: nakayama, runner: sashi, candidates: [{ id: quick.id, pt: 180 }], budget: 900,
+    });
+    const baseRow = without.chosen.find(c => c.id === quick.id)!;
+    expect(baseRow.evolvesTo).toBeNull();
+    expect(baseRow.soloBody).toBeCloseTo(row.soloBodyBefore, 1);
+  });
+
+  /**
+   * 多条进化方向:逐个方向都算一遍,取收益最高的当主方案,全部列出来(用户明确要求)。
+   * 目前 BWIKI 数据里都是单方向,所以这里用两个真实技能**合成**一个多方向样本
+   * (100102111 = 4s 持续,102101111 = 0.45 速度;二者都真实存在,只是不会同时是某技能的进化)。
+   */
+  it('多条进化方向:逐方向计价、取最优、全部列出', () => {
+    const quick = SKILLS.find(s => s.id === '200591')!;
+    const a = SKILLS.find(s => s.id === '100102111')!; // +0.35 / 4s
+    const b = SKILLS.find(s => s.id === '102101111')!; // +0.45 / 2.4s
+    const r = optimize({
+      course: nakayama, runner: sashi,
+      candidates: [{ id: quick.id, pt: 180, evolvesTo: a.id, evolveAlternatives: [b.id] }],
+      budget: 900,
+    });
+    const row = r.chosen.find(c => c.id === quick.id)!;
+    expect(row.evolveOptions).toBeDefined();
+    expect(row.evolveOptions).toHaveLength(2);
+    // 主方案 = 收益最高的那个方向
+    const best = row.evolveOptions![0]!;
+    expect(row.evolvesTo).toBe(best.name);
+    expect(row.soloBody).toBeCloseTo(best.soloBody, 2);
+    // 降序:排在前面的不比后面差
+    expect(row.evolveOptions![0]!.soloBody).toBeGreaterThanOrEqual(row.evolveOptions![1]!.soloBody);
+  });
 });

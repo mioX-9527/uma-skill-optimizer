@@ -12,6 +12,14 @@ export interface PlanSkill {
   readonly pt: number;
   readonly rarity: string;
   readonly precision: string;
+  /**
+   * 进化后的技能 id(从模拟器读「进化 ⓘ」得到,条件达成才有)。
+   * 进化是金技能**免费**变的,所以不额外占 PT 也不单独出现在候选里 ——
+   * 不带上这个,优化器只会按进化前的数值算,用户就会问"为什么还是只有迅速果断"。
+   */
+  readonly evolvesTo?: string;
+  /** 其他进化方向(一个技能可能有多条);优化器逐个算收益再择优 */
+  readonly evolveAlternatives?: readonly string[];
 }
 
 /** 下位技能关系:skillId 的列表价已包含 prereqId 的价格 */
@@ -132,7 +140,13 @@ export function exportPlan(state: PlanState): string {
         weather: state.weather,
         season: state.season,
       },
-      skills: state.skills.map(s => ({ id: s.id, name: s.name, pt: s.pt })),
+      skills: state.skills.map(s => ({
+        id: s.id, name: s.name, pt: s.pt,
+        ...(s.evolvesTo !== undefined ? { evolvesTo: s.evolvesTo } : {}),
+        ...(s.evolveAlternatives !== undefined && s.evolveAlternatives.length > 0
+          ? { evolveAlternatives: s.evolveAlternatives }
+          : {}),
+      })),
       ...(state.chains.length > 0 ? { chains: state.chains } : {}),
     },
     null,
@@ -172,12 +186,21 @@ export function importPlan(text: string): PlanState {
       if (hits.length === 1) entry = hits[0];
     }
     if (!entry) throw new Error(`skills[${i}]「${String(e.name ?? e.id ?? '?')}」无法唯一匹配到技能,请改用 id`);
+    // 进化:存的是技能 id,这里只在 id 合法时带上(未知 id 会被优化器报错,不如先丢掉)
+    const knownId = (v: unknown): string | undefined =>
+      typeof v === 'string' && SKILLS.some(k => k.id === v) ? v : undefined;
+    const evolvesTo = knownId(e.evolvesTo);
+    const alts = Array.isArray(e.evolveAlternatives)
+      ? e.evolveAlternatives.map(knownId).filter((x): x is string => x !== undefined)
+      : [];
     return {
       id: entry.id,
       name: entry.name,
       pt: typeof e.pt === 'number' ? e.pt : defaultPt(entry),
       rarity: entry.rarity,
       precision: entry.precision,
+      ...(evolvesTo !== undefined ? { evolvesTo } : {}),
+      ...(alts.length > 0 ? { evolveAlternatives: alts } : {}),
     };
   });
   const stats: Stats = { speed: stat('speed'), stamina: stat('stamina'), power: stat('power'), guts: stat('guts'), wisdom: stat('wisdom') };
@@ -245,7 +268,10 @@ export interface RunInput {
   readonly weather: Weather;
   readonly season: Season;
   /** requires = 下位技能 id(列表价已含它);由 App 从 plan.chains 展开后传入 */
-  readonly skills: readonly { id: string; pt: number; requires?: string }[];
+  readonly skills: readonly {
+    id: string; pt: number; requires?: string;
+    evolvesTo?: string; evolveAlternatives?: readonly string[];
+  }[];
 }
 
 function runOnMain(input: RunInput): Promise<OptimizerResult> {
