@@ -25,6 +25,11 @@ export interface CandidateSkill {
    * 从游戏「技能进化」弹窗读到,见 app/evolve.py。
    */
   readonly evolvesTo?: string;
+  /**
+   * 其他进化方向(一个技能可能有多条进化路线,条件各自判断)。
+   * 优化时**逐个方向都算一遍**,取收益最高的作为主方案,其余在结果里列出来对比。
+   */
+  readonly evolveAlternatives?: readonly string[];
 }
 
 export interface OptimizerInput {
@@ -234,8 +239,14 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     const prePt = preListed
       ? (input.candidates.find(x => x.id === c.requires)?.pt ?? 0)
       : 0;
-    // 条件已达成 → 结束养成时会免费进化,模拟应该用进化后的数值
-    const evolved = c.evolvesTo !== undefined ? SKILL_INDEX.get(c.evolvesTo) : undefined;
+    // 条件已达成 → 结束养成时会免费进化,模拟应该用进化后的数值。
+    // 多条进化路线时这里的 evolved 先放"第一个",真正的择优在算完单项收益后做。
+    const evoIds = [
+      ...(c.evolvesTo !== undefined ? [c.evolvesTo] : []),
+      ...(c.evolveAlternatives ?? []),
+    ].filter((id, i, a) => a.indexOf(id) === i);
+    const evoCands = evoIds.map(id => SKILL_INDEX.get(id)).filter((s): s is SkillEntry => s !== undefined);
+    const evolved = evoCands[0];
     return {
       id: c.id,
       skill,

@@ -106,8 +106,9 @@ def attach_evolutions(adb: Adb, image: Image.Image, profile: Profile, ocr: Ocr,
         rows[best_i].evolve = evo
         opened += 1
         if progress:
-            flag = "条件已达成" if evo.condition_met else "条件未达成"
-            progress(f"    可进化:{evo.from_name} → {evo.to_name}({flag})")
+            for t in evo.targets:
+                flag = "条件已达成" if t.condition_met else "条件未达成"
+                progress(f"    可进化:{evo.from_name} → {t.name}({flag})")
     return opened
 
 

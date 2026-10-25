@@ -44,15 +44,73 @@ class EvolveButton:
 
 
 @dataclass(frozen=True)
-class Evolution:
-    """弹窗内容。"""
+class EvolveTarget:
+    """弹窗里的一个「进化技能」卡片。一个技能可能有多个进化方向,所以这是列表的一项。"""
 
-    from_name: str
-    to_name: str
+    name: str
     condition_met: bool
 
+
+@dataclass(frozen=True)
+class PopupInfo:
+    """「技能进化」弹窗的内容。"""
+
+    from_name: str
+    targets: tuple[EvolveTarget, ...]
+
     def as_dict(self) -> dict:
-        return {"from": self.from_name, "to": self.to_name, "conditionMet": self.condition_met}
+        return {
+            "from": self.from_name,
+            "targets": [{"to": t.name, "conditionMet": t.condition_met} for t in self.targets],
+        }
+
+
+# 弹窗里三种卡片的实测底色(720×1280)
+GOLD_CARD = (255, 223, 122)     # 进化前的技能卡
+PINK_CARD = (255, 205, 231)     # 进化技能卡(可能有多个,垂直排列)
+COND_TAG = (255, 119, 187)      # 「条件已达成」小标签
+_COLOR_TOL = 12
+
+
+def _row_matches(arr: np.ndarray, y: int, rgb: tuple[int, int, int], tol: int = _COLOR_TOL) -> bool:
+    px = arr[y, 360]            # 取中轴线:卡片背景在这里最干净
+    return all(abs(int(px[i]) - rgb[i]) <= tol for i in range(3))
+
+
+# 卡片纵向取样列:横跨卡片宽度,靠"多数列命中"抵抗文字/图标的遮挡
+_PROBE_COLS = (80, 180, 280, 380, 480, 580, 660)
+
+
+def _color_bands(arr: np.ndarray, rgb: tuple[int, int, int], y0: int, y1: int,
+                 min_h: int = 40, need: int = 4, tol: int = 24) -> list[tuple[int, int]]:
+    """找某个底色的连续行段(多列投票)。
+
+    两个坑都踩过:
+    1. 单点采样会被卡片里的图标/文字打断,一张卡片被切成两三段;
+    2. 按整行占比也不行 —— 卡片内部本身就是**两种同色系**底色(深金 255,223,122 / 浅金 255,243,205),
+       换行处占比骤降。
+    多列投票(7 列里至少 4 列命中)能同时扛住这两种情况:文字最多遮住一两列。
+    """
+    strip = arr[y0:min(y1, arr.shape[0])].astype(int)
+    target = np.array(rgb, dtype=int)
+    votes = np.zeros(strip.shape[0], dtype=int)
+    for x in _PROBE_COLS:
+        if x >= strip.shape[1]:
+            continue
+        votes += (np.abs(strip[:, x, :] - target).max(axis=1) <= tol).astype(int)
+    ok = votes >= need
+    out: list[tuple[int, int]] = []
+    start = None
+    for i, v in enumerate(ok):
+        if v and start is None:
+            start = i
+        elif not v and start is not None:
+            if i - start >= min_h:
+                out.append((start + y0, i + y0))
+            start = None
+    if start is not None and len(ok) - start >= min_h:
+        out.append((start + y0, min(y1, arr.shape[0])))
+    return out
 
 
 def _white_mask(arr: np.ndarray) -> np.ndarray:
@@ -103,32 +161,64 @@ def find_button(image: Image.Image, row_cy: int, dy: int = 80) -> EvolveButton |
         return None
     return EvolveButton(row_cy=row_cy, tap_x=best[0], tap_y=best[1])
 
-def read_popup(ocr, image: Image.Image) -> Evolution | None:
-    """从「技能进化」弹窗截图里读进化前/后名字与条件是否达成。
+def card_boxes(arr: np.ndarray) -> list[tuple[int, int, int, int]]:
+    """找所有「进化技能」卡片的 bbox (x, y, w, h)。
+
+    这些卡片有**洋红色边框**(259,119,187 附近),边框本身会连成一个空心中框,
+    bbox 就是整张卡片 —— 这是最稳的定位方式:一个进化方向一张卡,多方向自然多一个框,
+    完全不依赖固定 y(多一张卡整块会往下排)。
+    """
+    a = arr.astype(np.int16)          # uint8 直接减会下溢(254-255 → 255),必须先转有符号
+    m = ((np.abs(a[:, :, 0] - 255) <= 18)
+         & (np.abs(a[:, :, 1] - COND_TAG[1]) <= 40)
+         & (np.abs(a[:, :, 2] - COND_TAG[2]) <= 35)).astype(np.uint8)
+    n, _, stats, _ = cv2.connectedComponentsWithStats(m, 8)
+    out: list[tuple[int, int, int, int]] = []
+    for i in range(1, n):
+        x, y, w, h, area = stats[i]
+        if w < 420 or not (90 <= h <= 260):      # 卡片宽度约 658,高度约 165
+            continue
+        if y < 380 or y > 1100:
+            continue
+        out.append((int(x), int(y), int(w), int(h)))
+    return sorted(out, key=lambda b: b[1])
+
+
+def read_popup(ocr, image: Image.Image) -> PopupInfo | None:
+    """从「技能进化」弹窗截图读:进化前名字 + **全部**进化方向(含各自条件是否达成)。
 
     版式实测(720×1280):
-        进化的技能  y≈105   前名 y≈165~195
-        条件已达成  y≈440~465(粉色小标签,没有则不显示)
-        进化技能    y≈365   后名 y≈470~500
+        进化前的技能卡  金色底,名字在 y≈165~195
+        进化技能卡      粉色底 + 洋红边框,y 由 card_boxes() 定位;每张 = 一个方向
+        条件小标签      在每张卡左上角,写「条件已达成 / 未达成」
     """
+    arr = np.asarray(image.convert("RGB"))
+
     def rec(box: tuple[int, int, int, int]) -> str:
-        crop = image.crop(box)
-        return ocr.read_text(crop).strip()
+        return ocr.read_text(image.crop(box)).strip()
 
-    # 后名区域避开左侧「条件已达成」标签,所以 x 从 150 起
-    before = rec((130, 150, 470, 205))
-    after = rec((150, 455, 470, 510))
-    cond = rec((20, 432, 175, 472))
-    if not before or not after:
+    boxes = card_boxes(arr)
+    if not boxes:
         return None
-    return Evolution(
-        from_name=before,
-        to_name=re.sub(r"^[成达已条态为](?=[\u4e00-\u9fa5]{2,})", "", after),
-        condition_met="条件已达成" in cond or "已达成" in cond,
-    )
+    before = rec((130, 150, 480, 205))
+
+    targets: list[EvolveTarget] = []
+    for x, y, w, h in boxes:
+        # 名字在条件标签下方,左边对齐到 150 避开标签
+        name = rec((150, y + 10, min(x + w, 500), min(y + h, y + 48)))
+        # 标签压在卡片上边框上,要往上多留一点(实测 -6..+28 才完整)
+        cond = rec((max(x, 20), max(y - 6, 0), min(x + 165, x + w), min(y + 28, y + h)))
+        name = re.sub(r"^[成达已条态为](?=[\u4e00-\u9fa5]{2,})", "", name).strip()
+        if not name:
+            continue
+        targets.append(EvolveTarget(name=name, condition_met=("已达成" in cond)))
+
+    if not before or not targets:
+        return None
+    return PopupInfo(from_name=before, targets=tuple(targets))
 
 
-def read_evolution(adb, ocr, image: Image.Image, btn: EvolveButton) -> Evolution | None:
+def read_evolution(adb, ocr, image: Image.Image, btn: EvolveButton) -> PopupInfo | None:
     """点开 → 读 → 返回键关闭。整个过程**只读**,不做任何会改存档的操作。"""
     adb.tap(btn.tap_x, btn.tap_y)
     adb.settle(1.1)

@@ -67,6 +67,7 @@ interface PlanInput {
   readonly evolutions?: readonly {
     readonly fromId: string;
     readonly toId: string;
+    readonly to: string;
     readonly conditionMet: boolean;
   }[];
 }
@@ -185,13 +186,44 @@ function main(): void {
   // 上下位关系:只有当**前置也在候选里**才生效(前置不在=已经买过,显示价里本来就不含它)
   const chainMap = new Map((plan.chains ?? []).map(c => [String(c.skillId), String(c.prereqId)] as const));
   const candIdSet = new Set(resolved.map(r => r.skill.id));
-  // 进化:只有「条件已达成」才按进化后算(结束养成时会自动进化,不额外花 PT)。
-  // 注意 toId 是进化后的技能,**它本身不在候选列表里**(不用单独买),所以只校验 fromId。
-  const evoMap = new Map(
-    (plan.evolutions ?? [])
-      .filter(e => e.conditionMet && candIdSet.has(e.fromId))
-      .map(e => [e.fromId, e.toId] as const),
-  );
+  // 进化:条件已达成才按进化后算(结束养成时自动进化,不额外花 PT)。
+  // **一个技能可能有多条进化路线**,各条单独算一遍单项收益,取最高的进主方案,其余在下面列出对比。
+  // 注意 toId 是进化后的技能,它本身不在候选列表里(不用单独买),所以只校验 fromId。
+  const ptOf = new Map(resolved.map(r => [r.skill.id, r.pt] as const));
+  const nameOf = new Map(resolved.map(r => [r.skill.id, r.skill.name] as const));
+  const evoGroups = new Map<string, { toId: string; to: string }[]>();
+  for (const e of plan.evolutions ?? []) {
+    if (!e.conditionMet || !candIdSet.has(e.fromId)) continue;
+    const arr = evoGroups.get(e.fromId) ?? [];
+    if (!arr.some(x => x.toId === e.toId)) arr.push({ toId: e.toId, to: e.to });
+    evoGroups.set(e.fromId, arr);
+  }
+
+  /** 单技能试算:得到某个进化方向下的单项收益(马身) */
+  const soloBodyOf = (fromId: string, toId: string | undefined): number => {
+    const pt = ptOf.get(fromId) ?? 0;
+    const r = optimize({
+      course, runner, budget: 1e9,
+      candidates: [toId !== undefined ? { id: fromId, pt, evolvesTo: toId } : { id: fromId, pt }],
+    });
+    return r.chosen[0]?.soloBody ?? 0;
+  };
+
+  const evoBest = new Map<string, string>();      // fromId → 选中的 toId
+  const evoCompare: { from: string; options: { to: string; body: number }[] }[] = [];
+  for (const [fromId, opts] of evoGroups) {
+    const scored = opts.map(o => ({ to: o.to, toId: o.toId, body: soloBodyOf(fromId, o.toId) }));
+    const base = soloBodyOf(fromId, undefined);
+    scored.push({ to: '(不进化)', toId: '', body: base });
+    scored.sort((a, b) => b.body - a.body);
+    const top = scored[0]!;
+    if (top.toId !== '') evoBest.set(fromId, top.toId);
+    evoCompare.push({
+      from: nameOf.get(fromId) ?? fromId,
+      options: scored.map(s => ({ to: s.to, body: s.body })),
+    });
+  }
+  const evoMap = evoBest;
   const candidates = resolved.map(r => {
     const req = chainMap.get(r.skill.id);
     const evo = evoMap.get(r.skill.id);
@@ -202,9 +234,6 @@ function main(): void {
       ...(evo !== undefined ? { evolvesTo: evo } : {}),
     };
   });
-  const ptOf = new Map(candidates.map(c => [c.id, c.pt] as const));
-  const nameOf = new Map(resolved.map(r => [r.skill.id, r.skill.name] as const));
-
   console.log(`赛道: ${course.name}(${course.id})  跑法: ${TACTIC_LABEL[runner.tactic]}  预算: ${budget}pt  候选: ${candidates.length} 条`);
   console.log(`环境: 场地 ${GROUND_LABEL[runner.groundCondition ?? 0]}  天气 ${WEATHER_LABEL[runner.weather ?? 1]}  季节 ${SEASON_LABEL[runner.season ?? 1]}(只影响「绿技能/环境条件类技能」是否生效)`);
   if (estPt.length > 0) {
@@ -244,6 +273,14 @@ function main(): void {
       ['left', 'left', 'right', 'right', 'right', 'right'],
     ));
   });
+  if (evoCompare.length > 0) {
+    console.log('');
+    console.log('进化方向对比(单项马身,主方案按收益最高的那条算):');
+    for (const c of evoCompare) {
+      const line = c.options.map(o => `${o.to} ${fmtBody(o.body)}`).join('  |  ');
+      console.log(`  ${c.from}: ${line}`);
+    }
+  }
   if (result.chosen.some(c => c.evolvesTo !== null)) {
     console.log('  ⇒进化 = 该金技能条件已达成,结束养成时免费变成进化技;「单独马身」显示 未进化→进化后');
   }

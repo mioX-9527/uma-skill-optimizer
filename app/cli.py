@@ -194,15 +194,17 @@ def cmd_capture(args: argparse.Namespace) -> int:
         evo = getattr(m.base, "evolve", None)
         if evo is None or m.skill is None:
             continue
-        hits = index.exact(evo.to_name) or [r for r, _ in index.fuzzy(evo.to_name, threshold=0.8, limit=3)]
-        if len(hits) != 1:
-            _say(f"[注意] 进化技能「{evo.to_name}」匹配到 {len(hits)} 个候选,该技能按未进化算")
-            continue
-        evolutions.append({
-            "fromId": m.skill.id, "from": m.skill.name,
-            "toId": hits[0].id, "to": hits[0].name,
-            "conditionMet": evo.condition_met,
-        })
+        # 一个技能可能有多条进化方向,每条都记下来分别计价
+        for t in evo.targets:
+            hits = index.exact(t.name) or [r for r, _ in index.fuzzy(t.name, threshold=0.8, limit=3)]
+            if len(hits) != 1:
+                _say(f"[注意] 进化技能「{t.name}」匹配到 {len(hits)} 个候选,该方向跳过")
+                continue
+            evolutions.append({
+                "fromId": m.skill.id, "from": m.skill.name,
+                "toId": hits[0].id, "to": hits[0].name,
+                "conditionMet": t.condition_met,
+            })
 
     plan = {
         "course": args.course or "东京 草 2400m",
