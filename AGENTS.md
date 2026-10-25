@@ -231,7 +231,21 @@ npm run web          # 浏览器打开 5183,载入默认示例点"开始计算",
 游戏包名 `com.bilibili.umamusu`。用雷电自带 `E:\leidian\LDPlayer9\adb.exe`(与设备 SDK 同代,比新版 platform-tools 稳)。
 `exec-out screencap -p` 实测 **280~350ms/帧**(早期用 shell 重定向测出的 ~1s 是 Git Bash 的额外开销,不是真实值)。
 
-**四个必须记住的坑**(都是踩出来的):
+**多模拟器共存:先列设备再读,别写死序列号**(2026-10-25 用户报"读取不了"的根因之一)。
+用户机器上 MuMu 和雷电同时开着,而 `127.0.0.1:5555` 当天被 **MuMu** 占着(前台碧蓝航线),
+雷电的实际连法不一样 —— 写死序列号就会去读另一台模拟器的画面,报出来的却是"横屏/读不到技能行"。
+- `adb.list_devices(connect="auto")`:`adb devices -l` 解析;**只有一台在线都没有时**才扫常见端口
+  (`connect=True` 强制扫,给「刷新设备」按钮用)。扫端口**并行 + 1.5s 超时** —— 串行 8 个端口实测 **14.7s**,
+  因为"端口在监听但不讲 adb"时 adb 会等满超时,界面像卡死。
+- `adb.describe(serial)`:一条 shell 拿全 `机型 / ro.serialno / 分辨率 / 前台应用`
+  (用 `echo M=$(...)` 前缀解析,机型为空时 getprop 会吐空行,按行号取会整体错位)。
+- `adb.dedupe_devices()`:同一台模拟器常同时挂在 `127.0.0.1:5555` 和 `emulator-5554` 下
+  (**serialno 一样**),不去重下拉框里就是两条一模一样的选项;保留 `host:port`(emulator-N 编号会变)。
+- `adb.resolve_serial()`:显式 > 唯一在线 > 前台是赛马娘的那台 > **报错让人选**(不瞎猜)。
+  CLI 的 `--serial` 默认值因此从写死的 5555 改成 `None`(自动),另外加了 `app.cli devices` 子命令。
+- 前端 `.actions` 里是设备下拉框 + 「刷新设备」,选中项存 localStorage(`uma-skill-optimizer-adb-serial`)。
+
+**五个必须记住的坑**(都是踩出来的):
 1. **`get-state` 是 adb 宿主命令,不是设备 shell 命令**,写成 `shell get-state` 会报 not found。
 2. **价格/角标这类单行小数字必须走 rec-only**(`engine(img, use_det=False, use_rec=True)`):
    det 对"右侧贴着裁剪边缘的小数字"经常直接检不到(同样字号下 200 检不到、130 检得到),

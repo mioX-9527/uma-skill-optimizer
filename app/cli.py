@@ -16,7 +16,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from .adb import Adb, AdbError, DEFAULT_SERIAL, probe
+from .adb import Adb, AdbError, dedupe_devices, describe, list_devices, probe, resolve_serial
 from .capture import capture_all, frame_diff
 from .layout import LAYOUT_DIR, load_profile
 from .match import SkillIndex, resolve_rows, to_plan_skills
@@ -37,6 +37,36 @@ def _font(size: int = 16):
 
 def _say(msg: str = "") -> None:
     print(msg, flush=True)
+
+
+def cmd_devices(args: argparse.Namespace) -> int:
+    """列出所有 adb 设备,顺带把机型/分辨率/前台应用显示出来,方便挑 --serial。"""
+    try:
+        devs = list_devices(connect=True)
+    except AdbError as exc:
+        _say(f"[失败] {exc}")
+        return 1
+    if not devs:
+        _say("没有找到设备。先启动模拟器,确认它开着 ADB 调试。")
+        return 1
+    rows = []
+    for d in devs:
+        row = dict(d)
+        if d["state"] == "device":
+            row.update(describe(d["serial"]))
+        rows.append(row)
+    for d in dedupe_devices(rows):     # 同一台机器的两个序列号只显示一次
+        line = f"  {d['serial']:<20} {d['state']:<13} {d.get('model') or '':<10}"
+        if d.get("size"):
+            line += f" {d['size']:<10}"
+        if d.get("isUma"):
+            line += " ← 赛马娘"
+        elif d.get("app"):
+            line += f" 前台:{d['app']}"
+        _say(line)
+    _say()
+    _say("用 --serial 指定要读的那台,例如:python -m app.cli capture --serial 127.0.0.1:16384")
+    return 0
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
@@ -232,8 +262,14 @@ def main(argv: list[str] | None = None) -> int:
         pass
 
     p = argparse.ArgumentParser(prog="app.cli", description="赛马娘技能购买界面自动读取")
-    p.add_argument("--serial", default=DEFAULT_SERIAL, help=f"adb 设备序列号(默认 {DEFAULT_SERIAL})")
+    p.add_argument(
+        "--serial", default=None,
+        help="adb 设备序列号(主机:端口)。不填则自动挑:只有一台在线就用它,"
+             "多台时挑前台是赛马娘的那台。用 `devices` 子命令看有哪些。",
+    )
     sub = p.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser("devices", help="列出所有 adb 设备(含前台应用)").set_defaults(func=cmd_devices)
 
     sub.add_parser("doctor", help="连通性与分辨率自检").set_defaults(func=cmd_doctor)
 
@@ -256,6 +292,14 @@ def main(argv: list[str] | None = None) -> int:
     pc.set_defaults(func=cmd_capture)
 
     args = p.parse_args(argv)
+    # 没显式给 --serial 就自动挑一台(多模拟器共存时按"前台是赛马娘"选)
+    if args.serial is None and args.cmd != "devices":
+        try:
+            args.serial = resolve_serial(None)
+        except AdbError as exc:
+            _say(f"[失败] {exc}")
+            return 1
+        _say(f"使用设备 {args.serial}")
     return args.func(args)
 
 

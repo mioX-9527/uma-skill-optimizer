@@ -19,7 +19,7 @@ import threading
 import traceback
 from pathlib import Path
 
-from .adb import Adb, AdbError, DEFAULT_SERIAL
+from .adb import Adb, AdbError, dedupe_devices, describe, list_devices, resolve_serial
 from .capture import capture_all
 from .layout import load_profile
 from .match import SkillIndex, resolve_rows, to_plan_skills
@@ -31,7 +31,9 @@ STANDALONE_HTML = ROOT / "打开规划器.html"
 class Bridge:
     """暴露给前端的 API。所有方法都返回 dict(前端好处理),异常也转成 dict 而不是抛穿。"""
 
-    def __init__(self, serial: str = DEFAULT_SERIAL):
+    def __init__(self, serial: str | None = None):
+        # 不写死序列号:多模拟器共存时 5555 未必是赛马娘那台(实测被 MuMu 占过)。
+        # 前端会先调 devices() 让用户选,再把选中的 serial 传进来。
         self.serial = serial
         self._index: SkillIndex | None = None
         self._last_plan: list[dict] = []
@@ -48,10 +50,38 @@ class Bridge:
     def _err(self, exc: Exception) -> dict:
         return {"ok": False, "error": str(exc), "detail": traceback.format_exc(limit=3)}
 
+    def _resolve(self, serial: str | None) -> str:
+        """选定要读哪台设备(逻辑在 adb.resolve_serial,CLI 共用同一份)。"""
+        return resolve_serial(serial or self.serial)
+
     # ── 前端 API ────────────────────────────────────────────
-    def doctor(self) -> dict:
+    def devices(self, force: bool = False) -> dict:
+        """列出所有 adb 设备,并带上机型/分辨率/前台应用,供前端做下拉框。
+
+        `force=True` 才会去扫一遍常见模拟器端口(界面上的「刷新设备」按钮用),
+        平时(`force=False`)只在**一台在线设备都没有**时才扫,省 1.5s。
+        """
         try:
-            adb = Adb(self.serial)
+            devs = list_devices(connect=True if force else "auto")
+            out = []
+            for d in devs:
+                row = {"serial": d["serial"], "state": d["state"], "model": d["model"]}
+                if d["state"] == "device":
+                    row.update(describe(d["serial"]))
+                out.append(row)
+            out = dedupe_devices(out)
+            # 推荐项:前台是赛马娘 > 唯一在线 > 无
+            online = [r for r in out if r["state"] == "device"]
+            recommend = next((r["serial"] for r in online if r.get("isUma")), None)
+            if recommend is None and len(online) == 1:
+                recommend = online[0]["serial"]
+            return {"ok": True, "devices": out, "recommended": recommend, "serial": self.serial}
+        except (AdbError, FileNotFoundError, OSError) as exc:
+            return self._err(exc)
+
+    def doctor(self, serial: str | None = None) -> dict:
+        try:
+            adb = Adb(self._resolve(serial))
             meta = adb.connect()
             profile = load_profile(meta.width, meta.height)
             return {
@@ -66,12 +96,12 @@ class Bridge:
         except (AdbError, FileNotFoundError, OSError) as exc:
             return self._err(exc)
 
-    def capture_skills(self) -> dict:
+    def capture_skills(self, serial: str | None = None) -> dict:
         """抓取技能列表。整个过程要 10~20 秒,前端应显示进度/禁用按钮。"""
         if not self._busy.acquire(blocking=False):
             return {"ok": False, "error": "正在读取中,请稍候"}
         try:
-            adb = Adb(self.serial)
+            adb = Adb(self._resolve(serial))
             meta = adb.connect()
             profile = load_profile(meta.width, meta.height)
             from .ocr import Ocr

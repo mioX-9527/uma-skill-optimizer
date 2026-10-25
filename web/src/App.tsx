@@ -7,8 +7,8 @@ import {
   type OptimizerResult, type PlanSkill, type PlanState,
 } from './api.js';
 import {
-  applyCapture, captureSummary, waitForDesktopBridge,
-  type CapturedSkill, type DesktopBridge,
+  applyCapture, captureSummary, deviceLabel, pickDevice, waitForDesktopBridge,
+  type AdbDevice, type CapturedSkill, type DesktopBridge,
 } from './desktop.js';
 
 const STAT_LABELS: readonly { key: keyof PlanState['stats']; label: string }[] = [
@@ -39,6 +39,8 @@ const REASON_LABEL: Record<string, string> = {
 };
 
 const STORAGE_KEY = 'uma-skill-optimizer-plan-v1';
+/** 上次选中的 adb 设备(序列号) */
+const SERIAL_KEY = 'uma-skill-optimizer-adb-serial';
 
 function loadInitialPlan(): PlanState {
   try {
@@ -83,6 +85,11 @@ export default function App() {
   // 首帧直接读会永远拿不到(实测就是窗口开了但没有「从模拟器读取」按钮)。
   const [bridge, setBridge] = useState<DesktopBridge | null>(null);
   useEffect(() => waitForDesktopBridge(setBridge), []);
+  // adb 设备选择:多模拟器共存时 5555 未必是赛马娘那台(实测被 MuMu 占过),
+  // 所以一律先列设备让用户选,选过的记下来下次直接用。
+  const [devices, setDevices] = useState<readonly AdbDevice[]>([]);
+  const [serial, setSerial] = useState<string | null>(null);
+  const [loadingDevices, setLoadingDevices] = useState(false);
 
   const course = courseOf(plan.courseId);
 
@@ -112,6 +119,43 @@ export default function App() {
     setResult(null);
   };
 
+  /** 刷新设备列表(force=true 会去扫一遍常见模拟器端口) */
+  const refreshDevices = async (force = false) => {
+    if (!bridge) return;
+    setLoadingDevices(true);
+    try {
+      const resp = await bridge.devices(force);
+      if (!resp.ok) {
+        setDevices([]);
+        setSerial(null);
+        setReadLog([`设备列表读取失败:${resp.error ?? '未知错误'}`]);
+        return;
+      }
+      const list = resp.devices ?? [];
+      setDevices(list);
+      let remembered: string | null = null;
+      try { remembered = localStorage.getItem(SERIAL_KEY); } catch { /* 忽略 */ }
+      const picked = pickDevice(list, remembered ?? resp.recommended ?? null);
+      setSerial(picked);
+      if (picked) {
+        try { localStorage.setItem(SERIAL_KEY, picked); } catch { /* 忽略 */ }
+      }
+      if (list.length === 0) setReadLog(['没找到在线的模拟器。先启动模拟器(雷电/MuMu 都行),再点「刷新设备」。']);
+    } catch (e) {
+      setReadLog([`设备列表读取失败:${(e as Error).message}`]);
+    } finally {
+      setLoadingDevices(false);
+    }
+  };
+
+  // 桌面壳就绪后自动列一次设备(不扫端口,快)
+  useEffect(() => { if (bridge) void refreshDevices(false); }, [bridge]);
+
+  const chooseDevice = (value: string) => {
+    setSerial(value);
+    try { localStorage.setItem(SERIAL_KEY, value); } catch { /* 忽略 */ }
+  };
+
   /** 桌面窗专用:从模拟器读技能名与价格,覆盖候选列表 */
   const readFromEmulator = async () => {
     if (!bridge) return;
@@ -119,7 +163,7 @@ export default function App() {
     setReadLog(['正在读取…(划到顶 + 逐屏识别,约 10~20 秒)']);
     setError(null);
     try {
-      const resp = await bridge.capture_skills();
+      const resp = await bridge.capture_skills(serial ?? undefined);
       setReadLog(captureSummary(resp));
       if (!resp.ok) return;
       const merged = applyCapture(plan, resp, (c: CapturedSkill) => {
@@ -346,7 +390,27 @@ export default function App() {
               {running ? '计算中…(几秒到几十秒)' : '开始计算'}
             </button>
             {bridge && (
-              <button onClick={readFromEmulator} disabled={reading}>
+              <span className="device-picker">
+                <select
+                  value={serial ?? ''}
+                  onChange={e => chooseDevice(e.target.value)}
+                  disabled={reading || loadingDevices || devices.length === 0}
+                  title="选择要读取的模拟器(序列号即 adb 的 主机:端口)"
+                >
+                  {devices.length === 0 && <option value="">{loadingDevices ? '正在查找设备…' : '未找到模拟器'}</option>}
+                  {devices.map(d => (
+                    <option key={d.serial} value={d.serial} disabled={d.state !== 'device'}>
+                      {deviceLabel(d)}
+                    </option>
+                  ))}
+                </select>
+                <button className="mini" onClick={() => void refreshDevices(true)} disabled={reading || loadingDevices} title="重新扫描 5555/7555/16384 等常见模拟器端口">
+                  {loadingDevices ? '…' : '刷新设备'}
+                </button>
+              </span>
+            )}
+            {bridge && (
+              <button onClick={readFromEmulator} disabled={reading || serial === null}>
                 {reading ? '读取中…' : '从模拟器读取'}
               </button>
             )}

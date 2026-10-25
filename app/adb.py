@@ -1,10 +1,15 @@
-"""ADB 封装:连接雷电模拟器、取帧、滑动。
+"""ADB 封装:连接模拟器、取帧、滑动。
 
 设计约束(均为实测得出,别随意改):
 - 720x1280 屏下 `exec-out screencap -p` 约 0.9~1.1s/帧,瓶颈在模拟器侧 screencap 本身,
   所以一次流程里每抓一帧都要算进预算,不要为了"稳妥"多抓。
 - raw 帧(不带 -p)同样耗时且体积 3.7MB,PNG 只用 420KB,故一律用 -p。
 - 雷电自带 adb(与设备 SDK 28 同代)比 platform-tools 新版更稳,优先用它。
+
+**为什么要有设备列表(`list_devices`)**:多个模拟器同时开着时,`adb devices` 会列出好几条,
+而哪台有赛马娘跟序列号完全对不上 —— 实测踩过一次:默认写死的 `127.0.0.1:5555` 当天其实是
+MuMu(前台碧蓝航线),雷电在 16384,于是"读取不了"查了半天。所以一律**先列设备、让用户选**,
+并且把每台的前台应用一起显示出来(前台是赛马娘的那台会标出来)。
 """
 
 from __future__ import annotations
@@ -15,17 +20,33 @@ import re
 import shutil
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 from PIL import Image
 
-# 雷电实例 0 的 adb 端口;多开时实例 N = 5555 + 2N
+# 兜底序列号(单实例、且只有一台在线时才会用到;正常走「先选设备」)
 DEFAULT_SERIAL = "127.0.0.1:5555"
 LDPPLAYER_ADB_CANDIDATES = (
     r"E:\leidian\LDPlayer9\adb.exe",
     r"C:\leidian\LDPlayer9\adb.exe",
     r"D:\leidian\LDPlayer9\adb.exe",
 )
+
+# 常见模拟器的默认 adb 端口。启动后不一定会自动进 adb 的服务器列表,列设备前顺手连一遍
+# (端口没人监听时 connect 会立刻失败,不拖时间)。
+#   雷电 实例 0 = 5555,实例 N = 5555+2N;MuMu 6 = 7555;MuMu 12 = 16384;
+#   夜神 = 62001/62025;BlueStacks = 5565。
+# 注意:端口 ≠ 模拟器品牌(实测见过 5555 被 MuMu 占着),所以**只用来连,不用来贴标签**。
+CANDIDATE_PORTS = (5555, 5557, 5559, 7555, 16384, 62001, 62025, 5565)
+
+# 认得出来的游戏包名(只用于给人看的标签,认不出就原样显示包名)
+UMA_PACKAGES = ("com.bilibili.umamusu", "jp.co.cygames.umamusume")
+PACKAGE_LABELS = {
+    "com.bilibili.umamusu": "赛马娘",
+    "jp.co.cygames.umamusume": "赛马娘(日服)",
+    "com.bilibili.azurlane": "碧蓝航线",
+}
 
 
 class AdbError(RuntimeError):
@@ -160,3 +181,161 @@ def probe(serial: str = DEFAULT_SERIAL) -> dict:
         "frame_size": img.size,
         "android": adb.shell("getprop", "ro.build.version.release").strip(),
     }
+
+
+# ── 设备列表(多模拟器共存时用)─────────────────────────────────
+def connect_candidates(adb_path: str, timeout: float = 1.5) -> None:
+    """对常见模拟器端口挨个 `adb connect`,**并行**且超时很短。
+
+    为什么要并行 + 短超时:端口没人监听时 adb 会立刻失败,但**端口有程序监听却不讲 adb 协议**
+    (模拟器未启动完 / 别的服务占了端口)时,adb 会一直等到超时 —— 串行 8 个端口实测要 14s,
+    整个界面像卡死。并行后最多 ~1.5s。
+    """
+    def one(port: int) -> None:
+        try:
+            subprocess.run(
+                [adb_path, "connect", f"127.0.0.1:{port}"],
+                capture_output=True, timeout=timeout, check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+
+    with ThreadPoolExecutor(max_workers=len(CANDIDATE_PORTS)) as pool:
+        list(pool.map(one, CANDIDATE_PORTS))
+
+
+def _raw_devices(path: str) -> list[dict]:
+    try:
+        proc = subprocess.run([path, "devices", "-l"], capture_output=True, timeout=20, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise AdbError(f"列不出设备(`adb devices -l` 失败):{exc}") from exc
+    out = proc.stdout.decode("utf-8", "ignore")
+    devs: list[dict] = []
+    for line in out.splitlines()[1:]:
+        line = line.strip()
+        if not line or line.startswith("*"):
+            continue
+        parts = line.split()
+        if len(parts) < 2:
+            continue
+        model = ""
+        for p in parts[2:]:
+            if p.startswith("model:"):
+                model = p[len("model:"):]
+        devs.append({"serial": parts[0], "state": parts[1], "model": model})
+    return devs
+
+
+def list_devices(adb_path: str | None = None, connect: str | bool = "auto") -> list[dict]:
+    """`adb devices -l` 的解析结果:[{serial, state, model}]。
+
+    `connect`:
+      - `"auto"`(默认):**只有一台在线设备都没有时**才去扫端口。常见情况省掉 1.5s。
+      - `True`:强制扫一遍(界面上的「刷新设备」按钮用它,模拟器刚启动/掉线时能捞回来)。
+      - `False`:只列,不连。
+
+    `state` 里常见 `device` / `offline` / `unauthorized`;后两者仍要列出来,
+    否则用户会以为"模拟器没开",其实是 adb 连接掉了或者没点授权。
+    """
+    path = adb_path or find_adb()
+    devs = _raw_devices(path)
+    need_sweep = connect is True or (connect == "auto" and not any(d["state"] == "device" for d in devs))
+    if need_sweep:
+        connect_candidates(path)
+        devs = _raw_devices(path)
+    return devs
+
+
+def resolve_serial(serial: str | None = None) -> str:
+    """决定读哪台设备。CLI 和桌面壳共用这一份逻辑。
+
+    优先级:显式指定 > 只有一台在线就用它 > 多台时挑前台是赛马娘的那台 > 报错让人选。
+    **不瞎猜**:多台又都不像赛马娘时宁可报错 —— 猜错的话会去读另一台模拟器的画面,
+    报出来的是"横屏/读不到技能行",比"请选一台设备"难查得多。
+    """
+    if serial:
+        return serial
+    devs = [d for d in list_devices() if d["state"] == "device"]
+    if not devs:
+        raise AdbError(
+            "一台在线的模拟器都没有。先启动模拟器(雷电/MuMu 都行),确认它开着 ADB 调试,"
+            "再试一次;也可以用 `python -m app.cli devices` 看当前能连到哪些。"
+        )
+    if len(devs) == 1:
+        return devs[0]["serial"]
+    for d in devs:
+        if describe(d["serial"]).get("isUma"):
+            return d["serial"]
+    raise AdbError(
+        "有多台设备在线,而且没有一台的前台是赛马娘,请用 --serial 指定一台:\n"
+        + "\n".join(f"  {d['serial']}  {d['model']}" for d in devs)
+    )
+
+
+def dedupe_devices(rows: list[dict]) -> list[dict]:
+    """同一台模拟器常同时挂在 `127.0.0.1:5555` 和 `emulator-5554` 两个序列号下
+    (实测:名字不同、`ro.serialno` 一样、前台应用一样)。不去重会在下拉框里出现
+    两条一模一样的选项,用户会以为有两个模拟器。
+
+    保留哪一个:`host:port` 优先 —— `emulator-5554` 这种编号会随启动顺序变,不适合存进配置。
+    需要 `serialno` 字段(由 `describe` / `parse_describe` 提供);没有就退化成按序列号区分。
+    """
+    kept: dict[str, dict] = {}
+    order: list[str] = []
+    for row in rows:
+        key = row.get("serialno") or row["serial"]
+        prev = kept.get(key)
+        if prev is None:
+            kept[key] = row
+            order.append(key)
+        elif ":" in row["serial"] and ":" not in prev["serial"]:
+            kept[key] = row
+    return [kept[k] for k in order]
+
+
+def parse_describe(out: str) -> dict:
+    """解析 `describe` 的那条复合 shell 输出(单独拆出来是为了能跑假数据测试)。
+
+    形如:
+        M=PHM110
+        S=0098ea74
+        Physical size: 720x1280
+        mCurrentFocus=Window{30e031d u0 com.bilibili.umamusu/com.xxx.MainActivity}
+    """
+    model = (re.search(r"^M=(.*)$", out, re.M) or [None, ""])[1].strip()
+    serialno = (re.search(r"^S=(.*)$", out, re.M) or [None, ""])[1].strip()
+    m = re.search(r"(\d+)x(\d+)", out)
+    size = f"{m.group(1)}x{m.group(2)}" if m else ""
+    fg = re.search(r"mCurrentFocus=Window\{[^}]*?\s+([\w.]+)/", out)
+    pkg = fg.group(1) if fg else None
+    return {
+        "model": model,
+        "serialno": serialno,
+        "size": size,
+        "foreground": pkg,
+        "app": PACKAGE_LABELS.get(pkg or "", pkg or ""),
+        "isUma": pkg in UMA_PACKAGES,
+    }
+
+
+def describe(serial: str, adb_path: str | None = None, timeout: float = 8.0) -> dict:
+    """补一屏信息:机型 / 设备唯一序列号 / 分辨率 / 前台应用。**一次 shell 调用拿全**(省往返)。
+
+    前台应用是关键信息 —— 多个模拟器同时开着时,只有它是"这台是不是赛马娘"的可靠信号。
+    `ro.serialno` 用来**去重**:同一台模拟器常常同时挂在 `127.0.0.1:5555` 和
+    `emulator-5554` 两个序列号下(实测两台名字不同、serialno 一样),不去重会在下拉框里
+    出现两条一模一样的选项。
+
+    解析用 `M=` / `S=` 前缀而不是按行号取值:机型为空时 getprop 会输出空行,
+    按行号取会整体错位。
+    """
+    adb = Adb(serial, adb_path=adb_path, timeout=timeout)
+    try:
+        # `$(...)` 由设备端的 sh 展开,不经 Windows 的 shell
+        out = adb.shell(
+            "echo M=$(getprop ro.product.model); echo S=$(getprop ro.serialno); "
+            "wm size; dumpsys window | grep mCurrentFocus"
+        )
+    except AdbError as exc:
+        return {"error": str(exc)}
+    return parse_describe(out)

@@ -84,11 +84,16 @@ option { padding: 2px 6px; }
 .x { border: none; background: none; color: var(--dim); cursor: pointer; font-size: 15px; padding: 2px 6px; }
 .x:hover { color: #c93c2e; }
 
-.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 button { cursor: pointer; }
 button:hover { border-color: var(--accent); }
 .primary { background: var(--accent); border-color: var(--accent); color: #ffffff; font-weight: 600; padding: 6px 16px; }
 .primary:disabled { opacity: 0.55; cursor: default; }
+
+/* 设备选择:序列号即 adb 的 主机:端口,多模拟器共存时用来指定读哪台 */
+.device-picker { display: inline-flex; align-items: center; gap: 6px; }
+.device-picker select { max-width: 300px; font-size: 12px; padding: 5px 6px; }
+.device-picker .mini { font-size: 12px; padding: 5px 8px; }
 
 .result table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
 .result th, .result td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--line); }

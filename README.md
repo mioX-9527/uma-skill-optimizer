@@ -82,19 +82,26 @@ npm run optimize -- --input examples/input.example.json [--budget 1000] [--out r
 
 目标:把游戏停在技能购买界面,**一键读出所有可学技能和它们在你号上的实际价格**,直接进优化器,不用手抄。
 
-现状:ADB 连接、翻页、OCR、名称匹配都跑通了(有单测),**还差版式校准**——需要真实截图定行高和裁剪坐标。
+现状:ADB 连接、翻页、OCR、名称匹配、版式校准都跑通了(有单测与假帧端到端测试)。
 
 ```bash
 pip install -r app/requirements.txt     # pywebview + rapidocr + onnxruntime
 双击 启动桌面版.bat                      # 开窗,里面会有「从模拟器读取」
 
 # 或者用命令行
+python -m app.cli devices               # 列出所有模拟器(带分辨率/前台应用),挑 --serial 用
 python -m app.cli doctor                # 自检:adb / 分辨率 / 版式状态
 python -m app.cli calibrate             # 出校准标注图(app/_debug/calib_lines.png)
-python -m app.cli capture -o plan.json  # 全流程抓取
+python -m app.cli capture -o plan.json  # 全流程抓取(不填 --serial 自动挑开着赛马娘的那台)
 ```
 
-前提:雷电模拟器已启动、游戏停在技能购买列表、该模拟器开着 ADB 调试。
+前提:模拟器已启动、游戏停在技能购买列表、该模拟器开着 ADB 调试。
+
+**同时开着好几个模拟器时**:窗口里「从模拟器读取」左边有个**设备下拉框**,每项显示
+`序列号 · 机型 · 分辨率 · 前台应用`,前台是赛马娘的那台会标 `★ 赛马娘`,并默认选它;
+选过的会记住。列表里没有你要的那台就点「刷新设备」(它会去扫 5555/7555/16384 等常见端口)。
+**别指望 5555 一定是雷电** —— 实测过 5555 被 MuMu 占着,读出来是另一台模拟器的画面。
+
 首版只读技能屏;**面板/跑法/赛道仍在网页里填**(那些在购买界面看不到)。
 
 ## 路线图

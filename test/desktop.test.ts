@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { applyCapture, captureSummary, type CapturedSkill } from '../web/src/desktop.js';
+import {
+  applyCapture, captureSummary, deviceLabel, pickDevice, type AdbDevice, type CapturedSkill,
+} from '../web/src/desktop.js';
 
 const toSkill = (c: CapturedSkill) => (c.id === 'bad' ? null : { id: c.id, pt: c.pt });
 
@@ -51,5 +53,55 @@ describe('captureSummary', () => {
     expect(text).toContain('1830');
     expect(text).toContain('到底了');
     expect(text).toContain('需确认');
+  });
+});
+
+/**
+ * 多模拟器共存时的设备选择。
+ *
+ * 踩过:默认写死 `127.0.0.1:5555`,那天 5555 其实被 MuMu 占着(前台碧蓝航线),
+ * 用户在雷电里开赛马娘 → 读到的是横屏的碧蓝航线界面 → 「读取不了」。
+ * 所以下拉框要能把「哪台开着赛马娘」直接写脸上。
+ */
+describe('deviceLabel', () => {
+  const base: AdbDevice = { serial: '127.0.0.1:5555', state: 'device', model: 'PHM110', size: '720x1280' };
+
+  it('前台是赛马娘时标出来', () => {
+    const label = deviceLabel({ ...base, foreground: 'com.bilibili.umamusu', app: '赛马娘', isUma: true });
+    expect(label).toContain('127.0.0.1:5555');
+    expect(label).toContain('720x1280');
+    expect(label).toContain('赛马娘');
+  });
+
+  it('前台是别的游戏时显示那个游戏名', () => {
+    const label = deviceLabel({ ...base, foreground: 'com.bilibili.azurlane', app: '碧蓝航线' });
+    expect(label).toContain('碧蓝航线');
+  });
+
+  it('掉线/未授权不显示成"能用"', () => {
+    expect(deviceLabel({ serial: '127.0.0.1:7555', state: 'offline' })).toContain('未连接');
+    expect(deviceLabel({ serial: '127.0.0.1:7555', state: 'unauthorized' })).toContain('未授权');
+  });
+});
+
+describe('pickDevice', () => {
+  const uma: AdbDevice = { serial: '127.0.0.1:16384', state: 'device', isUma: true };
+  const azur: AdbDevice = { serial: '127.0.0.1:5555', state: 'device' };
+  const dead: AdbDevice = { serial: '127.0.0.1:7555', state: 'offline' };
+
+  it('没有记忆时优先挑开着赛马娘的那台', () => {
+    expect(pickDevice([azur, uma, dead], null)).toBe('127.0.0.1:16384');
+  });
+
+  it('记忆的设备仍然在线就用它(尊重用户上次的选择)', () => {
+    expect(pickDevice([azur, uma], '127.0.0.1:5555')).toBe('127.0.0.1:5555');
+  });
+
+  it('记忆的设备掉线了就不能再用', () => {
+    expect(pickDevice([azur, dead], '127.0.0.1:7555')).toBe('127.0.0.1:5555');
+  });
+
+  it('一台在线的都没有时返回 null', () => {
+    expect(pickDevice([dead], null)).toBeNull();
   });
 });

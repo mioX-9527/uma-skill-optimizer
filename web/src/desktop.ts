@@ -28,9 +28,57 @@ export interface CaptureResponse {
 }
 
 export interface DesktopBridge {
-  doctor(): Promise<{ ok: boolean; size?: [number, number]; calibrated?: boolean; error?: string }>;
-  capture_skills(): Promise<CaptureResponse>;
+  /** 列 adb 设备(force=true 会去扫一遍常见模拟器端口,模拟器刚启动时用) */
+  devices(force?: boolean): Promise<DeviceResponse>;
+  doctor(serial?: string): Promise<{ ok: boolean; serial?: string; size?: [number, number]; calibrated?: boolean; error?: string }>;
+  /** 逐屏读取技能列表;serial 不传时后端按「前台是赛马娘」自动挑 */
+  capture_skills(serial?: string): Promise<CaptureResponse>;
   save_plan(path?: string): Promise<{ ok: boolean; path?: string; count?: number; error?: string }>;
+}
+
+/** 一台 adb 设备(下拉框一项) */
+export interface AdbDevice {
+  readonly serial: string;
+  /** adb 的连接状态:`device` 可用 / `offline` 掉线 / `unauthorized` 没点授权 */
+  readonly state: string;
+  readonly model?: string;
+  /** 设备唯一序列号;同一台模拟器常同时挂在 `127.0.0.1:5555` 和 `emulator-5554` 下,后端据此去重 */
+  readonly serialno?: string;
+  readonly size?: string;
+  readonly foreground?: string | null;
+  /** 前台应用的中文名(认得出来才有,认不出就是包名) */
+  readonly app?: string;
+  /** 前台是不是赛马娘 —— 多模拟器共存时这是唯一可靠的判断 */
+  readonly isUma?: boolean;
+  readonly error?: string;
+}
+
+export interface DeviceResponse {
+  readonly ok: boolean;
+  readonly error?: string;
+  readonly detail?: string;
+  readonly devices?: readonly AdbDevice[];
+  /** 后端推荐的序列号(前台是赛马娘的那台) */
+  readonly recommended?: string | null;
+}
+
+/** 下拉框里一行文字:`序列号 · 机型 · 分辨率 · 前台应用` */
+export function deviceLabel(d: AdbDevice): string {
+  const parts = [d.serial];
+  if (d.model) parts.push(d.model);
+  if (d.size) parts.push(d.size);
+  if (d.state !== 'device') parts.push(d.state === 'unauthorized' ? '未授权' : '未连接');
+  else if (d.isUma) parts.push('★ 赛马娘');
+  else if (d.app) parts.push(d.app);
+  return parts.join(' · ');
+}
+
+/** 从设备列表里挑默认选中项:存过的 > 后端推荐 > 第一台在线 */
+export function pickDevice(devices: readonly AdbDevice[], remembered: string | null): string | null {
+  if (remembered && devices.some(d => d.serial === remembered && d.state === 'device')) return remembered;
+  const online = devices.filter(d => d.state === 'device');
+  const rec = online.find(d => d.isUma) ?? online[0];
+  return rec?.serial ?? null;
 }
 
 /** 拿到桌面壳的 API;不在壳里就返回 null(单文件版/普通浏览器)。 */
