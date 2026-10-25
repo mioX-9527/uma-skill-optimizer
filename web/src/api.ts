@@ -162,7 +162,11 @@ export function importPlan(text: string): PlanState {
   };
 }
 
-// ── Worker 调用 ───────────────────────────────────────────────────
+// ── Worker 调用(http 下后台计算不卡界面;file:// 单文件版回退主线程) ──
+
+import OptimizerWorker from './optimizer.worker?worker&inline';
+import { optimize as optimizeSync } from '../../src/optimizer.js';
+import type { RunnerConfig } from '../../src/engine/index.js';
 
 let worker: Worker | null = null;
 let seq = 0;
@@ -171,7 +175,7 @@ const pending = new Map<number, Pending>();
 
 function getWorker(): Worker {
   if (worker === null) {
-    worker = new Worker(new URL('./optimizer.worker.ts', import.meta.url), { type: 'module' });
+    worker = new OptimizerWorker();
     worker.onmessage = (e: MessageEvent) => {
       const { seq: id, ok, result, error } = e.data as { seq: number; ok: boolean; result?: OptimizerResult; error?: string };
       const p = pending.get(id);
@@ -195,10 +199,37 @@ export interface RunInput {
   readonly skills: readonly { id: string; pt: number }[];
 }
 
+function runOnMain(input: RunInput): Promise<OptimizerResult> {
+  const course = COURSES.find(c => c.id === input.courseId);
+  if (!course) return Promise.reject(new Error(`找不到赛道 ${input.courseId}`));
+  const runner: RunnerConfig = {
+    stats: input.stats,
+    greenBonus: {},
+    tactic: input.tactic,
+    distanceAptitude: input.distanceAptitude,
+    surfaceAptitude: input.surfaceAptitude,
+    motivation: input.motivation,
+    courseFix: 'auto',
+    skills: [],
+  };
+  try {
+    return Promise.resolve(optimizeSync({ course, runner, candidates: input.skills, budget: input.budget }));
+  } catch (e) {
+    return Promise.reject(e as Error);
+  }
+}
+
 export function runOptimize(input: RunInput): Promise<OptimizerResult> {
+  if (location.protocol === 'file:') return runOnMain(input);
   const id = ++seq;
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject });
-    getWorker().postMessage({ seq: id, ...input });
+    try {
+      getWorker().postMessage({ seq: id, ...input });
+    } catch {
+      // Worker 不可用时回退主线程计算
+      pending.delete(id);
+      void runOnMain(input).then(resolve, reject);
+    }
   });
 }

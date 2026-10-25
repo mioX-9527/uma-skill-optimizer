@@ -294,7 +294,7 @@ export default function App() {
 
           <table>
             <thead>
-              <tr><th>#</th><th>技能</th><th>PT</th><th>单独马身</th><th>集内边际</th><th>边际(秒)</th></tr>
+              <tr><th>#</th><th>技能</th><th className="num">PT</th><th className="num">单独马身</th><th className="num">集内边际</th><th className="num">边际(秒)</th></tr>
             </thead>
             <tbody>
               {result.chosen.map((c, i) => (
@@ -315,7 +315,7 @@ export default function App() {
               <h3>未购买(按剩余边际收益排序)</h3>
               <table>
                 <thead>
-                  <tr><th>技能</th><th>PT</th><th>单独马身</th><th>原因</th><th>差PT</th></tr>
+                  <tr><th>技能</th><th className="num">PT</th><th className="num">单独马身</th><th>原因</th><th className="num">差PT</th></tr>
                 </thead>
                 <tbody>
                   {result.rejected.map(r => (

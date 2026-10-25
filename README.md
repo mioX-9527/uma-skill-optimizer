@@ -16,10 +16,12 @@ v0.1(命令行 + 网页版)已跑通:
 
 ## 用法
 
-**网页版**(推荐):
+**双击即用(免安装)**:根目录的 [`打开规划器.html`](打开规划器.html) 是单文件构建产物,双击直接在浏览器打开即可(无需 Node;此模式下优化器在主线程运行,计算时界面会短暂停顿)。
+
+**网页版**(开发/流畅模式):
 
 ```bash
-npm run web        # 或直接双击 打开规划器.bat
+npm run web        # 或双击 打开规划器.bat
 ```
 
 **命令行版**:
@@ -30,6 +32,8 @@ npm run sync        # 从 ../uma-race-sim 同步引擎与数据(可用 --from <�
 npm test
 npm run optimize -- --input examples/input.example.json [--budget 1000] [--out result.json]
 ```
+
+> 引擎或数据更新后跑 `npm run web:standalone` 重新生成 打开规划器.html。
 
 输入 JSON 格式(完整示例见 [`examples/input.example.json`](examples/input.example.json)):
 
