@@ -105,9 +105,13 @@ class FakeAdb:
     def settle(self, seconds: float = 0.0) -> None:
         pass
 
+    def foreground_package(self) -> str:
+        return ""
+
 
 class Meta:
     width, height = 720, 1280
+    size = (width, height)   # 和真实 ScreenMeta.size 对齐:横屏检查拿它跟截图尺寸比
 
 
 def main() -> int:
@@ -177,6 +181,25 @@ def main() -> int:
           is_unbuyable({"effects": [{"type": "passive", "stat": "power", "value": -40}]}))
     check("is_unbuyable 不误伤 回复类被动",
           not is_unbuyable({"effects": [{"type": "passive", "stat": "speed", "value": 40}]}))
+
+    print("预检(这两种翻车以前是静默的)")
+    class LandscapeAdb(FakeAdb):
+        """模拟器横屏:screencap 出来是 1280x720,而 wm size 永远报 720x1280。"""
+        def screencap(self):
+            return super().screencap().rotate(90, expand=True)
+
+    try:
+        capture_all(LandscapeAdb(pages, start=0), Meta(), profile, ocr, max_pages=2)
+        check("横屏直接报错而不是空转", False, "没抛异常")
+    except RuntimeError as exc:
+        check("横屏直接报错而不是空转", "横屏" in str(exc), str(exc))
+
+    blank = render_page(profile, [])     # 空页 = 没有绿色「+」按钮 = 一行都读不到
+    try:
+        capture_all(FakeAdb([blank, blank], start=0), Meta(), profile, ocr, max_pages=2)
+        check("不是技能页直接报错", False, "没抛异常")
+    except RuntimeError as exc:
+        check("不是技能页直接报错", "技能学习" in str(exc), str(exc))
 
     print()
     if FAILS:

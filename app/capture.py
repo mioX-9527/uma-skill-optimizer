@@ -154,6 +154,43 @@ def scroll_to_top(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
     return int(cfg["max_steps"])
 
 
+def check_orientation(adb: Adb, meta: ScreenMeta) -> None:
+    """确认截图方向和版式一致。**不碰 OCR**,所以放在 warmup 之前 —— 横屏时能立刻报错,
+    不用先花两秒加载 OCR 模型。
+
+    `wm size` 报的永远是竖屏物理尺寸(720x1280),而 `screencap` 给的是旋转后的位图
+    (横屏时 1280x720)。方向一错,所有裁切框全落在错误位置,每一屏都读不出名字,
+    表现就是"读取不了"—— 而且不会报错,只会安静地空转 26 屏。
+    """
+    image = adb.screencap()
+    if image.size != meta.size:
+        raise RuntimeError(
+            f"截图是 {image.size[0]}x{image.size[1]},而模拟器分辨率是 {meta.width}x{meta.height}"
+            f" —— 模拟器现在是**横屏**。\n"
+            f"  赛马娘的技能页是竖屏,先把模拟器转回竖屏(雷电右侧工具栏的旋转按钮),"
+            f"再点「从模拟器读取」。"
+        )
+
+
+def check_on_skill_page(adb: Adb, profile: Profile, ocr: Ocr) -> None:
+    """确认当前真的停在「技能学习」列表:第一屏至少得读出一个技能名。
+
+    停在别的界面(别的游戏 / 育成已结束的结算页)时,一行技能都找不到。
+    不拦的话它会老老实实滚 26 屏、每帧跑一遍 OCR,几十秒后给一堆空结果。
+    """
+    image = adb.screencap()
+    if not any(r.name_text for r in read_page(image, profile, ocr, 0)):
+        adb.settle(0.5)  # 偶发:截图正落在滑动动画里,补一帧再判
+        image = adb.screencap()
+        if not any(r.name_text for r in read_page(image, profile, ocr, 0)):
+            fg = adb.foreground_package()
+            raise RuntimeError(
+                "一行技能都没读到,当前页面不像「技能学习」列表"
+                + (f"(前台应用:{fg})" if fg else "")
+                + "。\n  请先回到 育成 → 技能学习(能上下滚动的那一屏),再读。"
+            )
+
+
 def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
                 max_pages: int | None = None, progress=None,
                 read_evolve: bool = True) -> CaptureResult:
@@ -162,7 +199,11 @@ def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
             "版式还没校准(profile.calibrated=false),先跑 `python -m app.cli calibrate`。\n"
             "  坐标不对时硬抓只会把名字和价格串错行。"
         )
+    check_orientation(adb, meta)
     ocr.warmup()
+    check_on_skill_page(adb, profile, ocr)
+    if progress:
+        progress("已确认停在技能列表(竖屏)")
     result = CaptureResult()
     steps = scroll_to_top(adb, meta, profile, ocr, progress)
     if progress:

@@ -83,6 +83,15 @@ class Adb:
     def shell(self, *args: str) -> str:
         return str(self._run("shell", *args))
 
+    def foreground_package(self) -> str:
+        """前台应用包名(只用于报错时给出线索)。读不到返回空串,不抛。"""
+        try:
+            out = self.shell("dumpsys window | grep mCurrentFocus")
+        except AdbError:
+            return ""
+        m = re.search(r"mCurrentFocus=Window\{[^}]*?\s+([\w.]+)/", out)
+        return m.group(1) if m else ""
+
     # ── 连接 ────────────────────────────────────────────────
     def connect(self) -> ScreenMeta:
         """连上并确认设备在线;返回屏幕信息。"""

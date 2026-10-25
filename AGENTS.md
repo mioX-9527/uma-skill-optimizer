@@ -177,6 +177,13 @@ CLI 与网页结果必须一致。示例特意包含"单项 4.07 → 组合内�
 ## 7. 环境与已知坑(Windows + Git Bash)
 
 1. **批处理调 npm 必须写 `call npm`**,否则 npm(.cmd)执行完直接终止批处理,`pause` 不会执行 → 窗口闪退。用户踩过。
+1.5. **`.bat` 必须纯 ASCII,中文一律交给 Python 打印**(2026-10-25 实测)。
+   `chcp 65001` + 批处理里有非 ASCII 时,cmd 会**按字节错位重读文件**,把某行 echo 的尾巴当命令执行:
+   `'��」自动填技能和价格' is not recognized as an internal or external command`。
+   同一份文件里中文放第 5 行没事、放第 6 行就炸,取决于字节偏移 —— 任何一次编辑都可能把它挪到会炸的位置。
+   三个 bat 的真源是 `tools/fix-bat-encoding.py`(改 bat 请改那里再跑一遍,直接改 .bat 会被覆盖),
+   脚本会**断言纯 ASCII**,混进中文就报错退出。中文启动横幅放在 `app/main.py`(Python 在 chcp 65001 下输出 UTF-8 完全正常,实测 `sys.stdout.encoding == utf-8`)。
+   同理:bat 里连 CJK **文件名**也别写(`打开规划器.html` 那个存在性检查已移进 main.py)。
 2. **git 中文路径默认八进制转义**,`git ls-files | grep 打开规划器` 会误报不存在;用 `git -c core.quotepath=false ls-files`。commit 时大量 LF→CRLF warning 是正常的,别试图"修"。
 3. **vitest 必须用独立的 `vitest.config.ts`**:vitest 会读取 `vite.config.ts`,其中 `root:'web'` 会让 vitest 在 web/ 下找测试而报 "No test files found"。
 4. **tsconfig 没有 exactOptionalPropertyTypes**:vendored 的 ablate.ts 不兼容该选项。若要给本项目代码加,先改用 vendor 排除方案或推动上游修。
@@ -234,6 +241,16 @@ npm run web          # 浏览器打开 5183,载入默认示例点"开始计算",
    再补符号变体;真正区分 ○/◎ 靠 `match.resolve_rows()` 的**跨行价格消歧**(游戏里价格随等级单调,比 OCR 可靠)。
 4. **去重键是 (归一化名字, 价格),不能只用名字**:OCR 常把 ○/◎ 的符号都读丢,
    只按名字会把两个不同技能合并成一行。
+5. **开抓之前必须先预检,否则翻车是「静默」的**(2026-10-25 用户报"读取不了了"后补的):
+   - **横屏**:`wm size` 报的永远是竖屏物理尺寸(720×1280),而 `screencap` 给的是**旋转后的位图**
+     (横屏时 1280×720)。方向一错,所有裁切框全落在错误位置,每屏都读不出名字 ——
+     不报错、不中止,只会滚满 26 屏后给一堆空结果。`capture.check_orientation` 拿 `image.size` 跟
+     `meta.size` 比,**在 OCR warmup 之前**判,横屏立刻报「模拟器现在是横屏,先转回竖屏」。
+   - **不在技能页**(开着别的游戏 / 育成已结束在结算页):`检查第一屏是否至少读出一个技能名`。
+     失败时报错并带上**前台包名**(`Adb.foreground_package()`),用户一看就知道开错了东西。
+     这次现场就是:模拟器前台是 `com.bilibili.azurlane`(碧蓝航线),而赛马娘**根本没装**
+     (`pm list packages -3` 里只有 6 个第三方应用)。所以别急着怀疑 adb/OCR。
+   - 两条都有假帧回归:`app/tests/test_capture.py` 的「预检」段(横屏 1280×720、空页)。
 
 **版式是「锚定式」,不是固定行高**(2026-10-25 真机校准时改的,原因很硬):
 - **卡片高度不统一**:带「达成进化条件」标题的金卡更高,已获得的灰卡更矮,同一屏内就有差;

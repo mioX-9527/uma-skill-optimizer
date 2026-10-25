@@ -132,14 +132,25 @@ class Bridge:
 
 
 def main() -> int:
+    # 中文提示一律在这里打印,不写进 .bat —— cmd 在 chcp 65001 下解析含中文的批处理
+    # 会按字节错位重读,把 echo 行的尾巴当成命令执行(实测见 启动桌面版.bat 注释)。
+    print("=" * 44)
+    print("  赛马娘技能PT规划器 - 桌面版")
+    print("  窗口里点「从模拟器读取」,自动填技能和价格")
+    print("=" * 44)
+    print()
+
     try:
         import webview
     except ImportError:
         print("缺 pywebview。装一下:pip install pywebview", file=sys.stderr)
         return 1
     if not STANDALONE_HTML.is_file():
-        print(f"找不到 {STANDALONE_HTML},先跑 npm run web:standalone 生成单文件版。", file=sys.stderr)
+        print(f"找不到 {STANDALONE_HTML}", file=sys.stderr)
+        print("先跑一次 `npm run web:standalone` 生成单文件版;", file=sys.stderr)
+        print("不想装 Node 的话,直接双击同名 .html 也能用(只是不能自动读模拟器)。", file=sys.stderr)
         return 1
+    print("启动中... 关闭窗口即退出")
     webview.create_window(
         "赛马娘技能PT规划器(桌面版)",
         str(STANDALONE_HTML),
