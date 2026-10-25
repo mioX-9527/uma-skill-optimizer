@@ -33,7 +33,7 @@ npm test
 npm run optimize -- --input examples/input.example.json [--budget 1000] [--out result.json]
 ```
 
-> 引擎或数据更新后跑 `npm run web:standalone` 重新生成 打开规划器.html。
+> 以后模拟器(uma-race-sim)更新了,只需跑一次 `npm run sync`——引擎、技能/赛道数据和根目录的 打开规划器.html 会自动一起重新生成(未装依赖时只同步源码并提示)。
 
 输入 JSON 格式(完整示例见 [`examples/input.example.json`](examples/input.example.json)):
 

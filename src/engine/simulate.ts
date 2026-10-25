@@ -21,7 +21,7 @@ import {
   inRegion,
   type FrameState,
 } from './conditions';
-import { effectiveStatsOf } from './effstats';
+import { effectiveStatsOf, passiveBonusOf } from './effstats';
 import { phaseAt } from './phase';
 import { baseAccelOf, baseSpeedOf, lastSpurtSpeedOf, minSpeedOf, phaseTargetSpeed } from './speed';
 import {
@@ -127,13 +127,15 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
   let ashiiroRemaining = 0;
   let ashiiroDone = false;
   const sfOn = (runner.assumeStaminaFight ?? true) && staminaFightDistCoef(course.distance) > 0;
-  const sfRef =
-    (runner.stats.stamina - (runner.greenBonus.stamina ?? 0)) * MOTIVATION_WISDOM_MULT[runner.motivation] +
-    (runner.greenBonus.stamina ?? 0);
+  // 耐力对决参照值:面板×干劲 + 绿加成(绿不吃干劲,614tools worker Je 口径)
+  const sfGreen = passiveBonusOf(runner).stamina;
+  const sfRef = runner.stats.stamina * MOTIVATION_WISDOM_MULT[runner.motivation] + sfGreen;
   const sfBonus = sfOn && sfRef > 1200 ? Math.sqrt(sfRef - 1200) * 0.0085 * staminaFightDistCoef(course.distance) : 0;
 
-  // 全开冲刺:面板速度 ≥2001 且进入末脚后速度达冲刺目标(含坡度修正)时,额外速度渐增至 +1 m/s
-  const fsOn = (runner.fullSpurtEnabled ?? true) && runner.stats.speed >= FULL_SPURT_SPEED_GATE;
+  // 全开冲刺:速度 ≥2001(含绿加成,614tools B2 口径)且进入末脚后速度达冲刺目标(含坡度修正)时
+  const fsOn =
+    (runner.fullSpurtEnabled ?? true) &&
+    runner.stats.speed + passiveBonusOf(runner).speed >= FULL_SPURT_SPEED_GATE;
   const fsRate = fsOn ? (FULL_SPURT_RATE * baseAccelOf(course, runner, 2, false)) / Math.pow(distScale, 1.5) : 0;
   let fsStarted = false;
   let fsExtra = 0;
@@ -267,6 +269,8 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
     const frame: FrameState = { t, x, phase, isSpurt: spurtOn };
     for (const s of runner.skills) {
       if (s.precision === 'unsupported') continue;
+      // 常时被动(绿技能)已并入起跑属性(effstats passiveBonusOf),不走发动通道
+      if (s.effects.length > 0 && s.effects.every(e => e.type === 'passive')) continue;
       const once = s.cooldownSec === null || s.cooldownSec === undefined;
       if (once ? activated.has(s.id) : (readyAt.get(s.id) ?? 0) > t) continue;
       // 位置采样(消融):强制首次发动位置——未到指定位置前压制规则发动,到达即发动(跳过区段/动态判定)

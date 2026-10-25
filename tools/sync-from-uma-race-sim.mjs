@@ -75,3 +75,15 @@ writeFileSync(
 );
 
 console.log(`[sync] 完成: engine/analysis 源码与 skills/courses 数据已同步自 ${from}`);
+
+// 自动重新生成根目录单文件版(打开规划器.html),保持与引擎/数据同步;依赖未装时跳过并提示
+const viteInstalled = existsSync(join(projectRoot, 'node_modules/vite'));
+if (!viteInstalled) {
+  console.log('[sync] 跳过 打开规划器.html 重新生成(未安装依赖);请先 npm install 再跑一次 npm run sync');
+} else {
+  const { spawnSync } = await import('node:child_process');
+  const r = spawnSync('npm', ['run', 'web:standalone'], { cwd: projectRoot, stdio: 'inherit', shell: true });
+  if (r.status !== 0) {
+    console.error('[sync] 警告: 打开规划器.html 重新生成失败(网页版源码已同步,可手动跑 npm run web:standalone)');
+  }
+}
