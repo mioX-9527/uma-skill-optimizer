@@ -7,13 +7,21 @@
   "scripts": {
     "sync": "node tools/sync-from-uma-race-sim.mjs",
     "optimize": "tsx src/cli.ts",
+    "web": "vite",
+    "web:build": "vite build",
     "test": "vitest run",
     "typecheck": "tsc -p ."
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^5.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "tsx": "^4.19.0",
     "typescript": "^5.5.0",
+    "vite": "^7.3.7",
     "vitest": "^3.0.0"
   }
 }
