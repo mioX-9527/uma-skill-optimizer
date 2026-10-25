@@ -60,7 +60,8 @@ class Bridge:
                 "size": [meta.width, meta.height],
                 "density": meta.density,
                 "calibrated": profile.calibrated,
-                "rows": len(profile.rows()),
+                # 版式是按钮锚定式,没有"固定行数"这个概念了,这里给出列表可视区更有用
+                "list": [profile.list_top, profile.list_bottom],
             }
         except (AdbError, FileNotFoundError, OSError) as exc:
             return self._err(exc)

@@ -6,7 +6,10 @@ import {
   PRECISION_LABEL, RARITY_LABEL, runOptimize, searchSkills,
   type OptimizerResult, type PlanSkill, type PlanState,
 } from './api.js';
-import { applyCapture, captureSummary, desktopBridge, type CapturedSkill } from './desktop.js';
+import {
+  applyCapture, captureSummary, waitForDesktopBridge,
+  type CapturedSkill, type DesktopBridge,
+} from './desktop.js';
 
 const STAT_LABELS: readonly { key: keyof PlanState['stats']; label: string }[] = [
   { key: 'speed', label: '速度' },
@@ -75,8 +78,11 @@ export default function App() {
   const [reading, setReading] = useState(false);
   const [readLog, setReadLog] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
-  // 只有被 pywebview 装进桌面窗时才有值;普通浏览器/单文件版恒为 null,按钮不出现
-  const bridge = useMemo(() => desktopBridge(), []);
+  // 只有被 pywebview 装进桌面窗时才有值;普通浏览器/单文件版恒为 null,按钮不出现。
+  // 注意必须等注入完成:pywebview 是页面加载**之后**才创建 window.pywebview 的,
+  // 首帧直接读会永远拿不到(实测就是窗口开了但没有「从模拟器读取」按钮)。
+  const [bridge, setBridge] = useState<DesktopBridge | null>(null);
+  useEffect(() => waitForDesktopBridge(setBridge), []);
 
   const course = courseOf(plan.courseId);
 

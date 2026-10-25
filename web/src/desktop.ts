@@ -39,6 +39,47 @@ export function desktopBridge(): DesktopBridge | null {
   return w.pywebview?.api ?? null;
 }
 
+/**
+ * 等桌面壳就绪。
+ *
+ * **不能只在首帧读一次** `window.pywebview` —— pywebview 是在页面加载完之后才注入这个对象的
+ * (实测 0.5s 时已有,但 React 首帧比它早),首帧读到 null 就再也不会更新,
+ * 结果窗口打开了却没有「从模拟器读取」按钮。
+ *
+ * 双保险:监听官方 `pywebviewready` 事件 + 100ms 轮询兜底(有些版本/后端不触发事件)。
+ * 返回取消函数,组件卸载时调用。
+ */
+export function waitForDesktopBridge(onReady: (b: DesktopBridge) => void): () => void {
+  let done = false;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  let giveUp: ReturnType<typeof setTimeout> | undefined;
+
+  const check = () => {
+    if (done) return true;
+    const b = desktopBridge();
+    if (b === null) return false;
+    done = true;
+    if (timer !== undefined) clearInterval(timer);
+    if (giveUp !== undefined) clearTimeout(giveUp);
+    onReady(b);
+    return true;
+  };
+
+  const onEvent = () => { check(); };
+
+  if (!check()) {
+    window.addEventListener('pywebviewready', onEvent);
+    timer = setInterval(check, 100);
+    giveUp = setTimeout(() => { if (timer !== undefined) clearInterval(timer); }, 5000);
+  }
+
+  return () => {
+    window.removeEventListener('pywebviewready', onEvent);
+    if (timer !== undefined) clearInterval(timer);
+    if (giveUp !== undefined) clearTimeout(giveUp);
+  };
+}
+
 /** 把抓到的技能并进计划:替换候选列表、用 OCR 到的 PT 余额当预算(有才覆盖)。 */
 export function applyCapture<T>(
   current: { skills: readonly T[]; budget: number },
