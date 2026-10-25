@@ -1,0 +1,15 @@
+{
+  "note": "PT 基价兜底表:仅在输入未提供 pt 时使用,为估算值;实际价格请以游戏内技能购买界面为准(折扣因号而异,建议直接填实际显示价格)。",
+  "defaultByRarity": {
+    "normal": 100,
+    "rareEvolved": 200,
+    "evolved": 200,
+    "unique1": 200,
+    "unique2": 200,
+    "unique3": 200,
+    "unique4": 200,
+    "unique5": 200,
+    "unique6": 200,
+    "uniqueHeir": 200
+  }
+}

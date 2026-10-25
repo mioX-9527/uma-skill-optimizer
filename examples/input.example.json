@@ -1,0 +1,23 @@
+{
+  "course": "东京 草 2400m",
+  "budget": 1000,
+  "runner": {
+    "stats": { "speed": 1200, "stamina": 1000, "power": 1100, "guts": 700, "wisdom": 900 },
+    "tactic": "senko",
+    "distanceAptitude": "A",
+    "surfaceAptitude": "A",
+    "motivation": "normal"
+  },
+  "skills": [
+    { "name": "中距离直线◎", "pt": 180 },
+    { "name": "迅疾如风", "pt": 180 },
+    { "id": "901121", "pt": 120 },
+    { "name": "弯道恢复○", "pt": 90 },
+    { "name": "直线恢复", "pt": 90 },
+    { "name": "一鼓作气", "pt": 90 },
+    { "name": "抢先", "pt": 90 },
+    { "name": "弯里横", "pt": 90 },
+    { "name": "随势而动", "pt": 90 },
+    { "name": "放学后的乐趣", "pt": 90 }
+  ]
+}

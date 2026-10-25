@@ -1,0 +1,19 @@
+{
+  "name": "uma-skill-optimizer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "赛马娘(国服)技能PT规划器:按实际PT预算,基于赛道模拟求马身收益最大的技能购买组合",
+  "scripts": {
+    "sync": "node tools/sync-from-uma-race-sim.mjs",
+    "optimize": "tsx src/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p ."
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0",
+    "vitest": "^3.0.0"
+  }
+}
