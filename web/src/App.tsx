@@ -469,20 +469,21 @@ export default function App() {
               {result.chosen.map((c, i) => (
                 <tr key={c.id}>
                   <td>{i + 1}</td>
-                  <td>
-                    {c.name}
-                    {c.evolvesTo !== null && <span className="dim"> → {c.evolvesTo}</span>}
-                    {c.evolveOptions !== undefined && (
-                      <div className="dim">
-                        方向:{c.evolveOptions.map(o => `${o.name} ${o.soloBody.toFixed(2)}`).join(' / ')}
-                      </div>
-                    )}
-                  </td>
+                  <td>{c.name}</td>
                   <td className="num">{c.pt}</td>
                   <td className="num">
-                    {c.soloBodyBefore !== c.soloBody
-                      ? <>{c.soloBodyBefore.toFixed(2)} → <b>{c.soloBody.toFixed(2)}</b></>
-                      : c.soloBody.toFixed(2)}
+                    {c.evolvesTo !== null ? (
+                      <>
+                        {c.soloBodyBefore.toFixed(2)} → <b>{c.soloBody.toFixed(2)}</b>
+                        {/* 用户要求的标注格式:进化后技能名(来源技能名+进化) */}
+                        <div className="dim">{c.evolvesTo}（{c.name}进化）</div>
+                        {c.evolveOptions !== undefined && c.evolveOptions.length > 1 && (
+                          <div className="dim">
+                            方向:{c.evolveOptions.map(o => `${o.name} ${o.soloBody.toFixed(2)}`).join(' / ')}
+                          </div>
+                        )}
+                      </>
+                    ) : c.soloBody.toFixed(2)}
                   </td>
                   <td className="num good">{c.finalMarginalBody.toFixed(2)}</td>
                   <td className="num">{c.finalMarginalSec.toFixed(3)}</td>

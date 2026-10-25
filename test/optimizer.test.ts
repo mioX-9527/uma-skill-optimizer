@@ -197,7 +197,7 @@ describe('区段随机取位技能按期望计价', () => {
    * 「怎么还是只有迅速果断」(2026-10-25 真实踩坑:网页链路把进化字段弄丢了)。
    *
    * 用真实关系:迅速果断(200591, +0.35 速度 2.4s)→ 盛夏的奋力一搏(100102111, 同值但 **4s**)。
-   * 同赛道上未进化期望 ~1.11 马身,进化后 ~2.2(持续时间 2.4s→4s,≈×1.67)。
+   * 中山2500 差行上未进化期望 ~1.11 马身,进化后 ~1.86。
    */
   it('申报 evolvesTo 后:按进化后的数值算收益,且给出进化前对照值', () => {
     const quick = SKILLS.find(s => s.id === '200591')!;
@@ -224,13 +224,14 @@ describe('区段随机取位技能按期望计价', () => {
 
   /**
    * 多条进化方向:逐个方向都算一遍,取收益最高的当主方案,全部列出来(用户明确要求)。
-   * 目前 BWIKI 数据里都是单方向,所以这里用两个真实技能**合成**一个多方向样本
-   * (100102111 = 4s 持续,102101111 = 0.45 速度;二者都真实存在,只是不会同时是某技能的进化)。
+   * 用**真实方向**:迅速果断(200591)有 6 个进化(盛夏的奋力一搏/雷腾云奔/赶快开始吧!/
+   * 胜利之路/疾行!英雄登场!/魔术:阴魂不散),这里取其中两个真实存在的技能合成样本。
+   * 实测(中山2500 差行):盛夏的奋力一搏 1.86 > 雷腾云奔 1.43 > 胜利之路 1.11 > 赶快开始吧! 0.79。
    */
   it('多条进化方向:逐方向计价、取最优、全部列出', () => {
     const quick = SKILLS.find(s => s.id === '200591')!;
-    const a = SKILLS.find(s => s.id === '100102111')!; // +0.35 / 4s
-    const b = SKILLS.find(s => s.id === '102101111')!; // +0.45 / 2.4s
+    const a = SKILLS.find(s => s.id === '100102111')!; // +0.35 / 4s(实测 1.86,最优)
+    const b = SKILLS.find(s => s.id === '102101111')!; // +0.45 / 2.4s(实测 1.43)
     const r = optimize({
       course: nakayama, runner: sashi,
       candidates: [{ id: quick.id, pt: 180, evolvesTo: a.id, evolveAlternatives: [b.id] }],
@@ -239,7 +240,7 @@ describe('区段随机取位技能按期望计价', () => {
     const row = r.chosen.find(c => c.id === quick.id)!;
     expect(row.evolveOptions).toBeDefined();
     expect(row.evolveOptions).toHaveLength(2);
-    // 主方案 = 收益最高的那个方向
+    // 主方案 = 收益最高的那个方向(这里是 4s 的盛夏的奋力一搏)
     const best = row.evolveOptions![0]!;
     expect(row.evolvesTo).toBe(best.name);
     expect(row.soloBody).toBeCloseTo(best.soloBody, 2);
