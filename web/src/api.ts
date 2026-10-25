@@ -81,7 +81,12 @@ export function searchSkills(query: string, limit = 14): readonly SkillEntry[] {
   const scored: Array<{ s: SkillEntry; score: number }> = [];
   for (const s of SKILLS) {
     if (s.cnReleased === false) continue;
+    // 固有技能本体(unique1~6)在育成里靠觉醒/自带获得,技能购买界面买不到;
+    // 界面能学的是继承版(uniqueHeir),数值只有本体的 50~60%。搜索里别给本体,免得选错。
+    if (/^unique[1-6]$/.test(s.rarity)) continue;
     const names = [s.name, s.nameJa ?? '', s.nameTrad ?? ''].map(normalizeName);
+    // 继承版在界面上的显示名不带「(继承)」,补一个别名让裸名字也能搜到
+    if (s.rarity === 'uniqueHeir') names.push(normalizeName(s.name.replace(/[（(]继承[）)]/g, '')));
     let score = -1;
     if (names[0] === q) score = 0;
     else if (names.some(n => n === q)) score = 1;

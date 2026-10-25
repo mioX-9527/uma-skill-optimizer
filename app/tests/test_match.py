@@ -95,6 +95,18 @@ def main() -> int:
     if jp_only:
         check("仅日服技能不命中", INDEX.exact(jp_only) == [], jp_only)
 
+    print("固有技能只能命中继承版")
+    # 购买界面能学到的固有技能一定是继承版(uniqueHeir),数值只有本体的 50~60%。
+    # 本体的名字不带「(继承)」,OCR 读到的也是不带后缀的名字,所以很容易误命中本体。
+    m = match_row(Row(name_text="向着，更远的地方……", price_text="130"), INDEX)
+    check("命中 900591(继承)而不是 100591(本体)",
+          m.skill is not None and m.skill.id == "900591", str(m))
+    check("稀有度是 uniqueHeir", m.skill is not None and m.skill.rarity == "uniqueHeir", str(m))
+    check("索引里没有 unique1~6 本体",
+          not any(r.rarity in {f"unique{i}" for i in range(1, 7)} for r in INDEX.skills))
+    # 直接拿本体 id 去查不该命中
+    check("本体 id 100591 不在索引里", not any(r.id == "100591" for r in INDEX.skills))
+
     print()
     if FAILS:
         print(f"失败 {len(FAILS)} 项:{', '.join(FAILS)}")

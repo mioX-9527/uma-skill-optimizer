@@ -22,6 +22,8 @@ from pathlib import Path
 # 等级符号 → 价格序(数字越大越贵)。只收技能名里真实会用到的。
 SYMBOL_RANK: dict[str, int] = {"×": 0, "○": 1, "◎": 2}
 SYMBOLS = tuple(SYMBOL_RANK)
+# 固有技能本体(unique1~6);继承版是 uniqueHeir,单独处理
+_UNIQUE_BASE = re.compile(r"^unique[1-6]$")
 # 全角/易混字符归一:OCR 常把 ○ 认成句号或零
 _CONFUSIONS = {"。": "○", "０": "0", "１": "1", "２": "2", "３": "3", "４": "4",
                "５": "5", "６": "6", "７": "7", "８": "8", "９": "9", "，": ","}
@@ -118,9 +120,20 @@ class SkillIndex:
                 continue
             if is_unbuyable(s):               # × 类减益绿技能,买不到
                 continue
+            if _UNIQUE_BASE.match(s.get("rarity", "")):
+                # 固有技能**本体**(unique1~6):育成里靠觉醒/自带获得,技能购买界面买不到。
+                # 列表里出现的同名技能一定是**继承版**(uniqueHeir),而继承版的数值只有本体的 50~60%
+                # (实测 93 对全部不同:如 向着更远的地方 acc 0.4/4.0s vs 0.2/2.4s)。
+                # 不剔除的话,OCR 读到裸名字会精确命中本体,收益直接被高估一倍。
+                # 反正 481 个本体里有 272 个压根没有继承版,更不可能出现在购买列表。
+                continue
             ref = SkillRef(id=s["id"], name=s["name"], rarity=s.get("rarity", ""), precision=s.get("precision", ""))
             self.skills.append(ref)
-            for alias in (s.get("name"), s.get("nameJa"), s.get("nameTrad")):
+            aliases = [s.get("name"), s.get("nameJa"), s.get("nameTrad")]
+            if s.get("rarity") == "uniqueHeir":
+                # 界面显示的是不带「(继承)」的名字,补一个别名让裸名字能命中
+                aliases.append(re.sub(r"[（(]继承[）)]", "", s["name"]))
+            for alias in aliases:
                 if not alias:
                     continue
                 self._by_norm.setdefault(normalize(alias), []).append(ref)
