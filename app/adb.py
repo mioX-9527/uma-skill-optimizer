@@ -118,6 +118,10 @@ class Adb:
         return bytes(self._run("exec-out", "screencap", "-p", binary=True))
 
     # ── 操作 ────────────────────────────────────────────────
+    def tap(self, x: int, y: int) -> None:
+        """点按坐标。只用于打开/关闭「技能进化」这类纯查看弹窗,不做任何会改存档的操作。"""
+        self.shell("input", "tap", str(x), str(y))
+
     def swipe(self, x1: int, y1: int, x2: int, y2: int, duration_ms: int = 250) -> None:
         self.shell("input", "swipe", str(x1), str(y1), str(x2), str(y2), str(duration_ms))
 

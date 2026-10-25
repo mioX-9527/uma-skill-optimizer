@@ -70,6 +70,47 @@ def read_page(image: Image.Image, profile: Profile, ocr: Ocr, page: int) -> list
     return rows
 
 
+def attach_evolutions(adb: Adb, image: Image.Image, profile: Profile, ocr: Ocr,
+                      rows: list[Row], progress=None) -> int:
+    """把这一屏里「可进化」的金技能逐个点开读弹窗,结果挂到对应行上。
+
+    为什么要真点:静态映射不知道当前马娘是否满足条件,也不保证覆盖所有分支;
+    弹窗里才写着「条件已达成」。实测一次 ≈ 2.5 秒(点开 1.1 + OCR 0.5 + 返回 0.8)。
+    """
+    from .evolve import find_all_buttons, read_evolution
+
+    if not rows:
+        return 0
+    buttons = find_all_buttons(image, profile.list_top, profile.list_bottom)
+    if not buttons:
+        return 0
+    used: set[int] = set()
+    opened = 0
+    for bx, by in buttons:
+        # 找 y 最接近的那一行;只有可购买行(有绿色 + 按钮)才值得读
+        best_i, best_d = -1, 10 ** 9
+        for i, r in enumerate(rows):
+            if i in used:
+                continue
+            d = abs(r.y - by)
+            if d < best_d:
+                best_i, best_d = i, d
+        if best_i < 0 or best_d > 90:
+            continue
+        used.add(best_i)
+        evo = read_evolution(adb, ocr, image, type("Btn", (), {"tap_x": bx, "tap_y": by, "row_cy": by})())
+        if evo is None:
+            if progress:
+                progress(f"    进化弹窗没读到(行 cy={rows[best_i].y})")
+            continue
+        rows[best_i].evolve = evo
+        opened += 1
+        if progress:
+            flag = "条件已达成" if evo.condition_met else "条件未达成"
+            progress(f"    可进化:{evo.from_name} → {evo.to_name}({flag})")
+    return opened
+
+
 def _signature(rows: list[Row]) -> tuple[str, ...]:
     return tuple(normalize(r.name_text) for r in rows)
 
@@ -113,7 +154,8 @@ def scroll_to_top(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
 
 
 def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
-                max_pages: int | None = None, progress=None) -> CaptureResult:
+                max_pages: int | None = None, progress=None,
+                read_evolve: bool = True) -> CaptureResult:
     if not profile.calibrated:
         raise RuntimeError(
             "版式还没校准(profile.calibrated=false),先跑 `python -m app.cli calibrate`。\n"
@@ -155,10 +197,19 @@ def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
         blank = [r for r in rows if not r.name_text]
         if blank:
             result.unread.append(f"第{page + 1}屏 cy={[r.y for r in blank]}")
+
+        # 可进化的金技能:点开「进化 ⓘ」读弹窗(只读操作,用返回键关闭)
+        if read_evolve:
+            attach_evolutions(adb, image, profile, ocr, rows, progress)
         new = 0
         for row in rows:
             key = (normalize(row.name_text), row.price)
-            if not key[0] or key in seen:
+            if not key[0]:
+                continue
+            if key in seen:
+                # 同一技能跨屏重现:后一屏读到了进化信息就补上(前一屏可能在边缘没点到)
+                if seen[key].evolve is None and row.evolve is not None:
+                    seen[key].evolve = row.evolve
                 continue
             seen[key] = row
             new += 1

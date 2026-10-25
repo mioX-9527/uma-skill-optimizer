@@ -187,6 +187,23 @@ def cmd_capture(args: argparse.Namespace) -> int:
     chain_map = load_chains()
     pairs = pairs_within(cand_ids, chain_map)
 
+    # 可进化关系:点开「进化 ⓘ」读到的。
+    # 进化后的技能**不在候选列表里**(它不用单独买),必须从全量技能库查
+    evolutions = []
+    for m in matches:
+        evo = getattr(m.base, "evolve", None)
+        if evo is None or m.skill is None:
+            continue
+        hits = index.exact(evo.to_name) or [r for r, _ in index.fuzzy(evo.to_name, threshold=0.8, limit=3)]
+        if len(hits) != 1:
+            _say(f"[注意] 进化技能「{evo.to_name}」匹配到 {len(hits)} 个候选,该技能按未进化算")
+            continue
+        evolutions.append({
+            "fromId": m.skill.id, "from": m.skill.name,
+            "toId": hits[0].id, "to": hits[0].name,
+            "conditionMet": evo.condition_met,
+        })
+
     plan = {
         "course": args.course or "东京 草 2400m",
         "budget": result.pt_balance if result.pt_balance else args.budget,
@@ -197,6 +214,7 @@ def cmd_capture(args: argparse.Namespace) -> int:
         },
         "skills": [{"id": s["id"], "pt": s["pt"]} for s in skills],
         "chains": [{"skillId": g, "prereqId": p} for g, p in pairs],
+        "evolutions": evolutions,
     }
     out = Path(args.out or (DEBUG_DIR / "plan.json"))
     out.parent.mkdir(parents=True, exist_ok=True)

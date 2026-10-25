@@ -19,6 +19,12 @@ export interface CandidateSkill {
    * 给出 requires 后:单独买金按 304 计(会自动带上前置),先买前置再买金按 304-160=144 计。
    */
   readonly requires?: string;
+  /**
+   * 进化后的技能 id(条件已达成时才有值)。
+   * 进化是金技能**免费**变的,不额外花 PT,但效果不同(一般更强)。
+   * 从游戏「技能进化」弹窗读到,见 app/evolve.py。
+   */
+  readonly evolvesTo?: string;
 }
 
 export interface OptimizerInput {
@@ -44,8 +50,12 @@ export interface ChosenSkill {
   readonly listPt: number;
   /** 会一并买下的下位技能名(没有则为空数组) */
   readonly includesPrereq: readonly string[];
-  /** 单独购买时的马身收益 */
+  /** 单独购买时的马身收益(已按进化后的数值算) */
   readonly soloBody: number;
+  /** 进化后的技能名;没进化/条件未达成为空 */
+  readonly evolvesTo: string | null;
+  /** 不进化时这个技能单独的收益,用于对照(未进化时等于 soloBody) */
+  readonly soloBodyBefore: number;
   /** 在最终组合内的边际马身(leave-one-out 口径) */
   readonly finalMarginalBody: number;
   /** 在最终组合内的边际时间收益(秒) */
@@ -96,6 +106,10 @@ interface Cand {
   readonly requires: readonly string[];
   /** 下位技能的显示价之和:当前置已在组合里时,可抵扣掉这么多 */
   readonly requiresPt: number;
+  /** 进化后的技能(条件已达成时才有);模拟用它,PT 不变 */
+  readonly evolved: SkillEntry | undefined;
+  /** 未进化时的单项收益(秒),用来对照进化带来多少 */
+  soloSecBefore: number;
   /** 单独购买时的时间收益(秒) */
   soloSec: number;
   /** 最近一次已知的时间边际(秒) */
@@ -220,14 +234,18 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     const prePt = preListed
       ? (input.candidates.find(x => x.id === c.requires)?.pt ?? 0)
       : 0;
+    // 条件已达成 → 结束养成时会免费进化,模拟应该用进化后的数值
+    const evolved = c.evolvesTo !== undefined ? SKILL_INDEX.get(c.evolvesTo) : undefined;
     return {
       id: c.id,
       skill,
       pt: c.pt,
-      withSkills: preListed ? [pre!, skill] : [skill],
+      withSkills: preListed ? [pre!, evolved ?? skill] : [evolved ?? skill],
       requires: preListed ? [c.requires!] : [],
       requiresPt: prePt,
+      evolved,
       soloSec: 0,
+      soloSecBefore: 0,
       lastMarginal: 0,
       state: 'pool' as const,
       blockedDetail: null,
@@ -271,6 +289,10 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     if (c.state === 'blocked') continue;
     // 带前置的候选,单独买等于把前置一起买了,所以按 withSkills 算单项收益
     c.soloSec = baseSim.finishTimeSec - sim(c.withSkills).finishTimeSec;
+    // 进化前的对照值:只看这个技能本身,不含前置
+    c.soloSecBefore = c.evolved === undefined
+      ? c.soloSec
+      : baseSim.finishTimeSec - sim([c.skill]).finishTimeSec;
     c.lastMarginal = c.soloSec;
   }
   for (const c of cands) {
@@ -429,6 +451,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
           .map(r => SKILL_INDEX.get(r)?.name)
           .filter((n): n is string => n !== undefined),
         soloBody: c.soloSec * bodyPerSec,
+        evolvesTo: c.evolved?.name ?? null,
+        soloBodyBefore: c.soloSecBefore * bodyPerSec,
         finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
         finalMarginalSec: finalMarginals.get(c.id) ?? 0,
       };

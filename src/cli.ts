@@ -60,6 +60,15 @@ interface PlanInput {
    * 列表里金技能显示的价格已包含前置价,不声明这个关系会把「金 + 前置」重复计费。
    */
   readonly chains?: readonly { readonly skillId: string; readonly prereqId: string }[];
+  /**
+   * 可进化关系(可选),由游戏「技能进化」弹窗读到。
+   * conditionMet=true 表示当前马娘已满足条件,结束养成时会免费进化,此时按进化后的数值算收益。
+   */
+  readonly evolutions?: readonly {
+    readonly fromId: string;
+    readonly toId: string;
+    readonly conditionMet: boolean;
+  }[];
 }
 
 function parseArgs(argv: readonly string[]): Record<string, string | boolean> {
@@ -176,11 +185,22 @@ function main(): void {
   // 上下位关系:只有当**前置也在候选里**才生效(前置不在=已经买过,显示价里本来就不含它)
   const chainMap = new Map((plan.chains ?? []).map(c => [String(c.skillId), String(c.prereqId)] as const));
   const candIdSet = new Set(resolved.map(r => r.skill.id));
+  // 进化:只有「条件已达成」才按进化后算(结束养成时会自动进化,不额外花 PT)。
+  // 注意 toId 是进化后的技能,**它本身不在候选列表里**(不用单独买),所以只校验 fromId。
+  const evoMap = new Map(
+    (plan.evolutions ?? [])
+      .filter(e => e.conditionMet && candIdSet.has(e.fromId))
+      .map(e => [e.fromId, e.toId] as const),
+  );
   const candidates = resolved.map(r => {
     const req = chainMap.get(r.skill.id);
-    return req !== undefined && candIdSet.has(req)
-      ? { id: r.skill.id, pt: r.pt, requires: req }
-      : { id: r.skill.id, pt: r.pt };
+    const evo = evoMap.get(r.skill.id);
+    return {
+      id: r.skill.id,
+      pt: r.pt,
+      ...(req !== undefined && candIdSet.has(req) ? { requires: req } : {}),
+      ...(evo !== undefined ? { evolvesTo: evo } : {}),
+    };
   });
   const ptOf = new Map(candidates.map(c => [c.id, c.pt] as const));
   const nameOf = new Map(resolved.map(r => [r.skill.id, r.skill.name] as const));
@@ -210,15 +230,22 @@ function main(): void {
   result.chosen.forEach((c, i) => {
     // 实付价与标价不同时(前置已买,扣掉了那部分)标出来;含前置的也标
     const ptCell = c.pt !== c.listPt ? `${c.pt}*` : String(c.pt);
-    const nameCell = c.includesPrereq.length > 0 ? `${c.name}(含${c.includesPrereq.join('+')})` : c.name;
+    const parts: string[] = [];
+    if (c.includesPrereq.length > 0) parts.push(`含${c.includesPrereq.join('+')}`);
+    if (c.evolvesTo !== null) parts.push(`⇒进化 ${c.evolvesTo}`);
+    const nameCell = parts.length > 0 ? `${c.name}(${parts.join(',')})` : c.name;
+    // 进化过的给出「未进化 → 进化后」对照,一眼看出进化值多少
+    const soloCell = c.evolvesTo !== null
+      ? `${fmtBody(c.soloBodyBefore)}→${fmtBody(c.soloBody)}`
+      : fmtBody(c.soloBody);
     console.log(tableRow(
-      [String(i + 1), nameCell, ptCell, fmtBody(c.soloBody), fmtBody(c.finalMarginalBody), c.finalMarginalSec.toFixed(3)],
+      [String(i + 1), nameCell, ptCell, soloCell, fmtBody(c.finalMarginalBody), c.finalMarginalSec.toFixed(3)],
       [W.no, W.name, W.pt, W.solo, W.marg, W.sec],
       ['left', 'left', 'right', 'right', 'right', 'right'],
     ));
   });
-  if (result.chosen.some(c => c.pt !== c.listPt)) {
-    console.log('  * 前置技能已计入组合,这里显示的是扣掉前置后的实付价(合计已按实付计)');
+  if (result.chosen.some(c => c.evolvesTo !== null)) {
+    console.log('  ⇒进化 = 该金技能条件已达成,结束养成时免费变成进化技;「单独马身」显示 未进化→进化后');
   }
 
   if (result.rejected.length > 0) {

@@ -1,0 +1,6043 @@
+{
+  "generatedAt": "2026-10-25T13:01:54.757Z",
+  "source": "BWIKI action=parse HTML: 技能页「可进化技能」栏(模板内嵌 query,不在 SMW 属性里)",
+  "note": "金技能达成条件后免费进化成 to; 两者效果不同,要分别算收益",
+  "count": 251,
+  "evolutions": [
+    {
+      "fromId": "200014",
+      "from": "顺时针恶煞",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "106701211",
+      "to": "顺时针的回旋曲",
+      "toNameJa": "右回りの輪舞曲",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "200034",
+      "from": "府中天才",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "stamina",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "wisdom",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "103703111",
+      "to": "府中骑士",
+      "toNameJa": "Ritter von Fuchu",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "stamina",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "wisdom",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "200064",
+      "from": "淀之奇才",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "stamina",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "wisdom",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "103003211",
+      "to": "淀区祝福",
+      "toNameJa": "淀の祝福",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "stamina",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "wisdom",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "200154",
+      "from": "良场地恶煞",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "107701111-b2",
+      "to": "草地的主角(2)",
+      "toNameJa": "ターフの主人公",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 40
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 40
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "200164",
+      "from": "不佳路况恶煞",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "100703211",
+      "to": "爱惊涛拍岸的黄金之船",
+      "toNameJa": "荒磯好みの黄金船",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型14",
+          "value": 0.1
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "200174",
+      "from": "春初暖风",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "106102211",
+      "to": "春风吹拂，樱花飞舞",
+      "toNameJa": "春風吹きて、桜舞う",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "200194",
+      "from": "秋初强风",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "101702211",
+      "to": "风霜高洁",
+      "toNameJa": "風霜高潔",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "200331",
+      "from": "弧线大师",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "101701211",
+      "to": "一击制胜",
+      "toNameJa": "鎧袖一触",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "200341",
+      "from": "曲线行家",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100601211",
+      "to": "怪物般的过弯",
+      "toNameJa": "怪物的コーナリング",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200351",
+      "from": "圆弧艺术家",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "101502111",
+      "to": "圆舞曲艺术家",
+      "toNameJa": "円舞曲のマエストロ",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.075
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "200361",
+      "from": "迅疾如风",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101302211",
+      "to": "直到天空的尽头",
+      "toNameJa": "空の果てまで",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200371",
+      "from": "一阵狂风",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104202111-b2",
+      "to": "驾驭密史脱拉风(2)",
+      "toNameJa": "ミストラルに乗って",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200381",
+      "from": "喘口气",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "100801111",
+      "to": "酒壶小憩",
+      "toNameJa": "スキットルブレイク",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200431",
+      "from": "专心一意",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型10",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "100201111",
+      "to": "究极专注",
+      "toNameJa": "最大集中",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型10",
+          "value": 0.4
+        },
+        {
+          "type": "acceleration",
+          "value": 0.2
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200441",
+      "from": "钢铁意志",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        }
+      ],
+      "fromDurationSec": 2,
+      "toId": "105201111",
+      "to": "还没结束哦！",
+      "toNameJa": "まだまだだよ！",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.075
+        },
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        }
+      ],
+      "toDurationSec": 2
+    },
+    {
+      "fromId": "200451",
+      "from": "人气舞娘",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.045
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104601111",
+      "to": "备受瞩目的优俊偶像登场★",
+      "toNameJa": "大注目のウマドル参上★",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.045
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "200461",
+      "from": "兴奋起来了！",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "100102211",
+      "to": "盛夏总大将",
+      "toNameJa": "真夏の総大将",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "200471",
+      "from": "不屈之心",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "105201211",
+      "to": "我不会输哦！",
+      "toNameJa": "まけないからね！",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200481",
+      "from": "耳边风",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "106201111",
+      "to": "就做我自己",
+      "toNameJa": "ゴーイングマイウェイ",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200491",
+      "from": "不停步的女孩",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.025
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100802111",
+      "to": "看我超过你！",
+      "toNameJa": "ぶっ差してやるぜ！",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.025
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200501",
+      "from": "赛道的魔术师",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101801211",
+      "to": "水月镜花",
+      "toNameJa": "水月鏡花",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        },
+        {
+          "type": "currentSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200511",
+      "from": "全神贯注",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "100101211",
+      "to": "实现梦想的最后冲刺",
+      "toNameJa": "夢叶える末脚",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "200531",
+      "from": "先发制人",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.2,
+      "toId": "102601111",
+      "to": "超频",
+      "toNameJa": "クロックアップ",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.5
+        }
+      ],
+      "toDurationSec": 1.2
+    },
+    {
+      "fromId": "200541",
+      "from": "逃脱术",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100202111",
+      "to": "蔚蓝逃脱",
+      "toNameJa": "瑠璃色エスケイプ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200551",
+      "from": "逃亡者",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100201211",
+      "to": "异次元的逃亡者",
+      "toNameJa": "異次元の逃亡者",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "currentSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200561",
+      "from": "游刃有余",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "100303211",
+      "to": "尽享欢乐",
+      "toNameJa": "盤楽遊嬉",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.035
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200571",
+      "from": "比赛策略家",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "100302111",
+      "to": "比赛天才",
+      "toNameJa": "レースの天才",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200581",
+      "from": "速度之星",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "100502211",
+      "to": "璀璨的顶级巨星",
+      "toNameJa": "煌めきのトップスタァ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "200591",
+      "from": "迅速果断",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "100102111",
+      "to": "盛夏的奋力一搏",
+      "toNameJa": "真夏の思い切り",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "200601",
+      "from": "换乘能手",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "101101211",
+      "to": "坚定不移的斗志",
+      "toNameJa": "不退転の意思",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "unsupported",
+          "label": "效果类型8",
+          "value": 5
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "200611",
+      "from": "登天之龙",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101402211",
+      "to": "登天神鹰",
+      "toNameJa": "昇りコンドル",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "200621",
+      "from": "沉睡的狮子",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "105001111",
+      "to": "鬼气森森",
+      "toNameJa": "鬼気森然",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200631",
+      "from": "疾风怒涛",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101201211",
+      "to": "怒涛般的涌潮",
+      "toNameJa": "怒濤のポロロッカ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200641",
+      "from": "迫近的暗影",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 0.9,
+      "toId": "100703111-b2",
+      "to": "席卷而来的爱(2)",
+      "toNameJa": "押し寄せるジュテーム",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200651",
+      "from": "短途涡轮",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "103802211",
+      "to": "＃美丽短途赛",
+      "toNameJa": "＃ビューティースプリント",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "unsupported",
+          "label": "效果类型8",
+          "value": 5
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200671",
+      "from": "电击光辉",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "acceleration",
+          "value": 0.1
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "105401211",
+      "to": "必杀·雷电飞踢！",
+      "toNameJa": "必殺・雷電キーック！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "acceleration",
+          "value": 0.2
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200681",
+      "from": "英里统治者",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100402211",
+      "to": "舞台统治者",
+      "toNameJa": "お立ち台の支配者",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200691",
+      "from": "慧眼",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.2
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104001111",
+      "to": "先见之明",
+      "toNameJa": "先見の明",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.2
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200701",
+      "from": "奋力一搏",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100801211",
+      "to": "超群的强劲脚力",
+      "toNameJa": "抜群の豪脚",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.5
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200711",
+      "from": "开拓者",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "102601211",
+      "to": "克服困难者",
+      "toNameJa": "困難を乗り越える者",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200721",
+      "from": "绝妙韵律",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "100901111",
+      "to": "完美韵律",
+      "toNameJa": "パーフェクトチューン",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "200731",
+      "from": "对胜利的执念",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "acceleration",
+          "value": 0.1
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101201111",
+      "to": "对胜利的咆哮",
+      "toNameJa": "勝利への咆哮",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "acceleration",
+          "value": 0.1
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200741",
+      "from": "冷却",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "101102111",
+      "to": "神圣治愈术",
+      "toNameJa": "キュアリーヒール",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200751",
+      "from": "内侧体验",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100602211",
+      "to": "圣诞节的奇迹体验",
+      "toNameJa": "クリスマスの奇跡体験",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200772",
+      "from": "吸睛诡计",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标20)",
+          "value": -0.03
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "100502111",
+      "to": "震撼全场的手法",
+      "toNameJa": "圧巻のトリック",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标20)",
+          "value": -0.03
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "200963",
+      "from": "紫电一闪",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104102211",
+      "to": "前进！前进！向前进！",
+      "toNameJa": "驀進！爆進！バクシーン！",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "200981",
+      "from": "压倒性领先",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104101211",
+      "to": "前进式领跑！",
+      "toNameJa": "バクシン的リード！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201001",
+      "from": "万事俱备！",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        },
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "102801111",
+      "to": "备菜完毕！",
+      "toNameJa": "下ごしらえ万全！",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        },
+        {
+          "type": "acceleration",
+          "value": 0.3
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "201011",
+      "from": "迷魂术",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标10)",
+          "value": -0.25
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "103801211",
+      "to": "＃为我着迷吧♪",
+      "toNameJa": "＃夢中になっちゃえ♪",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标10)",
+          "value": -0.25
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201043",
+      "from": "豪风圆刃",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "105102111",
+      "to": "祝福的花童",
+      "toNameJa": "祝福のフラワーガール",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标11)",
+          "value": 0.15
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.3
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201051",
+      "from": "换挡",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "100401111",
+      "to": "要加速喽！",
+      "toNameJa": "かっ飛ばすわよ！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "201061",
+      "from": "马力全开！",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100401211",
+      "to": "红莲的爆表转速",
+      "toNameJa": "紅蓮のオーバーレブ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201071",
+      "from": "大姐头气质",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "100403111",
+      "to": "天女羽衣",
+      "toNameJa": "天女の羽衣",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "201091",
+      "from": "布阵",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.3
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104002111",
+      "to": "亮眼的布阵",
+      "toNameJa": "鮮やかな布陣",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.3
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201103",
+      "from": "瞬息万变",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "103702211",
+      "to": "黑色闪光",
+      "toNameJa": "黒い閃光",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201113",
+      "from": "光芒圆刃",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104701211",
+      "to": "光辉之剑",
+      "toNameJa": "光輝く剣",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201121",
+      "from": "千里眼",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型8",
+          "value": 15
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101401111",
+      "to": "鹰之眼",
+      "toNameJa": "鷹ノ目",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型8",
+          "value": 15
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201131",
+      "from": "闪光步伐",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        },
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "100301211",
+      "to": "帝王舞步",
+      "toNameJa": "帝王ステップ",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        },
+        {
+          "type": "acceleration",
+          "value": 0.3
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "201141",
+      "from": "神迹步伐",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "100302211",
+      "to": "直到地平线的彼端",
+      "toNameJa": "地平の彼方まで",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201151",
+      "from": "独占力",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.25
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101101111",
+      "to": "大和抚子",
+      "toNameJa": "大和撫子",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201161",
+      "from": "魅惑低语",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.03
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "102402111",
+      "to": "纯白低语",
+      "toNameJa": "純白のささやき",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.03
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201173",
+      "from": "烈风一闪",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "106402111",
+      "to": "北风一蹴",
+      "toNameJa": "北風一蹴",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "201191",
+      "from": "领头心得",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101301111",
+      "to": "目白家的心得",
+      "toNameJa": "メジロの心得",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201201",
+      "from": "VIP熟客",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "102302111",
+      "to": "VIP的背影",
+      "toNameJa": "VIPな後ろ姿",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.075
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "201211",
+      "from": "怒涛般的追击",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "acceleration",
+          "value": 0.1
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100103111",
+      "to": "怒涛般的出阵",
+      "toNameJa": "怒涛の出陣",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "acceleration",
+          "value": 0.1
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201221",
+      "from": "掠夺体力",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.01
+        },
+        {
+          "type": "heal",
+          "value": 0.035
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "102501211",
+      "to": "不要丢下我",
+      "toNameJa": "オイテイカナイデ",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.01
+        },
+        {
+          "type": "heal",
+          "value": 0.035
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201231",
+      "from": "奇术师",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -10
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "105601111",
+      "to": "是吉兆！",
+      "toNameJa": "吉兆です！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "201243",
+      "from": "暴风一闪",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "112001211-b2",
+      "to": "疾风一驱！(2)",
+      "toNameJa": "突風一駆！",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201253",
+      "from": "阵风圆刃",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "103102211",
+      "to": "华丽出餐",
+      "toNameJa": "華麗なサーブ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "acceleration",
+          "value": 0.2
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201271",
+      "from": "领跑者",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "102002211",
+      "to": "破纪录跑者",
+      "toNameJa": "レコードランナー",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201281",
+      "from": "活泼优俊少女",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "100402111",
+      "to": "心动☆活泼优俊少女！",
+      "toNameJa": "ドキッ☆じゃじゃウマ娘！",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.075
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "201313",
+      "from": "迅猛一闪",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104702111",
+      "to": "神采奕奕",
+      "toNameJa": "勇躍閃々",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201323",
+      "from": "迅猛圆刃",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "107301111",
+      "to": "千辛万苦磨一剑",
+      "toNameJa": "千辛万苦切り裂く刃",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201331",
+      "from": "技巧派",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100301111",
+      "to": "天才般的技巧",
+      "toNameJa": "天才的技巧",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201341",
+      "from": "决心的直线下坡",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "102201211",
+      "to": "天坠",
+      "toNameJa": "天空落とし",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201351",
+      "from": "大胃王",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "100101111",
+      "to": "饥肠辘辘大将",
+      "toNameJa": "はらぺこ大将",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201371",
+      "from": "迷惑干扰",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标10)",
+          "value": -5
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101801111",
+      "to": "女帝的权谋",
+      "toNameJa": "女帝の権謀",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "201401",
+      "from": "努力家",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "103501111",
+      "to": "不懈的努力",
+      "toNameJa": "たゆまぬ努力",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.3
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "201411",
+      "from": "百万马力",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "103502111",
+      "to": "千万马力！！",
+      "toNameJa": "千万バリキ！！！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "201421",
+      "from": "放松",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "101102211",
+      "to": "勇气的魔法",
+      "toNameJa": "勇気の魔法",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201431",
+      "from": "大局观",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型8",
+          "value": 15
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "106101211",
+      "to": "王者的大局观",
+      "toNameJa": "王の大局観",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型8",
+          "value": 15
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201441",
+      "from": "紧盯八方",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标4)",
+          "value": -0.03
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "105901111",
+      "to": "冷峻的视线",
+      "toNameJa": "クールな視線",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标4)",
+          "value": -0.03
+        },
+        {
+          "type": "currentSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201453",
+      "from": "月影一闪",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "103601211",
+      "to": "Lose Myself",
+      "toNameJa": "Lose Myself",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "currentSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201471",
+      "from": "视野良好！没有异常！",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型8",
+          "value": 10
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100701111",
+      "to": "黄金船之眼！视野清晰！",
+      "toNameJa": "564アイズで視界クッキリ！",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型8",
+          "value": 10
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201481",
+      "from": "放学后的专家",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "100701211",
+      "to": "究极放学术",
+      "toNameJa": "エクストリーム下校術",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201491",
+      "from": "沉着冷静",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "103301111",
+      "to": "沉默的誓言",
+      "toNameJa": "静かな誓い",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201511",
+      "from": "炙热视线",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标4)",
+          "value": -0.25
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104401211",
+      "to": "魅惑魔法",
+      "toNameJa": "チャームマジック",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标4)",
+          "value": -0.25
+        },
+        {
+          "type": "currentSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201561",
+      "from": "超级幸运7",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "stamina",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "105601211",
+      "to": "七福即生",
+      "toNameJa": "七福即生",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "stamina",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "201582",
+      "from": "究极登山家",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "103003111",
+      "to": "顶峰开饭",
+      "toNameJa": "山頂でイタダキマス",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201592",
+      "from": "优俊少女狂热粉",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101901111",
+      "to": "究极优俊少女狂热粉",
+      "toNameJa": "限界ウママニア",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201602",
+      "from": "磐石之势",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "108001111-b2",
+      "to": "情报强者(2)",
+      "toNameJa": "情報強者",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201612",
+      "from": "尾巴跃龙门",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "102101211",
+      "to": "尾巴翘上天",
+      "toNameJa": "尻尾の有頂天",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201632",
+      "from": "同调",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标2)",
+          "value": 0
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "110502211",
+      "to": "宇宙共鸣",
+      "toNameJa": "“METI”レゾナンス",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 100
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标2)",
+          "value": 0
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "201652",
+      "from": "抢到好位置了！",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "106003111",
+      "to": "味道很不错吧？",
+      "toNameJa": "いい味、出てるでしょ？",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201662",
+      "from": "先走一步！",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "103103211-b2",
+      "to": "在青空之下等你哦！(2)",
+      "toNameJa": "青空の下で待ってるよ！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201671",
+      "from": "热度飙升！",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "104601211",
+      "to": "优俊偶像Power飙升↑↑",
+      "toNameJa": "ウマドルパワー急上昇↑↑",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "201681",
+      "from": "目标最前排！",
+      "fromEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        },
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "101901211",
+      "to": "决不让出最前排！",
+      "toNameJa": "最前列は譲れない！",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        },
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "201691",
+      "from": "潜伏状态",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "104002211",
+      "to": "虎视眈眈",
+      "toNameJa": "虎視眈々",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "201701",
+      "from": "拼死决心",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "103502211",
+      "to": "一定能飞起来！",
+      "toNameJa": "きっと飛べる！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "201901",
+      "from": "短兵相接",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "100303111-b2",
+      "to": "尽显天赋的身手(2)",
+      "toNameJa": "天賦の身ごなし",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "202001",
+      "from": "沙尘行家",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "103401211",
+      "to": "熟练的沙尘专家",
+      "toNameJa": "熟練の砂塵使い",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.075
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "202011",
+      "from": "真打",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "101303111",
+      "to": "夏日名伶",
+      "toNameJa": "夏の名優",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202021",
+      "from": "强攻策略",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "101202111",
+      "to": "热情誓约！",
+      "toNameJa": "熱烈エンゲージ！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202031",
+      "from": "孤注一掷",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "heal",
+          "value": -1
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "104901111-b2",
+      "to": "孤注一掷搏一把(2)",
+      "toNameJa": "乾坤一擲の大博打",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.55
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "202041",
+      "from": "气势冲天",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "104102111",
+      "to": "横冲直撞！前进之路！",
+      "toNameJa": "猪突猛進！バクシンロード！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202061",
+      "from": "全国第一的优俊少女",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100103211",
+      "to": "全国第一的超级毅力",
+      "toNameJa": "日之本一のド根性",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202071",
+      "from": "泰然自若",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.075
+        },
+        {
+          "type": "targetSpeed",
+          "value": -0.15
+        }
+      ],
+      "fromDurationSec": 1.2,
+      "toId": "107401211",
+      "to": "不动如羊蹄山",
+      "toNameJa": "動かざること羊蹄山の若し",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.095
+        },
+        {
+          "type": "targetSpeed",
+          "value": -0.15
+        }
+      ],
+      "toDurationSec": 1.2
+    },
+    {
+      "fromId": "202081",
+      "from": "起死回生",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "104802111-b2",
+      "to": "有机会就冲一波！(2)",
+      "toNameJa": "ワンチャンまくったる！",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "202091",
+      "from": "气焰万丈",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.035
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "101703111-b2",
+      "to": "煌煌大志(2)",
+      "toNameJa": "大望は煌めきとなりて",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型48",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.2
+    },
+    {
+      "fromId": "202101",
+      "from": "情绪高涨",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "100702211",
+      "to": "要不要来点炸鱿鱼？！",
+      "toNameJa": "イカ揚げ、いかがですか！？",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202121",
+      "from": "大胆无畏",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "acceleration",
+          "value": 0.1
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "104802211-b2",
+      "to": "赢家只会是我啦！(2)",
+      "toNameJa": "あたししか勝たん！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202131",
+      "from": "狂暴旋风",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标10)",
+          "value": -0.15
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "103101211",
+      "to": "狂野风神",
+      "toNameJa": "荒ぶる風神",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标10)",
+          "value": -0.15
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202151",
+      "from": "勇往直前",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "heal",
+          "value": -0.02
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "101103111-b2",
+      "to": "穿刺苍青(2)",
+      "toNameJa": "射貫く蒼",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.55
+        },
+        {
+          "type": "heal",
+          "value": -0.03
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202171",
+      "from": "顶级的下坡选手",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "102702211",
+      "to": "请享用顶级的胜利",
+      "toNameJa": "至高の勝利を召し上がれ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202191",
+      "from": "专心致志",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.075
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "101303211",
+      "to": "专心致志地放松！",
+      "toNameJa": "一意専心にリフレッシュ！",
+      "toEffects": [
+        {
+          "type": "heal",
+          "value": 0.095
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "202254",
+      "from": "交流重赏之鬼",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "109802211-b2",
+      "to": "奔跑的吉祥物(2)",
+      "toNameJa": "走る縁起物",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 60
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "202261",
+      "from": "胜利的机运",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "109801111",
+      "to": "小林好运来！",
+      "toNameJa": "コパッと開運！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202271",
+      "from": "卷土重来",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "101902211",
+      "to": "寻求感动，复活——！",
+      "toNameJa": "尊みを求めてふっかーーつ！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202281",
+      "from": "全速前进！",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104301111",
+      "to": "全速前进啦！",
+      "toNameJa": "全速前進なのだ！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202301",
+      "from": "优雅的沙浴",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "110001211",
+      "to": "女神的沙浴",
+      "toNameJa": "女神の砂浴び",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202311",
+      "from": "目标中心位！",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104602211",
+      "to": "绝对的中心位！",
+      "toNameJa": "絶対的センター！",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.5
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202331-b1",
+      "from": "超群的迈步(1)",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "109801211-b2",
+      "to": "龙脉的波涛(2)",
+      "toNameJa": "龍脈の波濤",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "202331-b2",
+      "from": "超群的迈步(2)",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "109801211-b2",
+      "to": "龙脉的波涛(2)",
+      "toNameJa": "龍脈の波濤",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "202341",
+      "from": "泥巴大师",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "104301211",
+      "to": "恶作剧大师",
+      "toNameJa": "いたずらマイスター",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "202371",
+      "from": "势不可挡",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "102902111",
+      "to": "再加把劲嘞！",
+      "toNameJa": "もうひとけっぱり！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202381",
+      "from": "突破",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "105002111",
+      "to": "让你们见识一下！",
+      "toNameJa": "見せつけてやる！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "unsupported",
+          "label": "效果类型28",
+          "value": 0.035
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202391",
+      "from": "输出1000%！",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "heal",
+          "value": -0.04
+        }
+      ],
+      "fromDurationSec": 2.7,
+      "toId": "106601111",
+      "to": "输出1000万%！！",
+      "toNameJa": "出力1000万%！！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.55
+        },
+        {
+          "type": "heal",
+          "value": -0.04
+        }
+      ],
+      "toDurationSec": 2.7
+    },
+    {
+      "fromId": "202401",
+      "from": "电光石火",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 2,
+      "toId": "108501211",
+      "to": "永葆极致闪耀",
+      "toNameJa": "常に最たる輝きを",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.15
+        }
+      ],
+      "toDurationSec": 2
+    },
+    {
+      "fromId": "202411",
+      "from": "风云之志",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "107801211",
+      "to": "迎神之风",
+      "toNameJa": "神渡し",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202421",
+      "from": "浑然忘我",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "heal",
+          "value": -0.02
+        }
+      ],
+      "fromDurationSec": 1.5,
+      "toId": "106702111",
+      "to": "无我之境",
+      "toNameJa": "無我の境地",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "heal",
+          "value": -0.005
+        }
+      ],
+      "toDurationSec": 1.5
+    },
+    {
+      "fromId": "202431",
+      "from": "气势如虹",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        },
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "108901111-b2",
+      "to": "伟大征途(2)",
+      "toNameJa": "偉大なる踏破",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        },
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202441-b1",
+      "from": "博弈者(1)",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "guts",
+          "value": 80
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "104901211-b2",
+      "to": "凶悍博弈者(2)",
+      "toNameJa": "鉄火のギャンブラー",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 100
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 100
+        },
+        {
+          "type": "passive",
+          "stat": "guts",
+          "value": 100
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "202441-b2",
+      "from": "博弈者(2)",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "guts",
+          "value": 80
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "104901211-b2",
+      "to": "凶悍博弈者(2)",
+      "toNameJa": "鉄火のギャンブラー",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 100
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 100
+        },
+        {
+          "type": "passive",
+          "stat": "guts",
+          "value": 100
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "202451",
+      "from": "最高档位",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "100802211",
+      "to": "最快的最高档位",
+      "toNameJa": "最速のトップギア",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.55
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202461",
+      "from": "绝影",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "100902211",
+      "to": "敞开的梦想之门",
+      "toNameJa": "開かれる夢の扉",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.55
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202471",
+      "from": "猛追",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "101602111",
+      "to": "BLAZING WOLF",
+      "toNameJa": "BLAZING WOLF",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202481",
+      "from": "怪物",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.2,
+      "toId": "100603211-b2",
+      "to": "让你的名字震撼天地(2)",
+      "toNameJa": "天地を揺らせ君の名で",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.2
+    },
+    {
+      "fromId": "202491",
+      "from": "超群的犀利步伐",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.2,
+      "toId": "101202211",
+      "to": "注入斗魂切蛋糕！",
+      "toNameJa": "闘魂入刀！",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202501",
+      "from": "奋不顾身",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "106501211",
+      "to": "总之先冲啦！",
+      "toNameJa": "とりまやったれ～！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202521",
+      "from": "天衣无缝",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "105701111",
+      "to": "翱翔天际的步伐",
+      "toNameJa": "天翔る足取り",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202531",
+      "from": "建立优势",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "107901111-b2",
+      "to": "海风的指引(2)",
+      "toNameJa": "潮風の導き",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202541",
+      "from": "威风堂堂",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.15
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标10)",
+          "value": -0.15
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "108501111",
+      "to": "华丽夺目",
+      "toNameJa": "華麗であれ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标9)",
+          "value": -0.15
+        },
+        {
+          "type": "unsupported",
+          "label": "妨害/他人(目标10)",
+          "value": -0.15
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "202551",
+      "from": "神速",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100503111-b2",
+      "to": "响彻吧，万雷般的喝彩(2)",
+      "toNameJa": "響け、万雷の喝采よ",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型48",
+          "value": 0.2
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202561",
+      "from": "一击必中",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "107403111",
+      "to": "海边的你追我赶",
+      "toNameJa": "浜辺の追いかけっこ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202581",
+      "from": "超越脱兔",
+      "fromEffects": [
+        {
+          "type": "heal",
+          "value": 0.055
+        },
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "102303211-b2",
+      "to": "霓虹光尾(2)",
+      "toNameJa": "ネオンの尾を引いて",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202591",
+      "from": "一气呵成",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "107403211",
+      "to": "熏风吹拂金光菊",
+      "toNameJa": "薫風もたらすルドベキア",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202601",
+      "from": "冷发光",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "105502111-b2",
+      "to": "辉煌☆洋娃娃舞台(2)",
+      "toNameJa": "煌めき☆ドーリィステージ",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202611",
+      "from": "灵感迸发",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "113701111-b2",
+      "to": "力求完美！(2)",
+      "toNameJa": "ブラッシュアップ！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202621",
+      "from": "突击之魂",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "109401111-b2",
+      "to": "强袭之牙(2)",
+      "toNameJa": "猛襲の牙",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202651",
+      "from": "云蒸龙变",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "power",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "106302111",
+      "to": "梅花时节志向前",
+      "toNameJa": "梅仰ぎ、漕ぐ計路",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型32",
+          "value": 60
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "202661",
+      "from": "激昂的心跳",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "107002211-b2",
+      "to": "群星之首(2)",
+      "toNameJa": "Beat the Stars",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202671",
+      "from": "斗志高昂",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "108201211-b2",
+      "to": "飞翔愉快(2)",
+      "toNameJa": "Enjoy the Flight",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202681",
+      "from": "情绪☆嗨爆↑",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.035
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "106402211-b2",
+      "to": "圣☆诞↑派对(2)",
+      "toNameJa": "メリ☆クリ↑パーリー",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "heal",
+          "value": 0.035
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202691",
+      "from": "奔向最前方！",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.5,
+      "toId": "100202211",
+      "to": "驰骋天际的阵风",
+      "toNameJa": "蒼天を駆けるラーファガ",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.5
+        }
+      ],
+      "toDurationSec": 1.5
+    },
+    {
+      "fromId": "202701-b1",
+      "from": "奇点(1)",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "103202111-b2",
+      "to": "拉普拉斯妖(2)",
+      "toNameJa": "ラプラスの悪魔",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "202701-b2",
+      "from": "奇点(2)",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "103202111-b2",
+      "to": "拉普拉斯妖(2)",
+      "toNameJa": "ラプラスの悪魔",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "202711",
+      "from": "将军",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 0.9,
+      "toId": "100503211-b2",
+      "to": "光辉白之王(2)",
+      "toNameJa": "光輝なるは白き王",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202721",
+      "from": "永不言弃",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "104202211-b2",
+      "to": "珠光璀璨始于海底…☆(2)",
+      "toNameJa": "海の底からキラめいて…☆",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202741",
+      "from": "十全十美",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "108601111",
+      "to": "纯爱",
+      "toNameJa": "純愛",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202751",
+      "from": "傲骨嶙嶙",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "106103211",
+      "to": "不屈的证明",
+      "toNameJa": "不屈の証明",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202761",
+      "from": "打飞它吧！",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "107802111",
+      "to": "风卷残云",
+      "toNameJa": "塵旋風となりて",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202771",
+      "from": "一点集中",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.2,
+      "toId": "102303111",
+      "to": "演算目镜·启动",
+      "toNameJa": "シミュレートグラス・オン",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.6
+        },
+        {
+          "type": "heal",
+          "value": -0.02
+        }
+      ],
+      "toDurationSec": 1.2
+    },
+    {
+      "fromId": "202811",
+      "from": "画龙点睛",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "106803111-b2",
+      "to": "精彩绝伦！卧龙出山(2)",
+      "toNameJa": "あっぱれ！臥竜勇往",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202821",
+      "from": "坚定一心",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 0.9,
+      "toId": "102403111-b2",
+      "to": "顺风☆我先溜(2)",
+      "toNameJa": "お先に☆テールウィンド",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 0.9
+    },
+    {
+      "fromId": "202831-b1",
+      "from": "互动＆回应(1)",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "104603211-b2",
+      "to": "给你最热烈的回应☆(2)",
+      "toNameJa": "爆レスあげちゃう☆",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        },
+        {
+          "type": "acceleration",
+          "value": 0.1
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202831-b2",
+      "from": "互动＆回应(2)",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "104603211-b2",
+      "to": "给你最热烈的回应☆(2)",
+      "toNameJa": "爆レスあげちゃう☆",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        },
+        {
+          "type": "acceleration",
+          "value": 0.1
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202851",
+      "from": "一网打尽",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "102502211",
+      "to": "玄界领域",
+      "toNameJa": "玄界領域",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202871",
+      "from": "君临",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 0.9,
+      "toId": "110801211-b2",
+      "to": "赫赫生辉(2)",
+      "toNameJa": "赫焉",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202881",
+      "from": "完全燃烧",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "105003211",
+      "to": "不屈不挠突破极限",
+      "toNameJa": "不撓のLimit Breaker",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.55
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202901",
+      "from": "飞毛腿",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "105003111",
+      "to": "零延迟",
+      "toNameJa": "ゼロレイテンシ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "202921",
+      "from": "一心不乱",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "heal",
+          "value": -0.02
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "104402211-b2",
+      "to": "紧急魔力增幅(2)",
+      "toNameJa": "緊急魔力ブースト",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202931",
+      "from": "肉薄骨并",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "111701111",
+      "to": "华丽的飞跃",
+      "toNameJa": "グラン・ジュッテ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202951",
+      "from": "砂之开拓者",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "108001211",
+      "to": "追寻『未知』",
+      "toNameJa": "『未知』を求めて",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "202961",
+      "from": "热情",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "108202111-b2",
+      "to": "流丽直追(2)",
+      "toNameJa": "流麗なる急追",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        },
+        {
+          "type": "heal",
+          "value": -0.02
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "202971",
+      "from": "千载难逢",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.2,
+      "toId": "105702211-b2",
+      "to": "诸位看官，好戏开场了！(2)",
+      "toNameJa": "さァさ、お立ち合い！",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.2
+    },
+    {
+      "fromId": "202981",
+      "from": "流星光底",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "103203111-b2",
+      "to": "超光速粒子(2)",
+      "toNameJa": "光速を超える粒子",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203001",
+      "from": "掌握",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "111901211-b2",
+      "to": "如梦似幻(2)",
+      "toNameJa": "夢見心地",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "203031",
+      "from": "单刀直入",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "102203211",
+      "to": "久等了！热腾腾的一碗好面！",
+      "toNameJa": "熱々、上等！へいお待ち！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203041",
+      "from": "怦然心动",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "113101111-b2",
+      "to": "我来哩！！(2)",
+      "toNameJa": "推してまいる！！",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "203051",
+      "from": "矢志不渝",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "109201111-b2",
+      "to": "我也想赢下来！！(2)",
+      "toNameJa": "わたしだって、勝ちたい！！",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203081",
+      "from": "脚踏大地",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "108101111-b2",
+      "to": "把你揍扁！(2)",
+      "toNameJa": "ベッコベコに凹ます！",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "203111",
+      "from": "王道征途",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "113202111-b2",
+      "to": "爱的澎湃♡(2)",
+      "toNameJa": "ロッツオブラヴ♡",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "203121",
+      "from": "强者的证明",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "111601211",
+      "to": "力量的化身",
+      "toNameJa": "Power Am I",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203131",
+      "from": "终结",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "112401211-b2",
+      "to": "嚆矢落定(2)",
+      "toNameJa": "嚆矢の花道",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203171-b1",
+      "from": "一张一弛(1)",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": -0.15
+        }
+      ],
+      "fromDurationSec": 1.2,
+      "toId": "103302211-b2",
+      "to": "冰星融解(2)",
+      "toNameJa": "氷星融解",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203171-b2",
+      "from": "一张一弛(2)",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "103302211-b2",
+      "to": "冰星融解(2)",
+      "toNameJa": "氷星融解",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203181",
+      "from": "清浊并包",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.035
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "108101211",
+      "to": "来啊谁怕谁！",
+      "toNameJa": "相手が誰でも関係ねーし！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "heal",
+          "value": -0.02
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "203201",
+      "from": "瞬息千里",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "102403211-b2",
+      "to": "驾驶舱魔术师(2)",
+      "toNameJa": "コックピット・マジシャン",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203221",
+      "from": "破影而出",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "heal",
+          "value": -0.02
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "107702211",
+      "to": "长夜漫漫，有我相伴！",
+      "toNameJa": "暗い夜道もお任せを！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "heal",
+          "value": -0.04
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "203231",
+      "from": "斗志喷薄",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "104302111",
+      "to": "坏蛋游戏！",
+      "toNameJa": "ラスカル・ロンプ！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "203301",
+      "from": "炙手可热",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "101703211-b2",
+      "to": "一丝不苟(2)",
+      "toNameJa": "熱烈峻厳",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "203321",
+      "from": "翩然飞落",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "113601211-b2",
+      "to": "天赐恩宠(2)",
+      "toNameJa": "天与の恩寵",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.3
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203331",
+      "from": "准备周到",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "111101211-b2",
+      "to": "步步为营的秘策(2)",
+      "toNameJa": "堅実なる秘策",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203341",
+      "from": "追踪者",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "103302111-b2",
+      "to": "追逐织女星(2)",
+      "toNameJa": "アル・ワーキを追いかけて",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203371",
+      "from": "后发制人",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "101103211",
+      "to": "胜机在望",
+      "toNameJa": "勝機到来",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "203381",
+      "from": "在这里决一胜负！",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 0.9,
+      "toId": "110402111",
+      "to": "伏龙觉醒",
+      "toNameJa": "伏竜は目覚めて",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 0.9
+    },
+    {
+      "fromId": "203391",
+      "from": "英姿飒爽",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "110402211",
+      "to": "身披曙光",
+      "toNameJa": "暁光背負いて",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203411",
+      "from": "天道酬勤",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "100603111-b2",
+      "to": "薪火相传(2)",
+      "toNameJa": "尽きぬ炎",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203431",
+      "from": "才气焕发",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "109102111",
+      "to": "为甜点宝石而着迷",
+      "toNameJa": "デザートジュエルに魅せられ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203441",
+      "from": "奔向梦想舞台",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.2,
+      "toId": "113301211",
+      "to": "创世一页",
+      "toNameJa": "創世の一頁",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.2
+    },
+    {
+      "fromId": "203461",
+      "from": "杰出",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "100403211",
+      "to": "神薙舞",
+      "toNameJa": "神薙ダンス",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203471",
+      "from": "猛烈狂奔",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "107901211",
+      "to": "勇船直捣",
+      "toNameJa": "勇船直往",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203481",
+      "from": "主动权",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "108702211",
+      "to": "请不要忘记我哦？",
+      "toNameJa": "覚えていてくださいね？",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "203511",
+      "from": "睥睨",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "111501211-b2",
+      "to": "王威绚烂(2)",
+      "toNameJa": "王威絢爛",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203541",
+      "from": "天真烂漫",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.8,
+      "toId": "113101211-b2",
+      "to": "响彻万哩大欢声(2)",
+      "toNameJa": "万哩へ響け大歓声",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        },
+        {
+          "type": "heal",
+          "value": -0.02
+        }
+      ],
+      "toDurationSec": 1.8
+    },
+    {
+      "fromId": "203601",
+      "from": "娴熟的踢沙",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "104302211",
+      "to": "坏蛋大逃亡",
+      "toNameJa": "ワルの大脱走",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "203611",
+      "from": "滴水穿石",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "109802111",
+      "to": "黄龙腾飞",
+      "toNameJa": "黄龍、天へと昇る",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203621",
+      "from": "赤诚之心",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "104803111-b2",
+      "to": "跟上节奏☆狂欢时刻(2)",
+      "toNameJa": "乗っとけ☆ぶち上げペース",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "203631",
+      "from": "独一无二",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "112901211-b2",
+      "to": "确信的胜利(2)",
+      "toNameJa": "確信された勝利",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.2
+        }
+      ],
+      "toDurationSec": 0.9
+    },
+    {
+      "fromId": "203671-b1",
+      "from": "阳焰(1)",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "104003211-b2",
+      "to": "黄金阳焰(2)",
+      "toNameJa": "黄金の炎陽",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203671-b2",
+      "from": "阳焰(2)",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "104003211-b2",
+      "to": "黄金阳焰(2)",
+      "toNameJa": "黄金の炎陽",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203701",
+      "from": "快刀斩乱麻",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "107703211-b2",
+      "to": "面馆开张了！(2)",
+      "toNameJa": "いざ、開店です！",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203711",
+      "from": "底牌",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 0.9,
+      "toId": "108902211",
+      "to": "我已经不同以往了！",
+      "toNameJa": "いつもの僕じゃないから！",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.5
+        },
+        {
+          "type": "currentSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 0.9
+    },
+    {
+      "fromId": "203731",
+      "from": "精力充沛",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        },
+        {
+          "type": "heal",
+          "value": 0.035
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "107703111",
+      "to": "热气腾腾致胜之路",
+      "toNameJa": "湯気立つ勝負道",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        },
+        {
+          "type": "heal",
+          "value": 0.035
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203741",
+      "from": "一念胜负",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "108802211-b2",
+      "to": "波涛上的最终诡计(2)",
+      "toNameJa": "波上のラストトリック",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203791",
+      "from": "竞争本能",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "109701111",
+      "to": "猩红战意",
+      "toNameJa": "赫き胎動",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.55
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203801-b1",
+      "from": "爱如泉涌(1)",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "109701211-b2",
+      "to": "讳莫如深的誓言(2)",
+      "toNameJa": "誰にも告げぬ誓い",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        },
+        {
+          "type": "acceleration",
+          "value": 0.2
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203801-b2",
+      "from": "爱如泉涌(2)",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "109701211-b2",
+      "to": "讳莫如深的誓言(2)",
+      "toNameJa": "誰にも告げぬ誓い",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        },
+        {
+          "type": "acceleration",
+          "value": 0.2
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203831",
+      "from": "天纵之才",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.2,
+      "toId": "111801211-b2",
+      "to": "孤傲雪花(2)",
+      "toNameJa": "無比なる六花",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型48",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.2
+    },
+    {
+      "fromId": "203841",
+      "from": "才貌双全",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "111801111-b2",
+      "to": "冰魂雪魄(2)",
+      "toNameJa": "雪魄氷姿",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型48",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.2
+    },
+    {
+      "fromId": "203851",
+      "from": "好奇心",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "113501211-b2",
+      "to": "针锋相对(2)",
+      "toNameJa": "針が交わる時",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203871",
+      "from": "轰雷掣电",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "104103111-b2",
+      "to": "超速×迅雷=超级爆进！！(2)",
+      "toNameJa": "超速×迅雷＝超バクシン！！",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203931",
+      "from": "身经百战",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "109501211",
+      "to": "刻骨铭心",
+      "toNameJa": "徹骨徹髄",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "203941",
+      "from": "婉若游龙",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "102802111",
+      "to": "摇曳的糖果灯笼",
+      "toNameJa": "手招きシュガーランタン",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203951",
+      "from": "麒麟儿",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "wisdom",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "105502211-b2",
+      "to": "现在是美丽秀时间♪(2)",
+      "toNameJa": "いざ、ショーベラスタイム♪",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "wisdom",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "203961",
+      "from": "傲然屹立",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "114401211",
+      "to": "铿锵玫瑰",
+      "toNameJa": "Rose of Steel",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203981",
+      "from": "威武雄壮",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "108002211-b2",
+      "to": "这么好的机会怎么能错过呢☆(2)",
+      "toNameJa": "ここ、逃す手はないってね☆",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.15
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "203991-b1",
+      "from": "开花(1)",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "110202211-b2",
+      "to": "花之女神的馈赠！(2)",
+      "toNameJa": "ドーノ・ディ・フローラ！",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "203991-b2",
+      "from": "开花(2)",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "110202211-b2",
+      "to": "花之女神的馈赠！(2)",
+      "toNameJa": "ドーノ・ディ・フローラ！",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "204021",
+      "from": "一生一次的高光",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.2,
+      "toId": "113701211-b2",
+      "to": "紧急再版(2)",
+      "toNameJa": "緊急重版",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.2
+    },
+    {
+      "fromId": "204031",
+      "from": "琢玉成器",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "101803111",
+      "to": "为了无愧于“榜样”",
+      "toNameJa": "“標”に足るために",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "204041",
+      "from": "锦上添花",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "101803211-b2",
+      "to": "崇高·不凋之华(2)",
+      "toNameJa": "崇高のアマラントス",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "204051",
+      "from": "灵魂烈焰",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "109201211-b2",
+      "to": "舞台的主角(2)",
+      "toNameJa": "Ignite this Stage",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "204061",
+      "from": "无畏的勇气",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "111401111-b2",
+      "to": "待到实现两个人的约定(2)",
+      "toNameJa": "ふたりの約束、とどく時",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "204071",
+      "from": "春风得意",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "102203111-b2",
+      "to": "加一份面，收到♪(2)",
+      "toNameJa": "替え玉一丁、承ります♪",
+      "toEffects": [
+        {
+          "type": "unsupported",
+          "label": "效果类型49",
+          "value": 1
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "204081",
+      "from": "不留余力",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "110301211",
+      "to": "认识度直线上升！",
+      "toNameJa": "認知度、急上昇！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "204101",
+      "from": "震天动地",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "110002111",
+      "to": "惊天动地大喷泉",
+      "toNameJa": "大地轟く大噴湯",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "204111",
+      "from": "行云流水",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "110002211-b2",
+      "to": "随风飘荡，随心浴泉(2)",
+      "toNameJa": "風まかせ、お湯まかせ",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "204121-b1",
+      "from": "遥遥领先(1)",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "113501111-b2",
+      "to": "未竟之旅途(2)",
+      "toNameJa": "見果てぬ旅路",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "204121-b2",
+      "from": "遥遥领先(2)",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "113501111-b2",
+      "to": "未竟之旅途(2)",
+      "toNameJa": "見果てぬ旅路",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.45
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "204131",
+      "from": "有志竟成",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "109402111-b2",
+      "to": "加油鼓劲三三七拍！(2)",
+      "toNameJa": "気合いの三三七拍子！",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "204141",
+      "from": "外柔内刚",
+      "fromEffects": [
+        {
+          "type": "passive",
+          "stat": "stamina",
+          "value": 60
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 60
+        }
+      ],
+      "fromDurationSec": null,
+      "toId": "107602111",
+      "to": "初空迢迢花宴酣",
+      "toNameJa": "初空高く、花宴",
+      "toEffects": [
+        {
+          "type": "passive",
+          "stat": "stamina",
+          "value": 80
+        },
+        {
+          "type": "passive",
+          "stat": "speed",
+          "value": 80
+        }
+      ],
+      "toDurationSec": null
+    },
+    {
+      "fromId": "204151",
+      "from": "独步一时！",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "101003111-b2",
+      "to": "绵羊出击！(2)",
+      "toNameJa": "飛び出せSheepy!",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "204161",
+      "from": "猪突猛进",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 1.5,
+      "toId": "101003211",
+      "to": "绵羊狂奔！",
+      "toNameJa": "Sheep Stampede!",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "toDurationSec": 1.5
+    },
+    {
+      "fromId": "204211",
+      "from": "典范转移",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "112901111-b2",
+      "to": "新篇章(2)",
+      "toNameJa": "The Next Phase",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "204301",
+      "from": "百花缭乱",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "fromDurationSec": 4,
+      "toId": "112702111-b2",
+      "to": "正统派刑警·硬汉(2)",
+      "toNameJa": "王道刑事、強面派",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 4
+    },
+    {
+      "fromId": "204431",
+      "from": "绝尘",
+      "fromEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.4
+        }
+      ],
+      "fromDurationSec": 0.9,
+      "toId": "102503211",
+      "to": "非此世之物",
+      "toNameJa": "コノヨナラザル",
+      "toEffects": [
+        {
+          "type": "acceleration",
+          "value": 0.5
+        }
+      ],
+      "toDurationSec": 0.9
+    },
+    {
+      "fromId": "204511",
+      "from": "超然",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        },
+        {
+          "type": "heal",
+          "value": 0.015
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "114101211-b2",
+      "to": "窥见天意(2)",
+      "toNameJa": "天意の彼方",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "204541",
+      "from": "急先锋",
+      "fromEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "102003211-b2",
+      "to": "夏風フロントランナー(2)",
+      "toNameJa": "夏風フロントランナー",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 3
+    },
+    {
+      "fromId": "204691",
+      "from": "剑拔弩张",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 2.4,
+      "toId": "114901211-b2",
+      "to": "近前者，斩!(2)",
+      "toNameJa": "寄らば斬る！",
+      "toEffects": [
+        {
+          "type": "targetSpeed",
+          "value": 0.25
+        }
+      ],
+      "toDurationSec": 2.4
+    },
+    {
+      "fromId": "204801",
+      "from": "拔山盖世",
+      "fromEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "fromDurationSec": 3,
+      "toId": "110802211-b2",
+      "to": "吞之不尽，食之不竭(2)",
+      "toNameJa": "喰らえども、喰らえども",
+      "toEffects": [
+        {
+          "type": "currentSpeed",
+          "value": 0.35
+        }
+      ],
+      "toDurationSec": 3
+    }
+  ]
+}

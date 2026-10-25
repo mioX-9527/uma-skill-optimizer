@@ -71,6 +71,8 @@ class Row:
     # 形状检测出来的等级符号(OCR 读不出 ○)。见 symbol.py
     symbol: str | None = None
     symbol_confident: bool = True
+    # 可进化信息(点开「进化 ⓘ」读到的)。见 evolve.py
+    evolve: object | None = None
 
     @property
     def price(self) -> int | None:
