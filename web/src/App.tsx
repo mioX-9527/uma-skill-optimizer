@@ -6,6 +6,7 @@ import {
   PRECISION_LABEL, RARITY_LABEL, runOptimize, searchSkills,
   type OptimizerResult, type PlanSkill, type PlanState,
 } from './api.js';
+import { applyCapture, captureSummary, desktopBridge, type CapturedSkill } from './desktop.js';
 
 const STAT_LABELS: readonly { key: keyof PlanState['stats']; label: string }[] = [
   { key: 'speed', label: '速度' },
@@ -71,7 +72,11 @@ export default function App() {
   const [result, setResult] = useState<OptimizerResult | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reading, setReading] = useState(false);
+  const [readLog, setReadLog] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  // 只有被 pywebview 装进桌面窗时才有值;普通浏览器/单文件版恒为 null,按钮不出现
+  const bridge = useMemo(() => desktopBridge(), []);
 
   const course = courseOf(plan.courseId);
 
@@ -101,6 +106,34 @@ export default function App() {
     setResult(null);
   };
 
+  /** 桌面窗专用:从模拟器读技能名与价格,覆盖候选列表 */
+  const readFromEmulator = async () => {
+    if (!bridge) return;
+    setReading(true);
+    setReadLog(['正在读取…(划到顶 + 逐屏识别,约 10~20 秒)']);
+    setError(null);
+    try {
+      const resp = await bridge.capture_skills();
+      setReadLog(captureSummary(resp));
+      if (!resp.ok) return;
+      const merged = applyCapture(plan, resp, (c: CapturedSkill) => {
+        const entry = SKILLS.find(k => k.id === c.id);
+        if (!entry) return null;
+        const skill: PlanSkill = {
+          id: entry.id, name: entry.name, pt: c.pt, rarity: entry.rarity, precision: entry.precision,
+        };
+        return skill;
+      });
+      patch({ skills: merged.skills, budget: merged.budget, chains: resp.chains ?? [] });
+      setResult(null);
+      if (merged.dropped > 0) setReadLog(prev => [...prev, `有 ${merged.dropped} 条未能对应到技能库,已丢弃`]);
+    } catch (e) {
+      setReadLog([`读取失败:${(e as Error).message}`]);
+    } finally {
+      setReading(false);
+    }
+  };
+
   const compute = async () => {
     setRunning(true);
     setError(null);
@@ -116,7 +149,14 @@ export default function App() {
         groundCondition: plan.groundCondition,
         weather: plan.weather,
         season: plan.season,
-        skills: plan.skills.map(s => ({ id: s.id, pt: s.pt })),
+        skills: plan.skills.map(s => {
+          // 金技能的列表价已含前置价:把关系展开成 requires,优化器才不会重复计费
+          const chain = plan.chains.find(c => c.skillId === s.id);
+          const req = chain !== undefined && plan.skills.some(x => x.id === chain.prereqId)
+            ? chain.prereqId
+            : undefined;
+          return req !== undefined ? { id: s.id, pt: s.pt, requires: req } : { id: s.id, pt: s.pt };
+        }),
       });
       setResult(r);
     } catch (e) {
@@ -127,8 +167,7 @@ export default function App() {
     }
   };
 
-  const download = () => {
-    const blob = new Blob([exportPlan(plan)], { type: 'application/json' });
+  const download = () => {    const blob = new Blob([exportPlan(plan)], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'skill-plan.json';
@@ -300,11 +339,21 @@ export default function App() {
             <button className="primary" onClick={compute} disabled={running || plan.skills.length === 0}>
               {running ? '计算中…(几秒到几十秒)' : '开始计算'}
             </button>
+            {bridge && (
+              <button onClick={readFromEmulator} disabled={reading}>
+                {reading ? '读取中…' : '从模拟器读取'}
+              </button>
+            )}
             <button onClick={openFile}>导入 JSON</button>
             <button onClick={download}>导出 JSON</button>
-            <button onClick={() => { setPlan(importPlan(JSON.stringify(EXAMPLE))); setResult(null); }}>载入示例</button>
+            <button onClick={() => { setPlan(importPlan(JSON.stringify(EXAMPLE))); setResult(null); setReadLog([]); }}>载入示例</button>
             <input ref={fileRef} type="file" accept=".json" hidden onChange={onFile} />
           </div>
+          {readLog.length > 0 && (
+            <ul className="read-log">
+              {readLog.map((line, i) => <li key={i}>{line}</li>)}
+            </ul>
+          )}
           {error && <p className="error">{error}</p>}
         </section>
       </div>

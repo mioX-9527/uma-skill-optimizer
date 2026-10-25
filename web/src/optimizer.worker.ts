@@ -14,7 +14,7 @@ interface WorkerInput {
   readonly groundCondition: GroundCondition;
   readonly weather: Weather;
   readonly season: Season;
-  readonly skills: readonly { id: string; pt: number }[];
+  readonly skills: readonly { id: string; pt: number; requires?: string }[];
 }
 
 const ctx = self as unknown as {

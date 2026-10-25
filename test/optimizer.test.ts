@@ -120,4 +120,31 @@ describe('optimize', () => {
     // 若本赛道体力跑不空,会附上"体力未耗尽"的说明
     expect(rej.detail === '' || rej.detail.includes('体力')).toBe(true);
   });
+
+  it('金技能申报下位后,「金+前置」只按金标价计费(不重复收前置的钱)', () => {
+    // 游戏里金技能列表价 = 前置价 + 金技能自己的折后价;
+    // 所以 先走一步！304 已经包含 游戏到此为止！160,两者一起买仍是 304,而不是 464。
+    const pre = SKILLS.find(s => s.name === '游戏到此为止！')!;
+    const gold = SKILLS.find(s => s.name === '先走一步！')!;
+    const both = optimize({
+      course, runner, budget: 2000,
+      candidates: [
+        { id: pre.id, pt: 160 },
+        { id: gold.id, pt: 304, requires: pre.id },
+      ],
+    });
+    expect(both.totalPt).toBeLessThanOrEqual(304);
+    const goldRow = both.chosen.find(c => c.id === gold.id);
+    expect(goldRow).toBeDefined();
+    expect(goldRow!.includesPrereq).toContain(pre.name);   // 效果里确实带了前置
+    // 前置被合并进来后,再单独买它没有额外收益
+    const preRej = both.rejected.find(x => x.id === pre.id);
+    if (preRej) expect(preRej.reason === 'no-gain' || preRej.reason === 'outbid').toBe(true);
+  });
+
+  it('前置不在候选里时,不申报关系、也不改价(已买过前置的情形)', () => {
+    const gold = SKILLS.find(s => s.name === '先走一步！')!;
+    const alone = optimize({ course, runner, candidates: [{ id: gold.id, pt: 144 }], budget: 2000 });
+    expect(alone.totalPt).toBe(144);
+  });
 });

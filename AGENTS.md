@@ -53,10 +53,21 @@ uma-skill-optimizer/
 │     ├─ optimizer.worker.ts    Worker 入口(web 模式下优化器在此运行)
 │     ├─ styles.css             浅色主题
 │     └─ vite-env.d.ts          vite client 类型(支持 ?worker&inline)
-├─ test/optimizer.test.ts       7 项单测
+├─ test/optimizer.test.ts       12 项单测
 ├─ examples/input.example.json  CLI/网页共用的输入示例
+├─ app/                         ★ Python 侧:桌面窗 + 从模拟器自动读取(§10)
+│  ├─ main.py                   pywebview 壳,把 Bridge 方法暴露给前端 window.pywebview.api
+│  ├─ adb.py                    连接/取帧/滑动(雷电自带 adb,127.0.0.1:5555)
+│  ├─ capture.py                翻页编排:划到顶→逐屏识别→去重→判停
+│  ├─ ocr.py                    RapidOCR 封装(行带 det / 单行 rec-only,2× 放大)
+│  ├─ match.py                  名称→技能匹配 + ○/◎ 跨行价格消歧
+│  ├─ layout.py + layouts/      版式 profile(720x1280 一份,坐标待校准)
+│  ├─ cli.py                    doctor / shot / calibrate / ocr / capture
+│  ├─ requirements.txt          pywebview + rapidocr + onnxruntime
+│  └─ tests/                    test_match.py(纯逻辑)、test_capture.py(造假帧的端到端)
 ├─ 运行示例.bat                 双击跑 CLI 示例(注意:批处理调 npm 必须 `call npm`,否则闪退)
 ├─ 打开规划器.bat                双击起 vite dev
+├─ 启动桌面版.bat                ★ 双击开桌面窗(带「从模拟器读取」按钮)
 ├─ 打开规划器.html               ★ 单文件构建产物(已入 git)。用户双击即用,无需 Node
 └─ dist-web/ dist-standalone/   构建输出(gitignored)
 ```
@@ -137,7 +148,7 @@ CLI 与网页结果必须一致。示例特意包含"单项 4.07 → 组合内�
   **rarity 映射**:normal=白技能,rareEvolved=金技能,evolved=进化技能,unique1~6=本体固有,uniqueHeir=继承固有(900xxx)。固有多等级同名,如 全心全意(1)/(2)/(继承) 三条——名称匹配歧义时报错列出让用户用 id。
   **注意 `is_basis_distance`** ≠ 距离档:1 = 赛程是 400 米整数倍(标准距离),引擎判 `distance % 400 === 0`;按中文技能名猜会全反。
 - `tools/sync-from-uma-race-sim.mjs`:从 `../uma-race-sim`(可 `--from` 覆盖)复制 engine/analysis 源码与数据 → 把 ablate.ts 里 `@uma-race-sim/engine` 改写为 `../engine/index.js` → 写 `data/SYNC_INFO.json` → **自动跑 `npm run web:standalone` 重建 打开规划器.html**(node_modules 未装则跳过并提示)。上游引擎更新后跑 `npm run sync` 一条命令全量同步。
-- PT 基价不在上游数据里(skills.json 没有 pt 字段,BWIKI/lua 解包里也没有)。`src/base-pt.json` 是兜底估算(白100/其余200),**仅当输入未给 pt 时使用并警告**;P1 的截图识别(§8)落地后应以实际价格为准。
+- PT 基价不在上游数据里(skills.json 没有 pt 字段,BWIKI/lua 解包里也没有)。`src/base-pt.json` 是兜底估算(白100/其余200),**仅当输入未给 pt 时使用并警告**;P1 的自动读取(§9/§10)落地后应以实际价格为准。
 
 ## 6. Web 版(web/)
 
@@ -178,11 +189,133 @@ npm run web          # 浏览器打开 5183,载入默认示例点"开始计算",
 
 ## 9. 路线图
 
-- **P1 截图识别(下一个大项,用户最期待)**:国服技能购买界面截图 → OCR 实际价格 + 技能名匹配 → 一键导入。背景:技能价格因 hint 折扣因号而异,直接 OCR 价格数字(而非识别 hint 等级再查折扣表)对游戏改版最鲁棒;名称匹配复用 src/lookup.ts + skills.json 国服译名,价格+稀有度可交叉校验。需用户提供截图定 UI 模板。参考:umax-tools.com(日服截图读评价点,本地处理)、国服自动化项目 shiokaze/UmamusumeAutoTrainer。落地形态待定:浏览器端 OCR(onnx/paddle.js)或本地脚本。
+- **P1 自动读取实际 PT(已完成首版,2026-10-25 真机跑通)**:ADB 连雷电 → 逐屏截图 → 局部 OCR 读「技能名 + 实际价格 + PT 余额」→ 喂优化器。
+  落地形态:**pywebview 桌面窗**(见 §10),只读技能屏,面板/赛道仍手填。
+  实测一把 30 行的育成:43 屏 / 44 帧 / 约 100 s,读出 **44 条可购买技能 + PT 余额 2034**,价格与界面逐个一致。
+  为什么不用其它路线:uiautomator/无障碍读不到 Unity 控件树;内存读取成本高且与版本强耦合。
 - **P2 Web 增强**:速度/体力曲线与发动位置可视化(上游有 uPlot 方案可搬)、多方案对比、URL 分享。
-- **待办小事**:courseFix 网页端暴露;手动 greenBonus 输入(给「因子/面板抄来的前提值」用,绿技能本身已按候选自动计入);CLI 增加进度输出(onProgress 已预留)。
+- **P1.5 白↔金价格联动(已完成)**:已从 BWIKI 的 SMW 查询拿到全部前置关系,并接进优化器
+  (`data/skill-chains.json` + `app/chains.py` + `CandidateSkill.requires`),详见 §10。
+  重新抓数据:`node tools/fetch-skill-chains.mjs`(游戏更新后跑一次)。
+  注意:当前只处理**一层**前置(金 ← 白);多层链条(金 ← 白 ← 更下位)在赛马娘里基本不存在,遇到再扩。
+- **待办小事**:courseFix 网页端暴露;手动 greenBonus 输入;CLI 增加进度输出(onProgress 已预留)。
 
-## 10. 约定
+## 10. 桌面版与自动读取(app/)
+
+**是什么**:pywebview 装一层壳(`app/main.py`),窗口里加载 `打开规划器.html`,并把 Python 能力通过
+`window.pywebview.api` 暴露给前端(`doctor` / `capture_skills` / `save_plan`)。前端只要判断
+`window.pywebview?.api` 存不存在来决定是否显示按钮,所以**单文件 HTML 版照旧可用**。
+
+**为什么不走 HTTP 服务**:网页版是纯前端,`file://` 下调不到 adb;桌面壳省掉一个常驻进程,
+也不用改 Vite 打包方式。代价是要 `pip install -r app/requirements.txt`(pywebview + rapidocr + onnxruntime)。
+
+**实测环境(2026-10-25)**:雷电 9.5.39,实例 0 = `127.0.0.1:5555`,**720×1280 @320dpi**,Android 9 / SDK 28,
+游戏包名 `com.bilibili.umamusu`。用雷电自带 `E:\leidian\LDPlayer9\adb.exe`(与设备 SDK 同代,比新版 platform-tools 稳)。
+`exec-out screencap -p` 实测 **280~350ms/帧**(早期用 shell 重定向测出的 ~1s 是 Git Bash 的额外开销,不是真实值)。
+
+**四个必须记住的坑**(都是踩出来的):
+1. **`get-state` 是 adb 宿主命令,不是设备 shell 命令**,写成 `shell get-state` 会报 not found。
+2. **价格/角标这类单行小数字必须走 rec-only**(`engine(img, use_det=False, use_rec=True)`):
+   det 对"右侧贴着裁剪边缘的小数字"经常直接检不到(同样字号下 200 检不到、130 检得到),
+   而 rec-only 四条都是 0.999+。
+3. **PP-OCR 会整个丢掉「◎」**(中距离直线◎ → 中距离直线),把「○」认成「。」,「×」反而认得对。
+   所以匹配分两步:先按**原样**精确匹配(尊重 OCR 给的符号,否则 直线赛道× 会被展开成三个候选凭空多出"需确认"),
+   再补符号变体;真正区分 ○/◎ 靠 `match.resolve_rows()` 的**跨行价格消歧**(游戏里价格随等级单调,比 OCR 可靠)。
+4. **去重键是 (归一化名字, 价格),不能只用名字**:OCR 常把 ○/◎ 的符号都读丢,
+   只按名字会把两个不同技能合并成一行。
+
+**版式是「锚定式」,不是固定行高**(2026-10-25 真机校准时改的,原因很硬):
+- **卡片高度不统一**:带「达成进化条件」标题的金卡更高,已获得的灰卡更矮,同一屏内就有差;
+  用户也确认「每把技能数量不一样,高度会不同」。按 `row.height` 累加切行,滚几屏后必然把名字和价格串到隔壁卡。
+- 做法:每张可购买卡片右侧有一个**纯绿「+」按钮**(实测 x=629..671, HSV 落在 (35,90,80)~(75,255,255)),
+  用连通块求它的中心 `cy`,再以 `cy` 为基准裁名字(`cy-80..cy-34`)与价格(`cy-26..cy+18`)。
+  与卡片高度、滚动位置完全无关。
+- 附带收益:**已获得/不可购买的卡片没有这个按钮**,天然被排除,不需要再判灰度。
+
+**滑动与判停的四条规矩**(全部踩坑得来,别改回去):
+1. **起点终点都必须落在列表区内(y≈480~960)**。用比例坐标 `0.30→0.80` 时起点 y=384 落在上半屏马娘立绘上,
+   那块是纯背景图,游戏直接忽略这次滑动——表现为"怎么划都滚不动"。
+2. **回顶用短促 fling**(`duration=120ms`, y 700→960):实测每次滚 1~2 行,从底部回顶要 **17~19 次**;
+   而慢速拖 250px 只滚不到一行,十几步也回不来。所以 `max_steps` 给到 26。
+3. **判停比对 `find_rows` 的 cy 序列 / 技能名序列,不用像素差**:列表到底/到顶会 overscroll 回弹,
+   像素一直在抖(实测差 5~20),永远等不到"画面不变";而 cy 和名字会稳定下来。
+   回顶阶段要求**连续 3 次一致**才算到顶——只要求 2 次时,偶发一次 fling 没滚动就会误判,
+   顶部两条(闪光☆着陆 / ∴win Q.E.D.)就是这么漏掉的。
+4. **精读用小步慢拖**(y 900→770, `duration=420ms`):每次 1~1.5 行,保证相邻两屏重叠 ≥1 行。
+   重叠是唯一的防漏手段;步长一旦超过可见行数就会跳行。
+
+**`list.top` 为什么是 540**:列表顶端有一条黑色渐隐遮罩(约到 y≈460 结束)。若允许 `cy` 更小,
+名字带会伸进遮罩区,OCR 会把「标准距离○」读成「准此高」;更糟时整块落在「当前技能点数 2034」那条上,
+凭空多出一条叫「当前技能点数20」的技能。`list.bottom=978` 则是避开底部「确定/重置」按钮。
+
+**两条技能界面机制(用户 2026-10-25 告知,已据此改实现,别再搞错)**:
+1. **○ 是 ◎ 的下位,两者占同一格**。格子里显示的是「当前可买等级」——没学过时显示 ○,买了 ○ 之后同一格才变成 ◎。
+   享受的折扣相同。**所以「同名两行」(○ 和 ◎ 同时出现)根本不会发生**。
+   早期 `resolve_rows()` 里那段「按价格给同名多行配 ○/◎」的逻辑基于错误前提,从未触发过,**已删除**。
+2. **金技能的下位白技能是分开的两格**。买了下位白技能,金技能的价格会**减少相应点数**;折扣分开算。
+   → 更关键的是:**列表里金技能显示的价格本身就等于「前置价 + 金技能自己的折后价」**。
+   实测四组(与 BWIKI 原始价吻合):
+
+   | 抓到的显示价 | BWIKI 消耗/共需 | 拆解(前置显示价 + 金自己) |
+   |---|---|---|
+   | 先走一步！304 | 160 / 320 | 游戏到此为止！160 + 160×0.9 = **144** |
+   | 巅峰之梦 320 | 200 / 400 | 背负信念 180 + 200×0.7 = **140** |
+   | 浑然忘我 288 | 180 / 360 | 不顾一切 144 + 180×0.8 = **144** |
+   | 内侧体验 304 | 160 / 320 | 弯里横 160 + 160×0.9 = **144** |
+
+   所以「金 304 + 前置 160 = 464」是**高估**,两者一起买只要 304。
+   反过来说:前置**还在列表里**说明没买过,显示价才含前置;前置**不在列表里**(已获得)时显示价就是纯金价
+   —— 「迅速果断 180」正是这种情况(它的前置「向前抢位」在界面上是已获得灰显)。
+
+**上下位关系怎么用**(数据 + 代码):
+- 数据:`data/skill-chains.json`,由 `node tools/fetch-skill-chains.mjs` 从 **BWIKI 的 SMW 查询**生成
+  (`[[前置技能::+]]|?前置技能|?技能消耗PT|?共需技能PT`;简中页标题是 `简/<技能名>`)。
+  实测 995 页命中 → **249 条关系 / 190 个金技能**(350 个金技能里 54% 有前置,其余本来就没有下位)。
+- 注入:`app/chains.py` 的 `pairs_within()` 只挑**两端都在候选里**的配对(前置不在=已买,不能抵扣),
+  由 `app/cli.py` 与 `app/main.py` 写进 plan 的 `chains: [{skillId, prereqId}]`;网页 PlanState 有同名字段。
+- 优化器:`CandidateSkill.requires` → `Cand.withSkills`(自己 + 前置,模拟时按 id 去重合并)
+  + `costOf()`(前置已在组合里就只付差额)。等价于「买金自动带前置、前置只收一次」,与购买顺序无关。
+  回归用例见 `test/optimizer.test.ts` 的两条 requires 用例。
+
+**符号识别走形状,不走 OCR**(`app/symbol.py`):PP-OCR 对 ○ 的识别率是 0——det/rec-only × 2×/4× 四种配置
+全部返回「良场地」(放大也救不回来,因为 ○ 的笔画只有 1~2px,汉字是 4~6px)。
+改用二维连通域的特征判定,实测(720×1280 @320dpi):
+
+| | 宽高 | 填充率 | 说明 |
+|---|---|---|---|
+| 汉字 | 18~20 × 19~20 | 0.47~0.83 | 笔画粗 |
+| ○ | 15 × 16 | 0.23~0.30 | 1px 细环 |
+
+判据用「填充率 ≤ 0.36 且尺寸 11~18 × 12~20」→ ○(实测 9/9 全中,误判 0)。
+「洞占比」看着更直观但**不可用**:环只有 1px,抗锯齿下常有缺口,洞会和背景连通,时有时无。
+◎ 的阈值(填充率 0.36~0.47)是**推断值**,当前截图里一条 ◎ 都没有(因为要学了 ○ 才会显示 ◎),
+所以判成 ◎ 时标 `needs_confirm`,等真样本再收紧。
+
+**版式 profile**:`app/layouts/<w>x<h>.json`。`calibrated: false` 时 `capture_all()` 直接拒绝执行。
+校准流程:把游戏停在技能购买列表 → `python -m app.cli calibrate`
+→ 看 `app/_debug/calib_lines.png`(画了列表区、PT 框、每行 cy 与名字/价格框)调 `list.*`、`anchor.*`、`crops.*`。
+
+**匹配层的两条过滤**:
+- `SkillIndex` 会剔除 **× 类减益绿技能**(效果全为负的 passive,如 良场地× 力量-40)。
+  它们是对手施加给你的,不可能出现在自己的购买列表;不剔除就会把「良场地○ 81pt」错配成「良场地× 81pt」。
+- `normalize()` 把 `.／．／…` 统一成 `…`:「向着，更远的地方……」每屏认出的点号个数都不同,
+  不归一就会被当成两个技能重复计数(实测多算出一条 900591)。
+
+**验证入口**:
+```bash
+python -m app.cli doctor            # adb + 分辨率 + 版式状态
+python -m app.cli calibrate         # 出调试图
+python -m app.cli ocr -i frame.png --rows   # 离线调解析(不连模拟器)
+python -m app.cli capture -o plan.json      # 全流程
+python app/tests/test_match.py      # 18 项:归一化/符号消歧/灰显过滤
+python app/tests/test_capture.py    # 端到端:造假帧 → 真 OCR → 匹配 → plan
+```
+`test_capture.py` 特意把 PP-OCR 的真实缺陷(丢 ◎、○→。)写进断言,OCR 模型升级会立刻暴露。
+
+**注意**:`打开规划器.html` 由 `npm run web:standalone` 生成,桌面窗加载的是这份产物;
+改了前端要重建,否则桌面窗里还是旧界面。
+
+## 11. 约定
 
 - UI 与文档一律中文;代码注释只写"代码本身说不出的约束"。
 - 代码 GPL-3.0-or-later(随上游);`src/engine`、`src/analysis`、`data/` 沿用上游许可与版权说明。

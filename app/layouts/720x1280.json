@@ -1,0 +1,35 @@
+{
+  "_comment": "技能购买界面版式(720x1280)。锚定式:不按固定行高切行,而是用每张可购买卡片右侧的纯绿色「+」按钮定位行中心 cy,再以 cy 为基准裁名字/价格。坐标全是原图像素。校准:停在技能购买列表跑 `python -m app.cli calibrate`。",
+  "calibrated": true,
+  "resolution": { "width": 720, "height": 1280 },
+
+  "_list_comment": "top 必须让名字带(cy-80)整块落在顶部渐隐遮罩之下,否则会读到「当前技能点数 2034」那一条;bottom 必须避开底部确定/重置按钮。",
+  "list": { "top": 540, "bottom": 978 },
+
+  "_anchor_comment": "绿色 + 按钮:实测 x=629 w=42 h=44。x_min/x_max 用来排除卡片左侧同为绿色的技能图标(x≈50)。",
+  "anchor": {
+    "hsv_lo": [35, 90, 80],
+    "hsv_hi": [75, 255, 255],
+    "x_min": 600,
+    "x_max": 720,
+    "w_range": [30, 70],
+    "h_range": [36, 70],
+    "area_min": 400
+  },
+
+  "row_height": 185,
+
+  "_crops_comment": "x0/x1 是绝对 x;dy0/dy1 是相对行中心 cy 的偏移。",
+  "crops": {
+    "name":  { "x0": 125, "x1": 548, "dy0": -80, "dy1": -34 },
+    "price": { "x0": 563, "x1": 630, "dy0": -26, "dy1": 18 }
+  },
+
+  "pt_balance": { "x0": 495, "y0": 396, "x1": 700, "y1": 438 },
+
+  "_scroll_comment": "to_top 用短时长长距离 fling(每次滚 1~2 行,实测回顶要 17 次,上限给到 26 防止漏顶);to_bottom 用小步慢拖(每次滚 1~1.5 行,保证跨屏重叠 ≥1 行)。起点终点都必须落在列表区内(y 480~960),否则游戏忽略这次滑动。",
+  "scroll": {
+    "to_top":    { "x": 360, "y0": 700, "y1": 960, "duration_ms": 120, "settle_s": 0.70, "max_steps": 26 },
+    "to_bottom": { "x": 360, "y0": 900, "y1": 770, "duration_ms": 420, "settle_s": 0.55, "max_steps": 60 }
+  }
+}

@@ -14,6 +14,12 @@ export interface PlanSkill {
   readonly precision: string;
 }
 
+/** 下位技能关系:skillId 的列表价已包含 prereqId 的价格 */
+export interface PlanChain {
+  readonly skillId: string;
+  readonly prereqId: string;
+}
+
 export interface PlanState {
   readonly courseId: string;
   readonly budget: number;
@@ -29,6 +35,11 @@ export interface PlanState {
   /** 季节(仅用于技能条件判定) */
   readonly season: Season;
   readonly skills: readonly PlanSkill[];
+  /**
+   * 下位技能关系(从模拟器读技能时自动带上)。
+   * 金技能的列表价 = 前置价 + 金自己的折后价,不声明这个会把「金+前置」重复计费。
+   */
+  readonly chains: readonly PlanChain[];
 }
 
 export const RARITY_LABEL: Record<string, string> = {
@@ -117,6 +128,7 @@ export function exportPlan(state: PlanState): string {
         season: state.season,
       },
       skills: state.skills.map(s => ({ id: s.id, name: s.name, pt: s.pt })),
+      ...(state.chains.length > 0 ? { chains: state.chains } : {}),
     },
     null,
     2,
@@ -180,6 +192,13 @@ export function importPlan(text: string): PlanState {
     weather: int(r.weather, 1, 4, 1) as Weather,
     season: int(r.season, 1, 5, 1) as Season,
     skills,
+    chains: Array.isArray(p.chains)
+      ? (p.chains as unknown[])
+          .map(c => c as Record<string, unknown>)
+          .filter(c => typeof c.skillId === 'string' && typeof c.prereqId === 'string')
+          .map(c => ({ skillId: c.skillId as string, prereqId: c.prereqId as string }))
+          .filter(c => skills.some(s => s.id === c.skillId) && skills.some(s => s.id === c.prereqId))
+      : [],
   };
 }
 
@@ -220,7 +239,8 @@ export interface RunInput {
   readonly groundCondition: GroundCondition;
   readonly weather: Weather;
   readonly season: Season;
-  readonly skills: readonly { id: string; pt: number }[];
+  /** requires = 下位技能 id(列表价已含它);由 App 从 plan.chains 展开后传入 */
+  readonly skills: readonly { id: string; pt: number; requires?: string }[];
 }
 
 function runOnMain(input: RunInput): Promise<OptimizerResult> {

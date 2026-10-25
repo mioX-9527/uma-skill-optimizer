@@ -2,3 +2,9 @@ node_modules/
 dist-web/
 dist-standalone/
 *.log
+
+# Python 侧(桌面版 / 自动读取)
+__pycache__/
+*.pyc
+# 调试产物:截图、校准标注图、临时 plan
+app/_debug/

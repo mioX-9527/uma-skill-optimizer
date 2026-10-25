@@ -8,6 +8,17 @@ const SKILL_INDEX = new Map(SKILLS.map(s => [s.id, s] as const));
 export interface CandidateSkill {
   readonly id: string;
   readonly pt: number;
+  /**
+   * 下位技能 id(前置技能)。**必须由调用方从游戏里读到的实际价格关系给出**。
+   *
+   * 为什么需要:列表里金技能显示的价格是「前置价 + 金技能自己的折后价」——
+   * 买了前置之后金技能会抵扣掉那部分。实测(与 BWIKI 原始价吻合):
+   *   先走一步！304 = 前置「游戏到此为止！」160 + 160×0.9
+   *   巅峰之梦  320 = 前置「背负信念」200     + 200×0.6
+   * 所以「金 304 + 前置 160 = 464」是高估,两者一起买只要 304。
+   * 给出 requires 后:单独买金按 304 计(会自动带上前置),先买前置再买金按 304-160=144 计。
+   */
+  readonly requires?: string;
 }
 
 export interface OptimizerInput {
@@ -27,7 +38,12 @@ export interface OptimizerInput {
 export interface ChosenSkill {
   readonly id: string;
   readonly name: string;
+  /** 实付价。带前置且前置也买了 → 已扣掉前置那部分;否则含前置 */
   readonly pt: number;
+  /** 该候选标价(列表上显示的那个数,含未买的前置) */
+  readonly listPt: number;
+  /** 会一并买下的下位技能名(没有则为空数组) */
+  readonly includesPrereq: readonly string[];
   /** 单独购买时的马身收益 */
   readonly soloBody: number;
   /** 在最终组合内的边际马身(leave-one-out 口径) */
@@ -72,7 +88,14 @@ export interface OptimizerResult {
 interface Cand {
   readonly id: string;
   readonly skill: SkillEntry;
+  /** 显示价(未买前置时它包含前置的价) */
   readonly pt: number;
+  /** 买这个技能时会一并装入的技能:自己 + 未买的下位技能 */
+  readonly withSkills: readonly SkillConfig[];
+  /** 下位技能 id 列表(为空表示没有前置) */
+  readonly requires: readonly string[];
+  /** 下位技能的显示价之和:当前置已在组合里时,可抵扣掉这么多 */
+  readonly requiresPt: number;
   /** 单独购买时的时间收益(秒) */
   soloSec: number;
   /** 最近一次已知的时间边际(秒) */
@@ -191,8 +214,31 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
   const cands: Cand[] = input.candidates.map(c => {
     const skill = SKILL_INDEX.get(c.id)!;
-    return { id: c.id, skill, pt: c.pt, soloSec: 0, lastMarginal: 0, state: 'pool', blockedDetail: null };
+    // 前置技能必须在候选池里:不在就说明它已经买过(或买不到),此时显示价里不含前置,不能抵扣
+    const pre = c.requires !== undefined ? SKILL_INDEX.get(c.requires) : undefined;
+    const preListed = c.requires !== undefined && seen.has(c.requires) && pre !== undefined;
+    const prePt = preListed
+      ? (input.candidates.find(x => x.id === c.requires)?.pt ?? 0)
+      : 0;
+    return {
+      id: c.id,
+      skill,
+      pt: c.pt,
+      withSkills: preListed ? [pre!, skill] : [skill],
+      requires: preListed ? [c.requires!] : [],
+      requiresPt: prePt,
+      soloSec: 0,
+      lastMarginal: 0,
+      state: 'pool' as const,
+      blockedDetail: null,
+    };
   });
+
+  /** 这个候选当前的实付价:前置已在组合里 → 只付差额;否则要连前置一起付 */
+  const costOf = (c: Cand, chosenIds: ReadonlySet<string>): number =>
+    c.requires.length > 0 && c.requires.every(r => chosenIds.has(r))
+      ? Math.max(0, c.pt - c.requiresPt)
+      : c.pt;
 
   // ── 剔除"本配置下根本不会生效"的候选:这类技能模拟收益恒为 0,
   //    若按 no-gain 汇报会被误读成"技能没用",实际是限制不满足或效果未建模
@@ -223,31 +269,54 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const baseSim = sim([]);
   for (const c of cands) {
     if (c.state === 'blocked') continue;
-    c.soloSec = baseSim.finishTimeSec - sim([c.skill]).finishTimeSec;
+    // 带前置的候选,单独买等于把前置一起买了,所以按 withSkills 算单项收益
+    c.soloSec = baseSim.finishTimeSec - sim(c.withSkills).finishTimeSec;
     c.lastMarginal = c.soloSec;
   }
   for (const c of cands) {
     if (c.state === 'pool' && c.pt > budget) c.state = 'no-gain';
   }
 
-  const skillsOf = (cs: readonly Cand[]) => cs.map(c => c.skill);
+  // 去重合并:前置技能可能已经被别的候选带进来了,同一技能在模拟里只能出现一次
+  const skillsOf = (cs: readonly Cand[]): SkillConfig[] => {
+    const m = new Map<string, SkillConfig>();
+    for (const c of cs) for (const s of c.withSkills) m.set(s.id, s);
+    return [...m.values()];
+  };
   const chosen: Cand[] = [];
   let spent = 0;
   const remaining = () => budget - spent;
   const pool = () => cands.filter(c => c.state === 'pool');
+  const chosenIds = () => new Set(chosen.map(c => c.id));
+  const costIn = (c: Cand) => costOf(c, chosenIds());
+
+  /**
+   * 一组技能的实际总价。
+   * 每个技能的 pt 已含前置价;若前置也在组里,那部分只该收一次,所以扣掉。
+   * (与选择顺序无关:先买前置再买金 = 先买金自动带前置,总价相同)
+   */
+  const totalSpent = (cs: readonly Cand[]): number => {
+    const ids = new Set(cs.map(c => c.id));
+    return cs.reduce(
+      (sum, c) => sum + c.pt - (c.requires.length > 0 && c.requires.every(r => ids.has(r)) ? c.requiresPt : 0),
+      0,
+    );
+  };
 
   /** 贪心装入:每轮重算全部在池候选的边际,选 边际/PT 效率 最高者 */
   const greedyFill = () => {
     for (;;) {
-      const feasible = pool().filter(c => c.pt <= remaining());
+      const feasible = pool().filter(c => costIn(c) <= remaining());
       if (feasible.length === 0) return;
       const cur = sim(skillsOf(chosen));
       let best: { cand: Cand; gain: number; ratio: number } | null = null;
       for (const c of feasible) {
-        const gain = timeGain(cur, sim([...skillsOf(chosen), c.skill]));
+        const gain = timeGain(cur, sim([...skillsOf(chosen), ...c.withSkills]));
         c.lastMarginal = gain;
         if (gain <= eps) continue;
-        const ratio = gain / c.pt;
+        const cost = costIn(c);
+        // 前置已付清且差额为 0 → 白送,优先级最高
+        const ratio = cost > 0 ? gain / cost : Number.POSITIVE_INFINITY;
         if (best === null || ratio > best.ratio) best = { cand: c, gain, ratio };
       }
       if (best === null) {
@@ -256,7 +325,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       }
       best.cand.state = 'chosen';
       chosen.push(best.cand);
-      spent += best.cand.pt;
+      spent = totalSpent(chosen);
     }
   };
 
@@ -276,9 +345,11 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     let best: { out: Cand; in: Cand; gain: number } | null = null;
     for (const b of insertCands) {
       for (const a of chosen) {
-        if (b.pt > remaining() + a.pt) continue;
         const next = chosen.filter(x => x !== a);
-        const gain = timeGain(cur, sim([...skillsOf(next), b.skill]));
+        const nextIds = new Set(next.map(x => x.id));
+        const inCost = costOf(b, nextIds);
+        if (inCost > remaining() + a.pt) continue;
+        const gain = timeGain(cur, sim([...skillsOf(next), ...b.withSkills]));
         if (gain > eps && (best === null || gain > best.gain)) best = { out: a, in: b, gain };
       }
     }
@@ -287,7 +358,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     best.out.state = 'pool';
     best.in.state = 'chosen';
     best.out.lastMarginal = 0;
-    spent += best.in.pt - best.out.pt;
+    spent = totalSpent(chosen);
     greedyFill();
   }
 
@@ -301,6 +372,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
 
   const rejected: RejectedSkill[] = [];
+  const chosenSet = new Set(chosen.map(c => c.id));
   for (const c of cands) {
     if (c.state === 'chosen') continue;
     const reason: RejectedSkill['reason'] =
@@ -319,11 +391,11 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     rejected.push({
       id: c.id,
       name: c.skill.name,
-      pt: c.pt,
+      pt: costOf(c, chosenSet),
       soloBody: c.soloSec * bodyPerSec,
       reason,
       detail: c.blockedDetail ?? healIdle,
-      missingPt: Math.max(0, c.pt - remaining()),
+      missingPt: Math.max(0, costOf(c, chosenSet) - remaining()),
       lastMarginalBody: c.lastMarginal * bodyPerSec,
     });
   }
@@ -345,14 +417,22 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
 
   return {
-    chosen: chosen.map(c => ({
-      id: c.id,
-      name: c.skill.name,
-      pt: c.pt,
-      soloBody: c.soloSec * bodyPerSec,
-      finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
-      finalMarginalSec: finalMarginals.get(c.id) ?? 0,
-    })),
+    chosen: chosen.map(c => {
+      // 前置也被选了 → 那部分只收一次,所以这里显示差额
+      const prereqPaid = c.requires.length > 0 && c.requires.every(r => chosenSet.has(r));
+      return {
+        id: c.id,
+        name: c.skill.name,
+        pt: prereqPaid ? Math.max(0, c.pt - c.requiresPt) : c.pt,
+        listPt: c.pt,
+        includesPrereq: c.requires
+          .map(r => SKILL_INDEX.get(r)?.name)
+          .filter((n): n is string => n !== undefined),
+        soloBody: c.soloSec * bodyPerSec,
+        finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
+        finalMarginalSec: finalMarginals.get(c.id) ?? 0,
+      };
+    }),
     totalBody: (baseSim.finishTimeSec - finalSim.finishTimeSec) * bodyPerSec,
     totalPt: spent,
     remainingPt: remaining(),

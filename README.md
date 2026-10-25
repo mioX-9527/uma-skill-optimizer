@@ -77,15 +77,35 @@ npm run optimize -- --input examples/input.example.json [--budget 1000] [--out r
 3. **交换局部搜索**:尝试"换出已选 + 换入未选",收益提升则交换并回填预算再贪心
 4. **汇报**:最终组合的 leave-one-out 边际 + 未上车技能分类;"单项收益之和"与"实测总收益"同时给出,差值即技能间交互
 
+## 自动读取实际 PT(开发中)
+
+目标:把游戏停在技能购买界面,**一键读出所有可学技能和它们在你号上的实际价格**,直接进优化器,不用手抄。
+
+现状:ADB 连接、翻页、OCR、名称匹配都跑通了(有单测),**还差版式校准**——需要真实截图定行高和裁剪坐标。
+
+```bash
+pip install -r app/requirements.txt     # pywebview + rapidocr + onnxruntime
+双击 启动桌面版.bat                      # 开窗,里面会有「从模拟器读取」
+
+# 或者用命令行
+python -m app.cli doctor                # 自检:adb / 分辨率 / 版式状态
+python -m app.cli calibrate             # 出校准标注图(app/_debug/calib_lines.png)
+python -m app.cli capture -o plan.json  # 全流程抓取
+```
+
+前提:雷电模拟器已启动、游戏停在技能购买列表、该模拟器开着 ADB 调试。
+首版只读技能屏;**面板/跑法/赛道仍在网页里填**(那些在购买界面看不到)。
+
 ## 路线图
 
-- **P1** 截图识别:国服技能购买界面截图 → OCR 实际价格 + 技能名匹配,一键导入(对齐"直接读取实际 PT 价格"的需求)
+- **P1** 自动读取实际 PT:ADB + OCR 读技能名与价格(进行中,见上);桌面版 = pywebview 窗口
 - **P2** Web 界面增强:速度曲线/发动位置可视化(复用 uma-race-sim 的 uPlot 方案)、多方案对比、URL 分享
 
 ## 结构
 
 ```
 src/engine, src/analysis   vendor 自 uma-race-sim(npm run sync 重同步,勿手改)
+app/                       桌面窗 + 从模拟器自动读技能与价格(Python:adb + OCR)
 src/data.ts                技能/赛道数据加载
 src/optimizer.ts           优化器核心
 src/lookup.ts              赛道/技能名称模糊匹配

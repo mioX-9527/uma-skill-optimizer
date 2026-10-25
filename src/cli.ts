@@ -55,6 +55,11 @@ interface PlanInput {
     readonly courseFix?: number | 'auto';
   };
   readonly skills: readonly PlanSkillInput[];
+  /**
+   * 下位技能关系(可选)。格式 `[{ skillId, prereqId }]`,由游戏界面读取时自动带上。
+   * 列表里金技能显示的价格已包含前置价,不声明这个关系会把「金 + 前置」重复计费。
+   */
+  readonly chains?: readonly { readonly skillId: string; readonly prereqId: string }[];
 }
 
 function parseArgs(argv: readonly string[]): Record<string, string | boolean> {
@@ -168,8 +173,17 @@ function main(): void {
   const runner = validateRunner(plan.runner);
   const resolved = plan.skills.map((s, i) => resolveSkill(s, i));
   const estPt = resolved.filter(r => r.ptEst).map(r => r.skill.name);
-  const candidates = resolved.map(r => ({ id: r.skill.id, pt: r.pt }));
+  // 上下位关系:只有当**前置也在候选里**才生效(前置不在=已经买过,显示价里本来就不含它)
+  const chainMap = new Map((plan.chains ?? []).map(c => [String(c.skillId), String(c.prereqId)] as const));
+  const candIdSet = new Set(resolved.map(r => r.skill.id));
+  const candidates = resolved.map(r => {
+    const req = chainMap.get(r.skill.id);
+    return req !== undefined && candIdSet.has(req)
+      ? { id: r.skill.id, pt: r.pt, requires: req }
+      : { id: r.skill.id, pt: r.pt };
+  });
   const ptOf = new Map(candidates.map(c => [c.id, c.pt] as const));
+  const nameOf = new Map(resolved.map(r => [r.skill.id, r.skill.name] as const));
 
   console.log(`赛道: ${course.name}(${course.id})  跑法: ${TACTIC_LABEL[runner.tactic]}  预算: ${budget}pt  候选: ${candidates.length} 条`);
   console.log(`环境: 场地 ${GROUND_LABEL[runner.groundCondition ?? 0]}  天气 ${WEATHER_LABEL[runner.weather ?? 1]}  季节 ${SEASON_LABEL[runner.season ?? 1]}(只影响「绿技能/环境条件类技能」是否生效)`);
@@ -194,12 +208,18 @@ function main(): void {
   const W = { no: 3, name: 20, pt: 7, solo: 9, marg: 9, sec: 8 };
   console.log(tableRow(['#', '技能', 'PT', '单独马身', '集内边际', '边际(秒)'], [W.no, W.name, W.pt, W.solo, W.marg, W.sec], ['left', 'left', 'right', 'right', 'right', 'right']));
   result.chosen.forEach((c, i) => {
+    // 实付价与标价不同时(前置已买,扣掉了那部分)标出来;含前置的也标
+    const ptCell = c.pt !== c.listPt ? `${c.pt}*` : String(c.pt);
+    const nameCell = c.includesPrereq.length > 0 ? `${c.name}(含${c.includesPrereq.join('+')})` : c.name;
     console.log(tableRow(
-      [String(i + 1), c.name, String(c.pt), fmtBody(c.soloBody), fmtBody(c.finalMarginalBody), c.finalMarginalSec.toFixed(3)],
+      [String(i + 1), nameCell, ptCell, fmtBody(c.soloBody), fmtBody(c.finalMarginalBody), c.finalMarginalSec.toFixed(3)],
       [W.no, W.name, W.pt, W.solo, W.marg, W.sec],
       ['left', 'left', 'right', 'right', 'right', 'right'],
     ));
   });
+  if (result.chosen.some(c => c.pt !== c.listPt)) {
+    console.log('  * 前置技能已计入组合,这里显示的是扣掉前置后的实付价(合计已按实付计)');
+  }
 
   if (result.rejected.length > 0) {
     console.log('');

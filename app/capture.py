@@ -1,0 +1,206 @@
+"""翻页抓取编排:fling 回顶 → 小步逐屏 → 按钮锚定取行 → 去重 → 判停。
+
+实测出来的四条规则(2026-10-25,雷电 720x1280):
+1. **滑动必须落在列表区内**(y 480~960)。起点落在上半屏马娘立绘上时,游戏直接忽略这次滑动。
+2. **回顶用短时长长距离 fling**(duration 120ms):每次滚 3~4 行;而慢速拖 250px 只滚不到一行,
+   十几步也爬不回顶。
+3. **判停比对「这一屏读到的技能名序列」**,不用像素差。列表有 overscroll 回弹,
+   到底时像素仍在抖(实测差 5~20),而名字序列会稳定下来。
+4. **精读用小步慢拖**(每次 1~1.5 行),保证相邻两屏重叠 ≥1 行——重叠是唯一的防漏手段。
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+import numpy as np
+from PIL import Image
+
+from .adb import Adb, ScreenMeta
+from .layout import Profile
+from .match import Row, normalize
+from .ocr import Ocr
+from .symbol import detect as detect_symbol
+
+
+@dataclass
+class CaptureResult:
+    rows: list[Row] = field(default_factory=list)
+    pages: int = 0
+    stop_reason: str = ""
+    pt_balance: int | None = None
+    frames: int = 0
+    # 每屏读到的名字,便于排查"哪屏漏了"
+    pages_seen: list[list[str]] = field(default_factory=list)
+    # 按钮检测到了但名字没识别出来(OCR 空/被遮),这类行是真漏,必须报出来
+    unread: list[str] = field(default_factory=list)
+
+
+def frame_diff(a: Image.Image, b: Image.Image) -> float:
+    """两帧的平均灰度差(0~255)。仅供参考,判停不用它。"""
+    if a.size != b.size:
+        return 255.0
+    ga = np.asarray(a.convert("L"), dtype=np.int16)
+    gb = np.asarray(b.convert("L"), dtype=np.int16)
+    return float(np.abs(ga - gb).mean())
+
+
+def read_pt_balance(ocr: Ocr, image: Image.Image, profile: Profile) -> int | None:
+    """读顶部「当前技能点数」——纯数字,识别率最高,顺手当预算用。"""
+    import re
+
+    text = ocr.read_line(profile.pt_balance_box().crop(image))
+    m = re.search(r"\d{2,6}", text.replace(",", ""))
+    return int(m.group()) if m else None
+
+
+def read_page(image: Image.Image, profile: Profile, ocr: Ocr, page: int) -> list[Row]:
+    """从一屏里读出所有可购买行(尚未去重)。名字读不出来的也返回(空名字),由上层统计。"""
+    rows: list[Row] = []
+    for cy in profile.find_rows(image):
+        name_crop = profile.crop_around(image, cy, "name")
+        name = ocr.read_text(name_crop)
+        # ○ 的笔画只有 1~2px,PP-OCR 一律读不出来 → 用连通域形状单独判(见 symbol.py)
+        hit = detect_symbol(name_crop)
+        # 价格是一小块纯数字:走 rec-only,不用检测(检测对小数字不稳定,实测会漏)
+        price = ocr.read_line(profile.crop_around(image, cy, "price"))
+        rows.append(Row(name_text=name.strip(), price_text=price, y=cy, page=page,
+                        symbol=hit.symbol if hit else None,
+                        symbol_confident=hit.confident if hit else True))
+    return rows
+
+
+def _signature(rows: list[Row]) -> tuple[str, ...]:
+    return tuple(normalize(r.name_text) for r in rows)
+
+
+def _drag(adb: Adb, cfg: dict) -> None:
+    adb.swipe(int(cfg["x"]), int(cfg["y0"]), int(cfg["x"]), int(cfg["y1"]),
+              int(cfg["duration_ms"]))
+    adb.settle(float(cfg["settle_s"]))
+
+
+def scroll_to_top(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
+                  progress=None) -> int:
+    """fling 回顶。
+
+    判停用 `find_rows` 的 cy 序列,**不做 OCR**——回顶只为定位,识别放到后面的精读阶段,
+    这样每次只要 1 秒(截图 + 一次 HSV 检测)。
+
+    两个实测教训:
+    - **不要用像素差判停**:列表到底/到顶会 overscroll 回弹,像素一直在抖。
+    - **不要用「两次相同」就收工**:偶发一次 fling 没滚动会误判到顶,导致顶部几条被漏掉
+      (实测就这么漏掉过 闪光☆着陆 / Q.E.D. 两条)。所以要求连续 3 次 cy 序列完全一致。
+    """
+    cfg = profile.scroll["to_top"]
+    prev: tuple[int, ...] | None = None
+    same = 0
+    for step in range(int(cfg["max_steps"])):
+        adb.swipe(int(cfg["x"]), int(cfg["y0"]), int(cfg["x"]), int(cfg["y1"]),
+                  int(cfg["duration_ms"]))
+        adb.settle(float(cfg["settle_s"]))
+        cur = tuple(profile.find_rows(adb.screencap()))
+        if progress and step % 4 == 0:
+            progress(f"  回顶 {step + 1}/{cfg['max_steps']} 行中心={cur}")
+        if prev is not None and cur == prev:
+            same += 1
+            if same >= 2:          # 连续 3 次一致 → 真的到顶
+                return step + 1
+        else:
+            same = 0
+        prev = cur
+    return int(cfg["max_steps"])
+
+
+def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
+                max_pages: int | None = None, progress=None) -> CaptureResult:
+    if not profile.calibrated:
+        raise RuntimeError(
+            "版式还没校准(profile.calibrated=false),先跑 `python -m app.cli calibrate`。\n"
+            "  坐标不对时硬抓只会把名字和价格串错行。"
+        )
+    ocr.warmup()
+    result = CaptureResult()
+    steps = scroll_to_top(adb, meta, profile, ocr, progress)
+    if progress:
+        progress(f"已到列表顶部(fling {steps} 次)")
+
+    cfg = profile.scroll["to_bottom"]
+    limit = max_pages if max_pages is not None else int(cfg["max_steps"])
+
+    # 去重键 = (归一化名字, 价格):只按名字会把 ○/◎ 当同一行合并掉
+    # (OCR 常常把两者的符号都读丢),而这两者是不同技能、价格也不同。
+    seen: dict[tuple[str, int | None], Row] = {}
+    prev_sig: tuple[str, ...] | None = None
+    prev_names: set[str] = set()
+    same_streak = 0
+    gaps: list[str] = []       # 连续两次相邻屏零交集 → 可能跳过了行
+    gap_streak = 0
+
+    for page in range(limit):
+        image = adb.screencap()
+        result.frames += 1
+        result.pages = page + 1
+        if result.pt_balance is None:
+            result.pt_balance = read_pt_balance(ocr, image, profile)
+
+        rows = read_page(image, profile, ocr, page)
+        if not any(r.name_text for r in rows):
+            # 偶发:截图正落在滑动动画中间,整屏一个名字都没读到。补拍一次再判。
+            adb.settle(0.5)
+            image = adb.screencap()
+            result.frames += 1
+            rows = read_page(image, profile, ocr, page)
+
+        blank = [r for r in rows if not r.name_text]
+        if blank:
+            result.unread.append(f"第{page + 1}屏 cy={[r.y for r in blank]}")
+        new = 0
+        for row in rows:
+            key = (normalize(row.name_text), row.price)
+            if not key[0] or key in seen:
+                continue
+            seen[key] = row
+            new += 1
+        result.pages_seen.append([r.name_text for r in rows])
+        if progress:
+            shown = " / ".join(f"{r.name_text} {r.price or ''}" for r in rows) or "(无)"
+            progress(f"第 {page + 1} 屏 +{new} 累计 {len(seen)}:{shown}")
+
+        cur_names = {normalize(r.name_text) for r in rows if r.name_text}
+        if prev_names and cur_names and not (prev_names & cur_names):
+            # 相邻两屏零交集可能是"滚得太狠",也可能只是上一屏的行刚好被更小的
+            # 可读区切掉了(可见区只放得下 2 行,每次滚 1 行时很常见)。所以连续两次才报。
+            gap_streak += 1
+            if gap_streak >= 2:
+                gaps.append(f"第 {page - 1}~{page + 1} 屏")
+        else:
+            gap_streak = 0
+        prev_names = cur_names
+
+        sig = _signature(rows)
+        if prev_sig is not None and sig and sig == prev_sig:
+            same_streak += 1
+            if same_streak >= 2:
+                result.stop_reason = "连续三屏内容相同(到底了)"
+                break
+        else:
+            same_streak = 0
+        prev_sig = sig
+
+        _drag(adb, cfg)
+    else:
+        result.stop_reason = f"达到 {limit} 屏上限,可能还有未读到的技能"
+
+    result.rows = list(seen.values())
+    if result.unread:
+        result.stop_reason += (
+            f";⚠ {len(result.unread)} 行按钮在但名字没读出来({', '.join(result.unread[:3])}),"
+            f"这些技能漏了"
+        )
+    if gaps:
+        result.stop_reason += (
+            f";⚠ {len(gaps)} 处连续两屏无重叠({', '.join(gaps[:4])}),可能跳过了技能——"
+            f"可调小版式 scroll.to_bottom 的 y0-y1 距离后重抓"
+        )
+    return result

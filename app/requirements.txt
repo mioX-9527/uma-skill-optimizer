@@ -1,0 +1,7 @@
+# 桌面版 + 自动读取所需的 Python 依赖(装进任意 3.11~3.13 环境)
+#   pip install -r app/requirements.txt
+pywebview>=6.0        # 桌面窗(Windows 走 EdgeChromium / WebView2)
+rapidocr>=2.0         # OCR:PP-OCR 中文模型
+onnxruntime>=1.17     # rapidocr 的推理后端
+pillow>=10.0          # 切图、灰显判定
+numpy>=1.26           # 帧差、饱和度统计
