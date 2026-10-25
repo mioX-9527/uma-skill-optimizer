@@ -525,6 +525,11 @@ export default function App() {
           <p className="dim">(模拟次数:{result.simsUsed};导出 JSON 可在 CLI 中复跑同组合)</p>
         </section>
       )}
+
+      <p className="disclaimer">
+        由 mioX 通过 AI 制作,仅供个人测试使用,非官方同人开源工具(GPL-3.0),与 Cygames/bilibili 无关;《赛马娘 Pretty Derby》名称与商标归各权利方所有。
+        数据来源:公开解包数据与社区攻略资料整理;马身收益仅作技能购买参考。随机机制(随机位置发动/依赖他马等)按满足区段的期望值近似计算,近似项已在界面标注。
+      </p>
     </div>
   );
 }
