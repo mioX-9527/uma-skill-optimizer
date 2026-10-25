@@ -1,0 +1,12 @@
+# Windows 批处理必须是 CRLF —— 用 LF 时 cmd 会把多行当一行解析,
+# `if errorlevel 1 (` 这类块直接崩,双击就是一串「此时不应有 ...」。
+# 这里显式声明,避免以后在别的机器(或 autocrlf=false 的环境)检出成 LF。
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Python / TS 源码保持 LF
+*.py text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
