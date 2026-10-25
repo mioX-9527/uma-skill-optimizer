@@ -248,3 +248,51 @@ describe('区段随机取位技能按期望计价', () => {
     expect(row.evolveOptions![0]!.soloBody).toBeGreaterThanOrEqual(row.evolveOptions![1]!.soloBody);
   });
 });
+
+/**
+ * 单双圈(○/◎):**占同一格**——没买时显示 ○,买完 ○ 同一格变成 ◎(再买一次,价格另付)。
+ * 用户要求两级的马身收益**分开写**。◎ 的价格游戏列表里看不到(只能看到当前可买级),
+ * 来自 BWIKI 的 SMW 技能消耗PT(data/skill-pt.json),不猜价。
+ * 样本:中距离直线○(201102, 100pt, +0.15)/ ◎(201101, 110pt, +0.25),东京2400(中距离)实测
+ * ○ solo 0.61、◎ solo 0.91、◎ 的组合内边际 0.30 = 0.91−0.61(◎ 是升级版,**不与 ○ 叠加**)。
+ */
+describe('单双圈候选自动补全', () => {
+  const tokyo = COURSES.find(c => c.name.includes('东京') && c.distance === 2400)!; // 中距离
+  const runner = {
+    stats: { speed: 1600, stamina: 1200, power: 1200, guts: 1200, wisdom: 1200 },
+    greenBonus: {},
+    tactic: 'sashi' as const,
+    distanceAptitude: 'S' as const,
+    surfaceAptitude: 'A' as const,
+    motivation: 'best' as const,
+    groundCondition: 0 as const,
+    weather: 1 as const,
+    season: 4 as const,
+    courseFix: 'auto' as const,
+    skills: [],
+  };
+
+  it('只申报 ○ 时,◎ 作为独立候选自动补出,两级收益分开算', () => {
+    const r = optimize({ course: tokyo, runner, candidates: [{ id: '201102', pt: 100 }], budget: 900 });
+    const o = r.chosen.find(c => c.id === '201102');
+    const d = r.chosen.find(c => c.id === '201101');
+    expect(o).toBeDefined();   // ○ 自己一行
+    expect(d).toBeDefined();   // ◎ 自动补出,也是自己一行
+    expect(d!.includesPrereq).toContain('中距离直线○'); // 标了依赖:点了单圈才能点双圈
+    // 两级分开计价:合计 = 100 + 110,不重复也不打折
+    expect(r.totalPt).toBe(210);
+    // ◎ 是升级版不是叠加:总收益 = ◎ 的收益(0.91),远小于两级单独收益之和(1.5+)
+    expect(r.totalBody).toBeGreaterThan(0.7);
+    expect(r.totalBody).toBeLessThan(d!.soloBody + 0.05); // ≈ solo◎,没把 ○ 叠上去
+    // 组合内 ○ 的边际 = 0(被 ◎ 顶掉了),如实展示
+    expect(o!.finalMarginalBody).toBeLessThan(0.05);
+    expect(d!.finalMarginalBody).toBeGreaterThan(0.2);    // ◎ 的边际 = 升级带来的增量
+  });
+
+  it('列表直接显示 ◎(○ 之前已买过)时:◎ 单独计价,不再要求 ○', () => {
+    const r = optimize({ course: tokyo, runner, candidates: [{ id: '201101', pt: 110 }], budget: 900 });
+    const d = r.chosen.find(c => c.id === '201101')!;
+    expect(d.soloBody).toBeGreaterThan(0.7);
+    expect(r.totalPt).toBe(110);   // ○ 是之前买的,这次只付 ◎
+  });
+});

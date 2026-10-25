@@ -1,6 +1,6 @@
 import { BODY_LENGTH_METERS, sampleableSpans, simulate, skillApplicable } from './engine/index.js';
 import type { Course, Region, RestrictionClause, RunnerConfig, SimResult, SimOptions, SkillConfig, SkillRestriction, Tactic } from './engine/index.js';
-import { SKILLS, type SkillEntry } from './data.js';
+import { CIRCLE_BASE, CIRCLE_UPGRADES, SKILLS, type SkillEntry } from './data.js';
 
 const SKILL_INDEX = new Map(SKILLS.map(s => [s.id, s] as const));
 
@@ -163,6 +163,13 @@ interface Cand {
   state: 'pool' | 'chosen' | 'no-gain' | 'blocked';
   /** state==='blocked' 时的原因说明(装配限制/未建模等) */
   blockedDetail: string | null;
+  /**
+   * 单双圈链(○/◎ 占同一格):价格**不含**单圈价,单圈没买时要连它一起付
+   * (游戏规则:点了单圈才能点双圈)。区别于金技能的「价格已含前置价」。
+   */
+  circleChain?: boolean;
+  /** 单双圈链的单圈候选 id(circleChain 时必有) */
+  baseId?: string;
 }
 
 const DEFAULT_MAX_SIMS = 30000;
@@ -362,11 +369,50 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     };
   });
 
+  // ── 单双圈:○ 和 ◎ 占同一格,买完 ○ 同一格变成 ◎(再买一次,价格另付)──
+  // 列表里只会显示「当前可买的那一级」,所以 ○ 在候选里时要把 ◎ 补出来,
+  // 否则单圈的收益永远只是半截(用户:单双圈的马身收益要分开写)。
+  // ◎ 的价格来自 BWIKI 的 SMW 技能消耗PT(data/skill-pt.json),抓不到的不提供,不猜价。
+  {
+    const seenIds = new Set(cands.map(c => c.id));
+    for (const base of [...cands]) {
+      const up = CIRCLE_UPGRADES.get(base.id);
+      if (up === undefined || seenIds.has(up.upId)) continue;
+      const upSkill = SKILL_INDEX.get(up.upId);
+      if (upSkill === undefined) continue;
+      seenIds.add(up.upId);
+      cands.push({
+        id: up.upId,
+        skill: upSkill,
+        pt: up.upPt,
+        withSkills: [upSkill],          // ◎ 是 ○ 的升级版(同格替换),效果只算 ◎ 不叠加
+        requires: [base.id],
+        requiresPt: 0,                  // 价格不含单圈价,靠 circleChain 分开计费
+        preSkills: [],
+        evolved: undefined,
+        evoCands: [],
+        evoSecs: new Map(),
+        soloSec: 0,
+        soloSecBefore: 0,
+        lastMarginal: 0,
+        state: 'pool' as const,
+        blockedDetail: null,
+        circleChain: true,
+        baseId: base.id,
+      });
+    }
+  }
+
   /** 这个候选当前的实付价:前置已在组合里 → 只付差额;否则要连前置一起付 */
-  const costOf = (c: Cand, chosenIds: ReadonlySet<string>): number =>
-    c.requires.length > 0 && c.requires.every(r => chosenIds.has(r))
-      ? Math.max(0, c.pt - c.requiresPt)
-      : c.pt;
+  const costOf = (c: Cand, chosenIds: ReadonlySet<string>): number => {
+    const prereqChosen = c.requires.length > 0 && c.requires.every(r => chosenIds.has(r));
+    if (c.circleChain === true) {
+      // ◎:价格不含 ○。○ 还没买 → 要连 ○ 的实付价一起(点了单圈才能点双圈)
+      const base = c.baseId !== undefined ? cands.find(x => x.id === c.baseId) : undefined;
+      return c.pt + (prereqChosen || base === undefined ? 0 : costOf(base, chosenIds));
+    }
+    return prereqChosen ? Math.max(0, c.pt - c.requiresPt) : c.pt;
+  };
 
   // ── 剔除"本配置下根本不会生效"的候选:这类技能模拟收益恒为 0,
   //    若按 no-gain 汇报会被误读成"技能没用",实际是限制不满足或效果未建模
@@ -424,11 +470,17 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
 
   // 去重合并:前置技能可能已经被别的候选带进来了,同一技能在模拟里只能出现一次
-  const skillsOf = (cs: readonly Cand[]): SkillConfig[] => {
+  // 去重合并:前置技能可能已经被别的候选带进来了,同一技能在模拟里只能出现一次;
+  // 另外单双圈占同一格,**买了 ◎ 之后 ○ 不再重复生效**(◎ 是升级版,同格替换不叠加)
+  const combine = (...groups: readonly (readonly SkillConfig[])[]): SkillConfig[] => {
     const m = new Map<string, SkillConfig>();
-    for (const c of cs) for (const s of c.withSkills) m.set(s.id, s);
+    for (const g of groups) for (const s of g) m.set(s.id, s);
+    for (const [upId, baseId] of CIRCLE_BASE) {
+      if (m.has(upId) && m.has(baseId)) m.delete(baseId);
+    }
     return [...m.values()];
   };
+  const skillsOf = (cs: readonly Cand[]): SkillConfig[] => combine(...cs.map(c => c.withSkills));
   const chosen: Cand[] = [];
   let spent = 0;
   const remaining = () => budget - spent;
@@ -443,10 +495,15 @@ export function optimize(input: OptimizerInput): OptimizerResult {
    */
   const totalSpent = (cs: readonly Cand[]): number => {
     const ids = new Set(cs.map(c => c.id));
-    return cs.reduce(
-      (sum, c) => sum + c.pt - (c.requires.length > 0 && c.requires.every(r => ids.has(r)) ? c.requiresPt : 0),
-      0,
-    );
+    return cs.reduce((sum, c) => {
+      const prereqChosen = c.requires.length > 0 && c.requires.every(r => ids.has(r));
+      if (c.circleChain === true) {
+        // ◎:价格不含 ○。○ 不在本组合里 → 要把它的实付价一起算(否则预算会虚低)
+        const base = c.baseId !== undefined ? cands.find(x => x.id === c.baseId) : undefined;
+        return sum + c.pt + (prereqChosen || base === undefined ? 0 : costOf(base, ids));
+      }
+      return sum + (prereqChosen ? Math.max(0, c.pt - c.requiresPt) : c.pt);
+    }, 0);
   };
 
   /** 贪心装入:每轮重算全部在池候选的边际,选 边际/PT 效率 最高者 */
@@ -457,7 +514,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       const cur = simSearch(skillsOf(chosen));
       let best: { cand: Cand; gain: number; ratio: number } | null = null;
       for (const c of feasible) {
-        const gain = timeGain(cur, simSearch([...skillsOf(chosen), ...c.withSkills]));
+        const gain = timeGain(cur, simSearch(combine(skillsOf(chosen), c.withSkills)));
         c.lastMarginal = gain;
         if (gain <= eps) continue;
         const cost = costIn(c);
@@ -495,7 +552,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         const nextIds = new Set(next.map(x => x.id));
         const inCost = costOf(b, nextIds);
         if (inCost > remaining() + a.pt) continue;
-        const gain = timeGain(cur, simSearch([...skillsOf(next), ...b.withSkills]));
+        const gain = timeGain(cur, simSearch(combine(skillsOf(next), b.withSkills)));
         if (gain > eps && (best === null || gain > best.gain)) best = { out: a, in: b, gain };
       }
     }
