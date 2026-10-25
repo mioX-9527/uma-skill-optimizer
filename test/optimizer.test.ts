@@ -148,3 +148,46 @@ describe('optimize', () => {
     expect(alone.totalPt).toBe(144);
   });
 });
+
+/**
+ * 区段随机取位技能(randomPosition)的收益必须是**期望值**,不能是引擎默认取位那一个点。
+ *
+ * 引擎默认取位 = 「一进入区段就发动」。对「迅速果断」(差行·中盘随机位置·+0.35 速度 2.4s)
+ * 在中山 2500m 上,默认取位落在 417m(中盘刚起点)只得 0.62 马身;而这段收益随位置变化很大:
+ * 中盘主体稳定 ~1.04,靠近终盘时因「存速带进末脚加速段」能到 2.3。按满足区段均匀采样求均值
+ * = 1.11 马身(与赛道模拟器 uma-race-sim 的 ablate.expectedBody 一致)。
+ * 用单点值会把这些技能整体压低约 45%,金技能会被下位白技能挤掉。
+ */
+describe('区段随机取位技能按期望计价', () => {
+  const nakayama = COURSES.find(c => c.id === 'c10506')!; // 中山 草 2500m
+  const sashi = {
+    stats: { speed: 1600, stamina: 1200, power: 1200, guts: 1200, wisdom: 1200 },
+    greenBonus: {},
+    tactic: 'sashi' as const,
+    distanceAptitude: 'S' as const,
+    surfaceAptitude: 'A' as const,
+    motivation: 'best' as const,
+    groundCondition: 0 as const,
+    weather: 1 as const,
+    season: 4 as const,
+    courseFix: 'auto' as const,
+    skills: [],
+  };
+
+  it('迅速果断:中山 2500m 差行约 1.1 马身(默认取位单点只有 0.62)', () => {
+    const quick = SKILLS.find(s => s.id === '200591')!;
+    expect(quick.randomPosition).toBe(true);
+    const r = optimize({ course: nakayama, runner: sashi, candidates: [{ id: quick.id, pt: 180 }], budget: 900 });
+    const solo = r.chosen[0]!.soloBody;
+    expect(solo).toBeGreaterThan(0.9); // > 默认取位单点(0.62):确实换成了期望口径
+    expect(solo).toBeLessThan(1.5);    // 也不该被尾部的 2.3 带偏
+  });
+
+  it('同一技能:差行生效、先行不适配(取位口径修好后仍受脚质限制)', () => {
+    const quick = SKILLS.find(s => s.id === '200591')!;
+    const senko = optimize({
+      course: nakayama, runner: { ...sashi, tactic: 'senko' }, candidates: [{ id: quick.id, pt: 180 }], budget: 900,
+    });
+    expect(senko.rejected.find(x => x.id === quick.id)!.reason).toBe('inapplicable');
+  });
+});

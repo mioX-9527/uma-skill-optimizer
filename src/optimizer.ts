@@ -1,8 +1,36 @@
-import { BODY_LENGTH_METERS, simulate, skillApplicable } from './engine/index.js';
-import type { Course, RestrictionClause, RunnerConfig, SimResult, SkillConfig, SkillRestriction, Tactic } from './engine/index.js';
+import { BODY_LENGTH_METERS, sampleableSpans, simulate, skillApplicable } from './engine/index.js';
+import type { Course, Region, RestrictionClause, RunnerConfig, SimResult, SimOptions, SkillConfig, SkillRestriction, Tactic } from './engine/index.js';
 import { SKILLS, type SkillEntry } from './data.js';
 
 const SKILL_INDEX = new Map(SKILLS.map(s => [s.id, s] as const));
+
+/**
+ * 区段随机取位技能(randomPosition)的期望口径采样点数。
+ *
+ * **为什么必须取期望**:这类技能(如「迅速果断」= 中盘随机位置发动)只模拟一次会落在
+ * 规则取位的那个点上,而收益随位置变化很大——中盘前段 ~1.0 马身,临近终盘的尾部能到 2.3
+ * (存速带进末脚加速段)。单点值系统性偏低约 45%,会把金技能排到下位白技能后面。
+ * 参考实现(uma-race-sim `ablate.ts` 的 expectedBody)就是按满足区段均匀取点求均值,
+ * 这里用同一口径:N 个等距分位点,取完赛时间差的均值。
+ */
+const RANDOM_POSITION_DRAWS = 12;
+
+/** 第 i 个等距分位(i 从 0 起;/ N) */
+const DRAWS: readonly number[] = Array.from(
+  { length: RANDOM_POSITION_DRAWS },
+  (_, i) => (i + 0.5) / RANDOM_POSITION_DRAWS,
+);
+
+/** 分位数 → 米(按区段长度加权的累计分布;与引擎 samplePositions 同法) */
+function quantileToMeter(spans: readonly Region[], u: number): number {
+  let target = u * spans.reduce((a, s) => a + (s[1] - s[0]), 0);
+  for (const s of spans) {
+    const len = s[1] - s[0];
+    if (target <= len) return s[0] + target;
+    target -= len;
+  }
+  return spans[spans.length - 1]![1];
+}
 
 /** 一名候选技能:技能库 id + 实际 PT 价格(游戏内显示价,含折扣) */
 export interface CandidateSkill {
@@ -215,10 +243,64 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const notes: string[] = [];
 
   let simsUsed = 0;
-  const sim = (skills: readonly SkillConfig[]): SimResult => {
+  const sim = (skills: readonly SkillConfig[], opts?: SimOptions): SimResult => {
     if (simsUsed >= maxSims) throw new Error(`模拟次数超过上限 ${maxSims}`);
     simsUsed++;
-    return simulate(course, { ...runner, skills });
+    return opts === undefined ? simulate(course, { ...runner, skills }) : simulate(course, { ...runner, skills }, opts);
+  };
+
+  /**
+   * 汇报口径:**期望收益**。随机取位技能在满足区段上等距取 N 点,完赛时间取均值
+   * (与 uma-race-sim `ablate.ts` 的 expectedBody 同一口径)。只用于「显示给用户的数」,
+   * 因为每次要多跑 N 遍,放进搜索循环会把耗时翻 N 倍。
+   */
+  const spanCache = new Map<string, readonly Region[] | null>();
+  const spansOf = (s: SkillConfig): readonly Region[] | null => {
+    let v = spanCache.get(s.id);
+    if (v === undefined) {
+      v = s.randomPosition === true ? sampleableSpans(s.condition, course) : null;
+      spanCache.set(s.id, v);
+    }
+    return v;
+  };
+  /** 随机技能的「代表位置」= 区段中点;搜索口径用,单次模拟即可 */
+  const midCache = new Map<string, number>();
+  const midOf = (s: SkillConfig): number => {
+    let v = midCache.get(s.id);
+    if (v === undefined) {
+      v = quantileToMeter(spansOf(s)!, 0.5);
+      midCache.set(s.id, v);
+    }
+    return v;
+  };
+  const anyRandom = (skills: readonly SkillConfig[]): boolean => skills.some(s => spansOf(s) !== null);
+
+  const simExpected = (skills: readonly SkillConfig[]): SimResult => {
+    if (!anyRandom(skills)) return sim(skills);
+    const randoms = skills.filter(s => spansOf(s) !== null);
+    let sumSec = 0;
+    let last: SimResult | null = null;
+    for (const u of DRAWS) {
+      const ov = new Map(randoms.map(s => [s.id, quantileToMeter(spansOf(s)!, u)] as const));
+      last = sim(skills, { positionOverrides: ov });
+      sumSec += last.finishTimeSec;
+    }
+    return { ...last!, finishTimeSec: sumSec / DRAWS.length };
+  };
+
+  /**
+   * 搜索口径:随机技能固定在区段中点发动。
+   *
+   * 为什么不能沿用引擎的默认取位:默认取位是「一进入区段就发动」(如迅速果断落在 417m,
+   * 中盘刚起点),对收益没有代表性——实测同一条赛道 0.62 马身,而区段中点 1.04、
+   * 全程期望 1.11。用它排序会把所有随机取位技能系统性压低约 45%,
+   * 金技能会被下位白技能挤掉。中点单点值与期望的偏差只剩「尾部存速」那一小块(~7%),
+   * 排序够用,且只要 1 次模拟。
+   */
+  const simSearch = (skills: readonly SkillConfig[]): SimResult => {
+    if (!anyRandom(skills)) return sim(skills);
+    const ov = new Map(skills.filter(s => spansOf(s) !== null).map(s => [s.id, midOf(s)] as const));
+    return sim(skills, { positionOverrides: ov });
   };
 
   // ── 候选解析:去重、查库、绿技能提示 ────────────────────────────────
@@ -299,11 +381,11 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   for (const c of cands) {
     if (c.state === 'blocked') continue;
     // 带前置的候选,单独买等于把前置一起买了,所以按 withSkills 算单项收益
-    c.soloSec = baseSim.finishTimeSec - sim(c.withSkills).finishTimeSec;
+    c.soloSec = baseSim.finishTimeSec - simExpected(c.withSkills).finishTimeSec;
     // 进化前的对照值:只看这个技能本身,不含前置
     c.soloSecBefore = c.evolved === undefined
       ? c.soloSec
-      : baseSim.finishTimeSec - sim([c.skill]).finishTimeSec;
+      : baseSim.finishTimeSec - simExpected([c.skill]).finishTimeSec;
     c.lastMarginal = c.soloSec;
   }
   for (const c of cands) {
@@ -341,10 +423,10 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     for (;;) {
       const feasible = pool().filter(c => costIn(c) <= remaining());
       if (feasible.length === 0) return;
-      const cur = sim(skillsOf(chosen));
+      const cur = simSearch(skillsOf(chosen));
       let best: { cand: Cand; gain: number; ratio: number } | null = null;
       for (const c of feasible) {
-        const gain = timeGain(cur, sim([...skillsOf(chosen), ...c.withSkills]));
+        const gain = timeGain(cur, simSearch([...skillsOf(chosen), ...c.withSkills]));
         c.lastMarginal = gain;
         if (gain <= eps) continue;
         const cost = costIn(c);
@@ -374,7 +456,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       .slice()
       .sort((a, b) => b.lastMarginal - a.lastMarginal)
       .slice(0, SWAP_POOL);
-    const cur = sim(skillsOf(chosen));
+    const cur = simSearch(skillsOf(chosen));
     let best: { out: Cand; in: Cand; gain: number } | null = null;
     for (const b of insertCands) {
       for (const a of chosen) {
@@ -382,7 +464,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         const nextIds = new Set(next.map(x => x.id));
         const inCost = costOf(b, nextIds);
         if (inCost > remaining() + a.pt) continue;
-        const gain = timeGain(cur, sim([...skillsOf(next), ...b.withSkills]));
+        const gain = timeGain(cur, simSearch([...skillsOf(next), ...b.withSkills]));
         if (gain > eps && (best === null || gain > best.gain)) best = { out: a, in: b, gain };
       }
     }
@@ -396,11 +478,11 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
 
   // ── 汇报:最终组合的 leave-one-out 边际 + 未上车技能分类 ────────────
-  const finalSim = sim(skillsOf(chosen));
+  const finalSim = simExpected(skillsOf(chosen));
   const bodyPerSec = finalSim.spurtTargetSpeed / BODY_LENGTH_METERS;
   const finalMarginals = new Map<string, number>();
   for (const a of chosen) {
-    const t = sim(skillsOf(chosen.filter(x => x !== a))).finishTimeSec;
+    const t = simExpected(skillsOf(chosen.filter(x => x !== a))).finishTimeSec;
     finalMarginals.set(a.id, t - finalSim.finishTimeSec);
   }
 
