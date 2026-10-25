@@ -1,5 +1,5 @@
-import { BODY_LENGTH_METERS, simulate } from './engine/index.js';
-import type { Course, RunnerConfig, SimResult, SkillConfig } from './engine/index.js';
+import { BODY_LENGTH_METERS, simulate, skillApplicable } from './engine/index.js';
+import type { Course, RestrictionClause, RunnerConfig, SimResult, SkillConfig, SkillRestriction, Tactic } from './engine/index.js';
 import { SKILLS, type SkillEntry } from './data.js';
 
 const SKILL_INDEX = new Map(SKILLS.map(s => [s.id, s] as const));
@@ -41,8 +41,14 @@ export interface RejectedSkill {
   readonly name: string;
   readonly pt: number;
   readonly soloBody: number;
-  /** unaffordable=超预算 no-gain=组合内无正收益 outbid=收益为正但被更优组合挤出 */
-  readonly reason: 'unaffordable' | 'no-gain' | 'outbid';
+  /**
+   * unaffordable=超预算 inapplicable=本配置下买不了/不会生效(装配限制、效果未建模等,
+   * 此时单独马身恒为 0,不代表技能无用) no-gain=能发动但组合内无正收益
+   * outbid=收益为正但被更优组合挤出
+   */
+  readonly reason: 'unaffordable' | 'inapplicable' | 'no-gain' | 'outbid';
+  /** 原因的具体说明(reason 为 inapplicable 时必填,如「仅限逃马」) */
+  readonly detail: string;
   /** 还差多少 PT 能上车(仅 outbid 时,预算用尽后有意义的字段) */
   readonly missingPt: number;
   readonly lastMarginalBody: number;
@@ -71,11 +77,89 @@ interface Cand {
   soloSec: number;
   /** 最近一次已知的时间边际(秒) */
   lastMarginal: number;
-  state: 'pool' | 'chosen' | 'no-gain';
+  state: 'pool' | 'chosen' | 'no-gain' | 'blocked';
+  /** state==='blocked' 时的原因说明(装配限制/未建模等) */
+  blockedDetail: string | null;
 }
 
 const DEFAULT_MAX_SIMS = 30000;
 const DEFAULT_MIN_IMPROVEMENT_SEC = 0.0005;
+
+const TACTIC_LABEL: Record<Tactic, string> = { nige: '逃马', senko: '先行', sashi: '差行', oikomi: '追马' };
+const DISTANCE_LABEL: Record<string, string> = { short: '短距离', mile: '英里', mid: '中距离', long: '长距离' };
+const SURFACE_LABEL: Record<string, string> = { turf: '草地', dirt: '泥地' };
+const GROUND_LABEL = ['良', '稍重', '重', '不良'];
+const WEATHER_LABEL = ['', '晴', '阴', '雨', '雪'];
+const SEASON_LABEL = ['', '春', '夏', '秋', '冬', '樱花'];
+const ROTATION_LABEL: Record<number, string> = { 1: '顺时针', 2: '逆时针' };
+const STAT_LABEL: Record<string, string> = { speed: '速度', stamina: '耐力', power: '力量', guts: '根性', wisdom: '智力' };
+
+/** 单条限制子句里不满足的项(仅供展示,判定以引擎 skillApplicable 为准) */
+function describeClause(c: RestrictionClause, runner: RunnerConfig, course: Course): string[] {
+  const parts: string[] = [];
+  if (c.tactics !== undefined && !c.tactics.includes(runner.tactic)) {
+    parts.push(`仅限${c.tactics.map(t => TACTIC_LABEL[t]).join('/')}`);
+  }
+  if (c.distanceTypes !== undefined) {
+    const ok = course.distanceType !== undefined && c.distanceTypes.includes(course.distanceType);
+    if (!ok) parts.push(`仅限${c.distanceTypes.map(d => DISTANCE_LABEL[d] ?? d).join('/')}`);
+  }
+  if (c.surfaces !== undefined && !c.surfaces.includes(course.surface)) {
+    parts.push(`仅限${c.surfaces.map(s => SURFACE_LABEL[s] ?? s).join('/')}`);
+  }
+  if (c.venues !== undefined && !c.venues.includes(course.venue)) {
+    parts.push(`仅限${c.venues.join('/')}赛场`);
+  }
+  if (c.grounds !== undefined && !c.grounds.includes(runner.groundCondition ?? 0)) {
+    parts.push(`仅限${c.grounds.map(g => GROUND_LABEL[g] ?? String(g)).join('/')}场地`);
+  }
+  if (c.distances !== undefined && !c.distances.includes(course.distance)) {
+    parts.push(`仅限 ${c.distances.join('/')}m`);
+  }
+  if (c.distanceMin !== undefined && course.distance < c.distanceMin) parts.push(`需 ≥${c.distanceMin}m`);
+  if (c.distanceMax !== undefined && course.distance > c.distanceMax) parts.push(`需 ≤${c.distanceMax}m`);
+  if (c.basisDistance !== undefined && (course.distance % 400 === 0) !== c.basisDistance) {
+    parts.push(c.basisDistance ? '仅限标准距离(400 倍数)' : '仅限非标准距离');
+  }
+  if (c.rotations !== undefined && (course.rotation === undefined || !c.rotations.includes(course.rotation))) {
+    parts.push(`仅限${c.rotations.map(r => ROTATION_LABEL[r] ?? `${r} 向`).join('/')}赛道`);
+  }
+  if (c.weathers !== undefined && !c.weathers.includes(runner.weather ?? 1)) {
+    parts.push(`仅限${c.weathers.map(w => `${WEATHER_LABEL[w] ?? w}天`).join('/')}`);
+  }
+  if (c.seasons !== undefined && !c.seasons.includes(runner.season ?? 1)) {
+    parts.push(`仅限${c.seasons.map(s => `${SEASON_LABEL[s] ?? s}季`).join('/')}`);
+  }
+  if (c.motivations !== undefined && !c.motivations.includes(runner.motivation)) {
+    parts.push(`仅限特定干劲(${c.motivations.join('/')})`);
+  }
+  if (c.abroad !== undefined && (course.overseas === true) !== c.abroad) {
+    parts.push(c.abroad ? '仅限海外赛场' : '仅限国内赛场');
+  }
+  if (c.statsAtLeast !== undefined) {
+    for (const [k, v] of Object.entries(c.statsAtLeast)) {
+      if (v !== undefined && runner.stats[k as keyof typeof runner.stats] < v) {
+        parts.push(`${STAT_LABEL[k] ?? k}需 ≥${v}`);
+      }
+    }
+  }
+  if (c.statsBelow !== undefined) {
+    for (const [k, v] of Object.entries(c.statsBelow)) {
+      if (v !== undefined && runner.stats[k as keyof typeof runner.stats] >= v) {
+        parts.push(`${STAT_LABEL[k] ?? k}需 <${v}`);
+      }
+    }
+  }
+  return parts;
+}
+
+/** 装配限制不满足时,说明是哪一条不满足;anyOf 多分支按「或」拼接 */
+function describeRestriction(r: SkillRestriction, runner: RunnerConfig, course: Course): string {
+  const clauses = r.anyOf ?? [r];
+  const per = clauses.map(c => describeClause(c, runner, course).join('、')).filter(s => s !== '');
+  if (r.anyOf !== undefined && per.length > 1) return per.map(s => `(${s})`).join(' 或 ');
+  return per[0] ?? '';
+}
 
 function timeGain(before: SimResult, after: SimResult): number {
   return before.finishTimeSec - after.finishTimeSec;
@@ -107,29 +191,43 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
   const cands: Cand[] = input.candidates.map(c => {
     const skill = SKILL_INDEX.get(c.id)!;
-    return { id: c.id, skill, pt: c.pt, soloSec: 0, lastMarginal: 0, state: 'pool' };
+    return { id: c.id, skill, pt: c.pt, soloSec: 0, lastMarginal: 0, state: 'pool', blockedDetail: null };
   });
 
-  const passiveOnly = cands.filter(c => c.skill.effects.length > 0 && c.skill.effects.every(e => e.type === 'passive'));
-  if (passiveOnly.length > 0) {
-    notes.push(`绿技能(仅被动加成)当前引擎版本不参与比赛过程模拟,以下技能建模收益为 0、不会被推荐购买:${passiveOnly.map(c => c.skill.name).join('、')}`);
-  }
-  const unsupported = cands.filter(c => c.skill.precision === 'unsupported');
-  if (unsupported.length > 0) {
-    notes.push(`以下技能的效果类型暂不支持建模(收益按 0 处理):${unsupported.map(c => c.skill.name).join('、')}`);
+  // ── 剔除"本配置下根本不会生效"的候选:这类技能模拟收益恒为 0,
+  //    若按 no-gain 汇报会被误读成"技能没用",实际是限制不满足或效果未建模
+  //
+  //    绿技能(常时被动,condition=raceStart 且全 passive)自上游 0.8 起由引擎
+  //    `effstats.passiveBonusOf` 并入起跑属性参与模拟,**属于正常候选**,不在此剔除;
+  //    但两条例外仍要被剔除:① 数据层标 unsupported 的条件型被动(依赖名次/人数,
+  //    剔除以免按"无条件加成"高估);② 带发动前提(prereq)的被动——引擎本身也已跳过。
+  for (const c of cands) {
+    const allPassive = c.skill.effects.length > 0 && c.skill.effects.every(e => e.type === 'passive');
+    const greenLike = allPassive && c.skill.condition.kind === 'raceStart' && c.skill.prereq === undefined;
+    const restriction = c.skill.restriction;
+    const blocked =
+      c.skill.precision === 'unsupported'
+        ? allPassive ? '条件型被动(依赖名次/人数等),数据层未建模' : '效果类型未建模,引擎不计入'
+      : allPassive && !greenLike
+        ? '非常时被动(非起跑加成/带发动前提),引擎不计入起跑属性'
+      : restriction !== undefined && !skillApplicable(c.skill, course, runner)
+        ? describeRestriction(restriction, runner, course)
+      : null;
+    if (blocked !== null) {
+      c.state = 'blocked';
+      c.blockedDetail = blocked === '' ? '装配限制不满足' : blocked;
+    }
   }
 
-  // ── 基准与单项收益 ──────────────────────────────────────────────
+  // ── 基准与单项收益(已标注 blocked 的候选不参与模拟:其收益按定义恒为 0) ──
   const baseSim = sim([]);
-  const soloT = new Map<string, number>();
   for (const c of cands) {
-    const t = sim([c.skill]).finishTimeSec;
-    soloT.set(c.id, t);
-    c.soloSec = baseSim.finishTimeSec - t;
+    if (c.state === 'blocked') continue;
+    c.soloSec = baseSim.finishTimeSec - sim([c.skill]).finishTimeSec;
     c.lastMarginal = c.soloSec;
   }
   for (const c of cands) {
-    if (c.pt > budget) c.state = 'no-gain';
+    if (c.state === 'pool' && c.pt > budget) c.state = 'no-gain';
   }
 
   const skillsOf = (cs: readonly Cand[]) => cs.map(c => c.skill);
@@ -206,13 +304,25 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   for (const c of cands) {
     if (c.state === 'chosen') continue;
     const reason: RejectedSkill['reason'] =
-      c.pt > budget ? 'unaffordable' : c.lastMarginal <= eps ? 'no-gain' : 'outbid';
+      c.state === 'blocked' ? 'inapplicable'
+      : c.pt > budget ? 'unaffordable'
+      : c.lastMarginal <= eps ? 'no-gain'
+      : 'outbid';
+    // 能发动但没收益的回体技能:多半是本组合体力没跑空(体力有富余时回复无价值),不是技能本身无用
+    const healIdle =
+      reason === 'no-gain' &&
+      finalSim.exhaustedAtMeter === null &&
+      c.skill.effects.some(e => e.type === 'heal') &&
+      c.skill.effects.every(e => e.type === 'heal' || e.type === 'passive')
+        ? '本组合体力未耗尽,回复类技能无额外收益'
+        : '';
     rejected.push({
       id: c.id,
       name: c.skill.name,
       pt: c.pt,
       soloBody: c.soloSec * bodyPerSec,
       reason,
+      detail: c.blockedDetail ?? healIdle,
       missingPt: Math.max(0, c.pt - remaining()),
       lastMarginalBody: c.lastMarginal * bodyPerSec,
     });
@@ -222,6 +332,13 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const budgetLimited = rejected.some(r => r.reason === 'outbid' && r.missingPt > 0);
   if (budgetLimited) {
     notes.push(`预算用尽:上表中「差PT」列 = 再充多少 PT 可让该技能上车(按当前组合的边际收益排序)。`);
+  }
+  const greenChosen = chosen.filter(c => c.skill.effects.length > 0 && c.skill.effects.every(e => e.type === 'passive'));
+  if (greenChosen.length > 0) {
+    notes.push(
+      `绿技能(常时被动)没有"发动位置",收益来自起跑属性加成;属性要过软上限(1200)与干劲,` +
+      `面板越高同类加成越挤,所以第二个同类绿技能的边际通常明显低于第一个。`,
+    );
   }
   if (simsUsed >= maxSims * 0.98) {
     notes.push(`已接近模拟次数上限(${simsUsed}/${maxSims}),搜索提前收敛;可用 --max-sims 提高上限获得更优解。`);

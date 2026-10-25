@@ -69,6 +69,9 @@
    "kind": "phase",
    "phase": 3
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -945,7 +948,7 @@
   "name": "只属于我的世界(1)",
   "nameJa": "私だけの世界",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -968,6 +971,9 @@
    ],
    "distances": [
     1800
+   ],
+   "rotations": [
+    2
    ]
   },
   "wisdomScaled": true,
@@ -979,7 +985,7 @@
   "name": "只属于我的世界(2)",
   "nameJa": "私だけの世界",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -1002,6 +1008,9 @@
    ],
    "distances": [
     1800
+   ],
+   "rotations": [
+    2
    ]
   },
   "wisdomScaled": true,
@@ -1677,6 +1686,9 @@
    "tactics": [
     "senko"
    ],
+   "statsAtLeast": {
+    "stamina": 1000
+   },
    "distanceMin": 2400,
    "distanceMax": 2500
   },
@@ -1710,6 +1722,9 @@
    "tactics": [
     "senko"
    ],
+   "statsBelow": {
+    "stamina": 1000
+   },
    "distanceMin": 2400,
    "distanceMax": 2500
   },
@@ -2924,7 +2939,9 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "tactics": [
@@ -2935,7 +2952,13 @@
    ],
    "venues": [
     "中山"
-   ]
+   ],
+   "statsAtLeast": {
+    "stamina": 1000
+   }
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -2984,7 +3007,7 @@
   "name": "光辉白之王(2)",
   "nameJa": "光輝なるは白き王",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -3005,6 +3028,9 @@
    "venues": [
     "中山"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -3212,9 +3238,7 @@
   "restriction": {
    "distanceTypes": [
     "mid",
-    "long",
-    "short",
-    "mile"
+    "long"
    ]
   },
   "wisdomScaled": true,
@@ -3244,8 +3268,6 @@
   },
   "restriction": {
    "distanceTypes": [
-    "mid",
-    "long",
     "short",
     "mile"
    ]
@@ -3538,6 +3560,9 @@
     "long"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "英里",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -3810,9 +3835,7 @@
   "restriction": {
    "distanceTypes": [
     "short",
-    "mile",
-    "mid",
-    "long"
+    "mile"
    ]
   },
   "wisdomScaled": true,
@@ -3842,8 +3865,6 @@
   },
   "restriction": {
    "distanceTypes": [
-    "short",
-    "mile",
     "mid",
     "long"
    ]
@@ -3884,7 +3905,7 @@
   "nameTrad": "引擎全開！大噴射！",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -3895,6 +3916,9 @@
   "condition": {
    "kind": "phase",
    "phase": 3
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -4272,7 +4296,7 @@
   "nameTrad": "排山倒海而來的愛意",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -4287,6 +4311,9 @@
    "tactics": [
     "oikomi"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "追马",
   "wisdomScaled": true,
@@ -4639,9 +4666,9 @@
   },
   "restriction": {
    "venues": [
-    "大井",
     "川崎",
-    "船桥"
+    "船桥",
+    "大井"
    ]
   },
   "wisdomScaled": true,
@@ -4669,9 +4696,9 @@
   },
   "restriction": {
    "venues": [
-    "大井",
     "川崎",
-    "船桥"
+    "船桥",
+    "大井"
    ]
   },
   "wisdomScaled": true,
@@ -4704,16 +4731,16 @@
     "dirt"
    ],
    "venues": [
-    "东京",
-    "中山",
-    "京都",
     "阪神",
-    "札幌",
-    "函馆",
-    "新潟",
+    "东京",
     "福岛",
+    "函馆",
+    "京都",
+    "小仓",
+    "新潟",
+    "札幌",
     "中京",
-    "小仓"
+    "中山"
    ]
   },
   "wisdomScaled": true,
@@ -4742,16 +4769,16 @@
     "dirt"
    ],
    "venues": [
-    "东京",
-    "中山",
-    "京都",
     "阪神",
-    "札幌",
-    "函馆",
-    "新潟",
+    "东京",
     "福岛",
+    "函馆",
+    "京都",
+    "小仓",
+    "新潟",
+    "札幌",
     "中京",
-    "小仓"
+    "中山"
    ]
   },
   "wisdomScaled": true,
@@ -5403,6 +5430,9 @@
     "turf"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "草地",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -5543,7 +5573,7 @@
   "nameJa": "緋色の光となって",
   "nameTrad": "成為緋色光輝",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -5561,6 +5591,9 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -5748,9 +5781,7 @@
   "restriction": {
    "distanceTypes": [
     "short",
-    "mile",
-    "mid",
-    "long"
+    "mile"
    ]
   },
   "wisdomScaled": true,
@@ -5780,8 +5811,6 @@
   },
   "restriction": {
    "distanceTypes": [
-    "short",
-    "mile",
     "mid",
     "long"
    ]
@@ -5956,6 +5985,9 @@
     100
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -5966,7 +5998,7 @@
   "nameJa": "スカーレットリリィの高揚",
   "nameTrad": "緋紅百合的激昂",
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -5984,6 +6016,11 @@
   "restriction": {
    "distanceTypes": [
     "mid"
+   ]
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "203781"
    ]
   },
   "wisdomScaled": true,
@@ -6420,7 +6457,7 @@
   "nameJa": "ヴィヴァーチェ・ヴォラーレ",
   "nameTrad": "Vivace Volare",
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -6434,6 +6471,9 @@
     45,
     60
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -6474,7 +6514,12 @@
   ],
   "durationSec": 4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -6574,6 +6619,13 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 7
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -6736,6 +6788,9 @@
     100
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -6828,6 +6883,9 @@
    "kind": "distanceLeft",
    "fromMeters": 799,
    "toMeters": 801
+  },
+  "restriction": {
+   "basisDistance": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -7366,7 +7424,14 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1000,
+    "stamina": 1000,
+    "power": 1000,
+    "guts": 1000,
+    "wisdom": 1000
+   }
   },
   "restrictionText": "追马",
   "wisdomScaled": true,
@@ -7447,6 +7512,9 @@
     66.66666666666667,
     100
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -7593,8 +7661,8 @@
     "long"
    ],
    "venues": [
-    "中山",
-    "阪神"
+    "阪神",
+    "中山"
    ]
   },
   "wisdomScaled": true,
@@ -7619,14 +7687,43 @@
    "kind": "straightFastest"
   },
   "restriction": {
-   "distanceTypes": [
-    "mid",
-    "long"
-   ],
-   "venues": [
-    "中山",
-    "阪神"
+   "anyOf": [
+    {
+     "distanceTypes": [
+      "mid"
+     ],
+     "venues": [
+      "中山"
+     ]
+    },
+    {
+     "distanceTypes": [
+      "long"
+     ],
+     "venues": [
+      "中山"
+     ]
+    },
+    {
+     "distanceTypes": [
+      "mid"
+     ],
+     "venues": [
+      "阪神"
+     ]
+    },
+    {
+     "distanceTypes": [
+      "long"
+     ],
+     "venues": [
+      "阪神"
+     ]
+    }
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -7647,7 +7744,15 @@
   ],
   "durationSec": 4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "203061",
+    "203071"
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -8087,7 +8192,9 @@
   ],
   "durationSec": 2,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
@@ -8096,6 +8203,9 @@
    "surfaces": [
     "turf"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "草地",
   "wisdomScaled": true,
@@ -8442,6 +8552,9 @@
     "mile"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -8683,7 +8796,7 @@
   "name": "万苦千辛，终寻黄金(2)",
   "nameJa": "黄金を訪ねて",
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -8700,6 +8813,9 @@
     "oikomi"
    ],
    "distanceMin": 2000
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -8748,13 +8864,21 @@
   ],
   "durationSec": 2,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
     "mile",
     "mid"
    ]
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "204452"
+   ],
+   "requiresFirstBlock": true
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -8791,6 +8915,11 @@
    "distanceTypes": [
     "mid",
     "long"
+   ]
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "202051"
    ]
   },
   "restrictionText": "中距离",
@@ -9127,7 +9256,7 @@
   "name": "闪光！迸裂！超新星爆发！(2)",
   "nameJa": "光れ！弾けろ！超新星爆発！",
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -9144,6 +9273,9 @@
     "senko"
    ],
    "distanceMin": 2000
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -9205,6 +9337,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "差行",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -9244,7 +9379,7 @@
   "name": "昌盛诏令(2)",
   "nameJa": "エパヌイスマンの大号令",
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -9260,6 +9395,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -9283,8 +9421,8 @@
   },
   "restriction": {
    "tactics": [
-    "oikomi",
-    "senko"
+    "senko",
+    "oikomi"
    ]
   },
   "restrictionText": "追马",
@@ -9312,8 +9450,8 @@
   },
   "restriction": {
    "tactics": [
-    "oikomi",
-    "senko"
+    "senko",
+    "oikomi"
    ]
   },
   "restrictionText": "追马",
@@ -9343,8 +9481,8 @@
   },
   "restriction": {
    "tactics": [
-    "sashi",
-    "senko"
+    "senko",
+    "sashi"
    ],
    "distanceTypes": [
     "mid"
@@ -9360,7 +9498,7 @@
   "name": "炽烈绽放(2)",
   "nameJa": "烈々と咲く",
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -9373,12 +9511,15 @@
   },
   "restriction": {
    "tactics": [
-    "sashi",
-    "senko"
+    "senko",
+    "sashi"
    ],
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "差马",
   "wisdomScaled": true,
@@ -9773,7 +9914,7 @@
   "nameTrad": "風霜高潔",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -9789,6 +9930,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    3
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -9824,16 +9970,16 @@
     "turf"
    ],
    "venues": [
-    "东京",
-    "中山",
-    "京都",
     "阪神",
-    "札幌",
-    "函馆",
-    "新潟",
+    "东京",
     "福岛",
+    "函馆",
+    "京都",
+    "小仓",
+    "新潟",
+    "札幌",
     "中京",
-    "小仓"
+    "中山"
    ]
   },
   "restrictionText": "中距离",
@@ -9856,7 +10002,9 @@
   ],
   "durationSec": 1.2,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
@@ -9867,17 +10015,20 @@
     "turf"
    ],
    "venues": [
-    "东京",
-    "中山",
-    "京都",
     "阪神",
-    "札幌",
-    "函馆",
-    "新潟",
+    "东京",
     "福岛",
+    "函馆",
+    "京都",
+    "小仓",
+    "新潟",
+    "札幌",
     "中京",
-    "小仓"
+    "中山"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -9904,25 +10055,32 @@
   },
   "restriction": {
    "tactics": [
-    "sashi",
-    "senko"
+    "senko",
+    "sashi"
    ],
    "surfaces": [
     "turf"
    ],
    "venues": [
-    "东京",
-    "中山",
-    "京都",
     "阪神",
-    "札幌",
-    "函馆",
-    "新潟",
+    "东京",
     "福岛",
+    "函馆",
+    "京都",
+    "小仓",
+    "新潟",
+    "札幌",
     "中京",
-    "小仓"
+    "中山"
    ],
    "distanceMin": 2000
+  },
+  "prereq": {
+   "counters": {
+    "green": {
+     "min": 7
+    }
+   }
   },
   "restrictionText": "差马",
   "wisdomScaled": true,
@@ -9949,23 +10107,23 @@
   },
   "restriction": {
    "tactics": [
-    "sashi",
-    "senko"
+    "senko",
+    "sashi"
    ],
    "surfaces": [
     "turf"
    ],
    "venues": [
-    "东京",
-    "中山",
-    "京都",
     "阪神",
-    "札幌",
-    "函馆",
-    "新潟",
+    "东京",
     "福岛",
+    "函馆",
+    "京都",
+    "小仓",
+    "新潟",
+    "札幌",
     "中京",
-    "小仓"
+    "中山"
    ],
    "distanceMin": 2000
   },
@@ -10364,8 +10522,7 @@
     "mid"
    ],
    "surfaces": [
-    "turf",
-    "dirt"
+    "turf"
    ]
   },
   "restrictionText": "中距离",
@@ -10398,7 +10555,6 @@
     "mid"
    ],
    "surfaces": [
-    "turf",
     "dirt"
    ]
   },
@@ -10782,7 +10938,10 @@
    ],
    "surfaces": [
     "turf"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1000
+   }
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -10892,7 +11051,7 @@
   "nameTrad": "忘乎所以的尾巴",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -10901,7 +11060,15 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 1
+  },
+  "prereq": {
+   "counters": {
+    "middle": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -11175,7 +11342,7 @@
   "nameJa": "理想へ向かう覚悟",
   "nameTrad": "邁向理想的覺悟",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -11192,6 +11359,9 @@
    "tactics": [
     "senko"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -11255,6 +11425,12 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "120221"
+   ],
+   "requiresFirstBlock": true
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -11503,6 +11679,9 @@
     "long"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "先行",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -11728,7 +11907,7 @@
   "nameJa": "コックピット・マジシャン",
   "nameTrad": "駕駛艙魔術師",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -11743,6 +11922,9 @@
    "tactics": [
     "nige"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -11884,7 +12066,7 @@
   "nameTrad": "逐漸逼近的黑夜",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -11899,6 +12081,9 @@
    "tactics": [
     "oikomi"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "追马",
   "wisdomScaled": true,
@@ -12113,7 +12298,10 @@
   "restriction": {
    "tactics": [
     "nige"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -12603,7 +12791,7 @@
   "nameJa": "決意の根性娘",
   "nameTrad": "決心的意志堅強女孩",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -12620,6 +12808,9 @@
    "tactics": [
     "senko"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -12912,7 +13103,7 @@
   "nameJa": "淀の祝福",
   "nameTrad": "淀的祝福",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -13231,7 +13422,7 @@
   "nameTrad": "拉普拉斯的惡魔",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -13249,7 +13440,11 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200,
+    "wisdom": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -13263,7 +13458,7 @@
   "nameTrad": "拉普拉斯的惡魔",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -13281,7 +13476,13 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200
+   },
+   "statsBelow": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -13688,7 +13889,7 @@
   "nameTrad": "打火英雄的急登梯",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -13697,7 +13898,15 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 1
+  },
+  "prereq": {
+   "counters": {
+    "middle": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -13870,7 +14079,7 @@
   "nameJa": "韋駄天ノ襲脚",
   "nameTrad": "韋馱天之襲腳",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -13888,6 +14097,9 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "追马",
   "wisdomScaled": true,
@@ -14459,7 +14671,7 @@
   "nameJa": "Ritter von Fuchu",
   "nameTrad": "Ritter von Fuchu",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -15033,7 +15245,7 @@
   "nameJa": "フィナーレの先頭へ",
   "nameTrad": "奔向終章的前頭",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -15050,6 +15262,9 @@
    "tactics": [
     "sashi"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -15209,7 +15424,10 @@
   "restriction": {
    "tactics": [
     "sashi"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1200
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -15238,7 +15456,10 @@
   "restriction": {
    "tactics": [
     "sashi"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1200
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -15417,6 +15638,9 @@
    "distanceTypes": [
     "short"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "短距离",
   "wisdomScaled": true,
@@ -15711,7 +15935,7 @@
   "nameTrad": "惡作劇大師",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -15776,8 +16000,8 @@
     "dirt"
    ],
    "grounds": [
-    0,
-    2
+    2,
+    3
    ]
   },
   "restrictionText": "泥地",
@@ -15792,7 +16016,7 @@
   "nameTrad": "泥巴魔王大人",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -15815,7 +16039,7 @@
    ],
    "grounds": [
     0,
-    2
+    1
    ]
   },
   "restrictionText": "泥地",
@@ -16166,7 +16390,7 @@
   "nameJa": "緊急魔力ブースト",
   "nameTrad": "緊急魔力增幅",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -16185,6 +16409,9 @@
    "tactics": [
     "oikomi"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "追马",
   "wisdomScaled": true,
@@ -16598,7 +16825,7 @@
   "nameJa": "爆レスあげちゃう☆",
   "nameTrad": "送上爆熱情回覆☆",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -16618,6 +16845,13 @@
     "dirt"
    ]
   },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   }
+  },
   "restrictionText": "逃马",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -16629,7 +16863,7 @@
   "nameJa": "爆レスあげちゃう☆",
   "nameTrad": "送上爆熱情回覆☆",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -16652,6 +16886,14 @@
    "surfaces": [
     "dirt"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   },
+   "requiresFirstBlock": true
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -16786,7 +17028,7 @@
   "nameJa": "嵐纏いし英雄は往く",
   "nameTrad": "身纏暴風英雄邁步前行",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -16802,6 +17044,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    3,
+    4
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -17008,9 +17256,9 @@
     "sashi"
    ],
    "distanceTypes": [
-    "mid",
     "short",
     "mile",
+    "mid",
     "long"
    ],
    "venues": [
@@ -17179,7 +17427,6 @@
     "sashi"
    ],
    "distanceTypes": [
-    "long",
     "short",
     "mile",
     "mid"
@@ -17301,7 +17548,7 @@
   "nameTrad": "驍勇的賭徒",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -17334,7 +17581,7 @@
   "nameTrad": "驍勇的賭徒",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -17409,7 +17656,7 @@
   "name": "All-in!!(2)",
   "nameJa": "All-in!!",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -17558,6 +17805,9 @@
     "mid",
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -18308,7 +18558,7 @@
   "nameTrad": "熱血進化的騎乘！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -18325,6 +18575,9 @@
    "tactics": [
     "sashi"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -18368,7 +18621,7 @@
   "nameTrad": "必殺！爆快短途！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -18385,6 +18638,9 @@
    "distanceTypes": [
     "short"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "短距离",
   "wisdomScaled": true,
@@ -18606,7 +18862,7 @@
   "name": "辉煌☆洋娃娃舞台(1)",
   "nameJa": "煌めき☆ドーリィステージ",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -18615,13 +18871,25 @@
   ],
   "durationSec": 2.4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "tactics": [
     "sashi"
    ],
+   "weathers": [
+    1
+   ],
    "distanceMin": 2000
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 13
+    }
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -18633,7 +18901,7 @@
   "name": "辉煌☆洋娃娃舞台(2)",
   "nameJa": "煌めき☆ドーリィステージ",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -18642,13 +18910,22 @@
   ],
   "durationSec": 2.4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "tactics": [
     "sashi"
    ],
    "distanceMin": 2000
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 13
+    }
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -18660,7 +18937,7 @@
   "name": "现在是美丽秀时间♪(1)",
   "nameJa": "いざ、ショーベラスタイム♪",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -18684,7 +18961,10 @@
    ],
    "grounds": [
     0
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -18696,7 +18976,7 @@
   "name": "现在是美丽秀时间♪(2)",
   "nameJa": "いざ、ショーベラスタイム♪",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -18719,8 +18999,13 @@
     "long"
    ],
    "grounds": [
-    0
-   ]
+    1,
+    2,
+    3
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -18764,7 +19049,7 @@
   "nameTrad": "七福即生",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -18873,6 +19158,9 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "长距离",
   "wisdomScaled": true,
@@ -19281,7 +19569,7 @@
   "nameTrad": "點亮內心的鬥志",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -19296,6 +19584,9 @@
    "tactics": [
     "senko"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -19403,7 +19694,7 @@
   "nameTrad": "淀之女王",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -19874,7 +20165,7 @@
   "nameTrad": "春風吹拂，櫻花飛舞",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -19890,6 +20181,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    1,
+    5
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -20172,7 +20469,7 @@
   "nameJa": "やばしやばし！",
   "nameTrad": "不妙不妙！",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -20189,6 +20486,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -20314,7 +20614,11 @@
    "distanceTypes": [
     "mile",
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1000,
+    "power": 1000
+   }
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -20557,6 +20861,14 @@
    ],
    "venues": [
     "中山"
+   ],
+   "motivations": [
+    "best"
+   ]
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "202051"
    ]
   },
   "restrictionText": "大逃",
@@ -20597,6 +20909,17 @@
    ],
    "venues": [
     "中山"
+   ],
+   "motivations": [
+    "worst",
+    "bad",
+    "normal",
+    "good"
+   ]
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "202051"
    ]
   },
   "restrictionText": "大逃",
@@ -20817,7 +21140,7 @@
   "nameTrad": "引擎點火！",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -20828,6 +21151,9 @@
   "condition": {
    "kind": "phase",
    "phase": 3
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -20910,7 +21236,7 @@
   "nameTrad": "順時針的輪舞曲",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -20926,6 +21252,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "rotations": [
+    1
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -21060,6 +21391,9 @@
    ],
    "venues": [
     "隆尚"
+   ],
+   "motivations": [
+    "best"
    ]
   },
   "restrictionText": "中距离",
@@ -21092,6 +21426,12 @@
    ],
    "venues": [
     "隆尚"
+   ],
+   "motivations": [
+    "worst",
+    "bad",
+    "normal",
+    "good"
    ]
   },
   "restrictionText": "中距离",
@@ -21281,7 +21621,7 @@
   "nameTrad": "吉兆驚天！臥龍勇往",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -21299,6 +21639,9 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -21344,7 +21687,7 @@
   "nameTrad": "飛越萬里嘿呀！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -21362,6 +21705,9 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -21436,7 +21782,7 @@
   "nameTrad": "今日九重宮中櫻花盛開",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -21452,6 +21798,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    1,
+    5
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -21643,7 +21995,7 @@
   "nameJa": "悪路のほうが好みでね",
   "nameTrad": "我比較喜歡艱難的路呢",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -21665,7 +22017,6 @@
     "turf"
    ],
    "grounds": [
-    0,
     1,
     2,
     3
@@ -21682,7 +22033,7 @@
   "nameJa": "悪路のほうが好みでね",
   "nameTrad": "我比較喜歡艱難的路呢",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -21704,8 +22055,7 @@
     "turf"
    ],
    "grounds": [
-    0,
-    2
+    0
    ]
   },
   "restrictionText": "草地",
@@ -21718,7 +22068,7 @@
   "name": "燃尽一切之星(1)",
   "nameJa": "すべてを焼き焦がす星",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -21776,6 +22126,9 @@
    "distances": [
     2400
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -21844,8 +22197,7 @@
     "mid"
    ],
    "grounds": [
-    0,
-    2
+    0
    ]
   },
   "restrictionText": "中距离",
@@ -22178,6 +22530,9 @@
     "sashi"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "先行",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -22405,7 +22760,10 @@
   "restriction": {
    "tactics": [
     "sashi"
-   ]
+   ],
+   "statsAtLeast": {
+    "stamina": 1200
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -22435,7 +22793,10 @@
   "restriction": {
    "tactics": [
     "sashi"
-   ]
+   ],
+   "statsBelow": {
+    "stamina": 1200
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -22465,7 +22826,10 @@
   "restriction": {
    "distanceTypes": [
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "stamina": 1200
+   }
   },
   "restrictionText": "长距离",
   "wisdomScaled": true,
@@ -22626,7 +22990,7 @@
   "name": "初空迢迢花宴酣",
   "nameJa": "初空高く、花宴",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -22647,7 +23011,10 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "stamina": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -22712,6 +23079,9 @@
     "long"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "差行",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -22725,7 +23095,7 @@
   "nameTrad": "草地的主角",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -22762,7 +23132,7 @@
   "nameTrad": "草地的主角",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -22782,6 +23152,11 @@
   "restriction": {
    "surfaces": [
     "turf"
+   ],
+   "grounds": [
+    1,
+    2,
+    3
    ]
   },
   "restrictionText": "草地",
@@ -22827,7 +23202,7 @@
   "nameTrad": "正道",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -22842,6 +23217,9 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "长距离",
   "wisdomScaled": true,
@@ -22983,7 +23361,7 @@
   "name": "面馆开张了！(2)",
   "nameJa": "いざ、開店です！",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -23001,6 +23379,9 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -23264,7 +23645,7 @@
   "nameJa": "情報強者",
   "nameTrad": "資訊強者",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
@@ -23273,15 +23654,21 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 0
   },
   "restriction": {
    "distanceTypes": [
     "mile",
-    "mid",
-    "short",
-    "long"
+    "mid"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "start": {
+     "min": 3
+    }
+   }
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -23294,7 +23681,7 @@
   "nameJa": "情報強者",
   "nameTrad": "資訊強者",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
@@ -23303,15 +23690,21 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 0
   },
   "restriction": {
    "distanceTypes": [
-    "mile",
-    "mid",
     "short",
     "long"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "start": {
+     "min": 3
+    }
+   }
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -23353,7 +23746,7 @@
   "name": "胜券在握(1)",
   "nameJa": "勝ち筋ドミネーション",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
@@ -23362,13 +23755,21 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 0
   },
   "restriction": {
    "distanceTypes": [
     "mile",
     "mid"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "start": {
+     "min": 3
+    }
+   }
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -23396,6 +23797,9 @@
     "mile",
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -23443,12 +23847,17 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "surfaces": [
     "dirt"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "泥地",
   "wisdomScaled": true,
@@ -23508,7 +23917,8 @@
   "restriction": {
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "distanceMax": 1800
   },
   "restrictionText": "泥地",
   "wisdomScaled": true,
@@ -23567,6 +23977,11 @@
   "condition": {
    "kind": "phase",
    "phase": 1
+  },
+  "restriction": {
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -23631,7 +24046,7 @@
   "nameJa": "Enjoy the Flight",
   "nameTrad": "Enjoy the Flight",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -23648,6 +24063,9 @@
    "distanceTypes": [
     "mile"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -23691,7 +24109,7 @@
   "name": "流丽直追(2)",
   "nameJa": "流麗なる急追",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -23713,6 +24131,9 @@
    "distanceTypes": [
     "mile"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "追马",
   "wisdomScaled": true,
@@ -23776,6 +24197,9 @@
    "distanceTypes": [
     "mile"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "追马",
   "wisdomScaled": true,
@@ -24006,7 +24430,7 @@
   "nameTrad": "為我陶醉吧，世界",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -24027,7 +24451,11 @@
    "distanceTypes": [
     "mile",
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1000,
+    "power": 1000
+   }
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -24087,6 +24515,9 @@
    "distanceTypes": [
     "mile"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -24597,6 +25028,9 @@
     "short"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "逃马",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -24726,7 +25160,8 @@
   "restriction": {
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "distanceMax": 2400
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -24793,7 +25228,10 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -25043,7 +25481,7 @@
   "nameJa": "不撓不屈の女王",
   "nameTrad": "不屈不撓的女王",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -25063,6 +25501,9 @@
     "mile"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -25073,7 +25514,7 @@
   "nameJa": "『お姉ちゃん、だもの』",
   "nameTrad": "「因為我是姊姊嘛」",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -25082,12 +25523,20 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 0
   },
   "restriction": {
    "distanceTypes": [
     "mile"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "start": {
+     "min": 1
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -25099,7 +25548,7 @@
   "nameJa": "『お姉ちゃん、だもの』",
   "nameTrad": "「因為我是姊姊嘛」",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -25108,15 +25557,22 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 0
   },
   "restriction": {
    "distanceTypes": [
-    "mile",
     "short",
     "mid",
     "long"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "start": {
+     "min": 1
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -25246,7 +25702,10 @@
    ],
    "venues": [
     "京都"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -25332,7 +25791,9 @@
   ],
   "durationSec": 2.4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "tactics": [
@@ -25341,6 +25802,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -25371,7 +25835,6 @@
   },
   "restriction": {
    "distanceTypes": [
-    "mile",
     "mid"
    ]
   },
@@ -25401,8 +25864,7 @@
   },
   "restriction": {
    "distanceTypes": [
-    "mile",
-    "mid"
+    "mile"
    ]
   },
   "restrictionText": "英里",
@@ -25470,7 +25932,6 @@
     "senko"
    ],
    "distanceTypes": [
-    "short",
     "mile",
     "mid",
     "long"
@@ -25550,7 +26011,7 @@
   "nameTrad": "生命的煙火",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -25567,6 +26028,9 @@
    "tactics": [
     "senko"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -25700,7 +26164,10 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1200
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -26077,6 +26544,11 @@
     "mid"
    ]
   },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "203781"
+   ]
+  },
   "restrictionText": "英里",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -26120,7 +26592,7 @@
   "nameJa": "誰にも告げぬ誓い",
   "nameTrad": "無法向他人訴說的誓言",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -26143,6 +26615,12 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "203781"
+   ],
+   "requiresFirstBlock": true
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -26208,6 +26686,12 @@
     "mid"
    ]
   },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "203781"
+   ],
+   "requiresFirstBlock": true
+  },
   "restrictionText": "英里",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -26252,7 +26736,7 @@
   "nameTrad": "龍脈的波濤",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -26267,7 +26751,10 @@
   "restriction": {
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1200
+   }
   },
   "restrictionText": "泥地",
   "wisdomScaled": true,
@@ -26281,7 +26768,7 @@
   "nameTrad": "龍脈的波濤",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -26296,7 +26783,13 @@
   "restriction": {
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1000
+   },
+   "statsBelow": {
+    "power": 1200
+   }
   },
   "restrictionText": "泥地",
   "wisdomScaled": true,
@@ -26340,7 +26833,7 @@
   "nameJa": "走る縁起物",
   "nameTrad": "奔跑的幸運物",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -26373,7 +26866,7 @@
   "nameJa": "走る縁起物",
   "nameTrad": "奔跑的幸運物",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -26420,6 +26913,9 @@
   "restriction": {
    "surfaces": [
     "dirt"
+   ],
+   "motivations": [
+    "best"
    ]
   },
   "restrictionText": "泥地",
@@ -26432,7 +26928,7 @@
   "name": "鸿运敲鼓(2)",
   "nameJa": "盛運のドラムロール",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -26452,6 +26948,12 @@
   "restriction": {
    "surfaces": [
     "dirt"
+   ],
+   "motivations": [
+    "worst",
+    "bad",
+    "normal",
+    "good"
    ]
   },
   "restrictionText": "泥地",
@@ -26557,7 +27059,7 @@
   "nameJa": "ひた走れ！苫小牧の星",
   "nameTrad": "全力奔跑吧！苫小牧之星",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -26573,6 +27075,9 @@
     "dirt"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "泥地",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -26584,7 +27089,7 @@
   "nameJa": "感謝のふるさとメドレー",
   "nameTrad": "感謝的故鄉組曲",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -26604,6 +27109,13 @@
     "dirt"
    ]
   },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   }
+  },
   "restrictionText": "先行",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -26615,7 +27127,7 @@
   "nameJa": "感謝のふるさとメドレー",
   "nameTrad": "感謝的故鄉組曲",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -26634,6 +27146,14 @@
    "surfaces": [
     "dirt"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   },
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -26699,7 +27219,8 @@
    ],
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "distanceMin": 1800
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -26850,7 +27371,10 @@
    ],
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "statsAtLeast": {
+    "guts": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -26912,6 +27436,13 @@
   "condition": {
    "kind": "phase",
    "phase": 1
+  },
+  "prereq": {
+   "counters": {
+    "middle": {
+     "min": 2
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -27010,6 +27541,13 @@
    "fromPct": 50,
    "toPct": 100
   },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 1
+    }
+   }
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -27043,7 +27581,7 @@
   "nameTrad": "聖夜的奇蹟跑者！",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -27063,6 +27601,13 @@
    "kind": "distanceRate",
    "fromPct": 50,
    "toPct": 100
+  },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -27381,6 +27926,13 @@
    "fromMeters": 399,
    "toMeters": 401
   },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 7
+    }
+   }
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -27404,6 +27956,13 @@
    "kind": "distanceLeft",
    "fromMeters": 399,
    "toMeters": 401
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "max": 6
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -27725,12 +28284,21 @@
   ],
   "durationSec": 2.4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 13
+    }
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -27813,7 +28381,7 @@
   "nameTrad": "火神鳴",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -27826,7 +28394,15 @@
   ],
   "durationSec": 6,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 1
+  },
+  "prereq": {
+   "counters": {
+    "middle": {
+     "min": 2
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -28115,7 +28691,6 @@
   },
   "restriction": {
    "distanceTypes": [
-    "mid",
     "short",
     "mile",
     "long"
@@ -28955,6 +29530,9 @@
     "mile"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -29056,7 +29634,7 @@
   "nameJa": "とっておきmaterialize",
   "nameTrad": "特製魔法materialize",
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -29070,6 +29648,15 @@
     66.66666666666667,
     100
    ]
+  },
+  "restriction": {
+   "motivations": [
+    "good",
+    "best"
+   ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -29189,15 +29776,26 @@
    ]
   },
   "restriction": {
-   "distanceTypes": [
-    "mid"
-   ],
-   "venues": [
-    "东京",
-    "中山"
-   ],
-   "distances": [
-    2500
+   "anyOf": [
+    {
+     "distanceTypes": [
+      "mid"
+     ],
+     "venues": [
+      "中山"
+     ],
+     "distances": [
+      2500
+     ]
+    },
+    {
+     "distanceTypes": [
+      "mid"
+     ],
+     "venues": [
+      "东京"
+     ]
+    }
    ]
   },
   "wisdomScaled": true,
@@ -29257,6 +29855,11 @@
    "kind": "distanceRate",
    "fromPct": 40,
    "toPct": 50
+  },
+  "restriction": {
+   "motivations": [
+    "best"
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -29340,6 +29943,9 @@
     "long"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "中距离",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -29412,7 +30018,7 @@
   "nameTrad": "馳騁星海",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -29421,12 +30027,21 @@
   ],
   "durationSec": 4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 13
+    }
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -29453,12 +30068,21 @@
   ],
   "durationSec": 2.4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 13
+    }
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -29486,7 +30110,9 @@
   ],
   "durationSec": null,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
@@ -29494,6 +30120,11 @@
    ],
    "surfaces": [
     "turf"
+   ]
+  },
+  "prereq": {
+   "ownedSkillBaseIds": [
+    "201631"
    ]
   },
   "restrictionText": "中距离",
@@ -29652,6 +30283,11 @@
   "durationSec": 5,
   "condition": {
    "kind": "finalStraight"
+  },
+  "restriction": {
+   "motivations": [
+    "best"
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -30182,6 +30818,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "randomPosition": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -30219,6 +30858,11 @@
    ],
    "venues": [
     "中山"
+   ]
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "202051"
    ]
   },
   "wisdomScaled": true,
@@ -30425,7 +31069,10 @@
   "restriction": {
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1200
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -30505,7 +31152,15 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 1
+  },
+  "prereq": {
+   "counters": {
+    "middle": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -30732,7 +31387,7 @@
   "nameTrad": "Illuminate you",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -30743,6 +31398,14 @@
   "condition": {
    "kind": "phaseAfter",
    "phase": 2
+  },
+  "restriction": {
+   "statsAtLeast": {
+    "stamina": 1200
+   }
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -30831,6 +31494,13 @@
     10000
    ]
   },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 1
+    }
+   }
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -30853,6 +31523,13 @@
    "kind": "distanceRate",
    "fromPct": 45,
    "toPct": 100
+  },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 1
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -30969,6 +31646,9 @@
     "dirt"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "泥地",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -31043,7 +31723,7 @@
   "nameTrad": "赫然",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -31064,6 +31744,9 @@
    "venues": [
     "中山"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "追马",
   "wisdomScaled": true,
@@ -31089,8 +31772,8 @@
   },
   "restriction": {
    "tactics": [
-    "oikomi",
-    "sashi"
+    "sashi",
+    "oikomi"
    ],
    "distanceTypes": [
     "mid"
@@ -31121,8 +31804,8 @@
   },
   "restriction": {
    "tactics": [
-    "oikomi",
-    "sashi"
+    "sashi",
+    "oikomi"
    ],
    "distanceTypes": [
     "mid"
@@ -31157,8 +31840,8 @@
   },
   "restriction": {
    "tactics": [
-    "oikomi",
-    "sashi"
+    "sashi",
+    "oikomi"
    ],
    "distanceTypes": [
     "mid"
@@ -31188,8 +31871,8 @@
   },
   "restriction": {
    "tactics": [
-    "oikomi",
-    "sashi"
+    "sashi",
+    "oikomi"
    ],
    "distanceTypes": [
     "mid"
@@ -31504,7 +32187,10 @@
   "restriction": {
    "distanceTypes": [
     "short"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -31800,7 +32486,7 @@
   "nameJa": "ぜーったい負けられない！",
   "nameTrad": "絕～對不能輸！",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -31817,6 +32503,9 @@
    "tactics": [
     "senko"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -32294,6 +32983,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "中距离",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -32452,6 +33144,11 @@
     "mid"
    ]
   },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "202051"
+   ]
+  },
   "restrictionText": "中距离",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -32508,6 +33205,26 @@
    "withinPct": [
     66.66666666666667,
     100
+   ]
+  },
+  "prereq": {
+   "anyOf": [
+    {
+     "counters": {
+      "middle": {
+       "min": 7,
+       "max": 7
+      }
+     }
+    },
+    {
+     "counters": {
+      "middle": {
+       "min": 13,
+       "max": 13
+      }
+     }
+    }
    ]
   },
   "wisdomScaled": true,
@@ -32582,6 +33299,9 @@
     66.66666666666667,
     100
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -32731,18 +33451,40 @@
    ]
   },
   "restriction": {
-   "surfaces": [
-    "turf"
-   ],
-   "venues": [
-    "阪神",
-    "京都",
-    "东京"
-   ],
-   "distances": [
-    1600,
-    2000,
-    2400
+   "anyOf": [
+    {
+     "surfaces": [
+      "turf"
+     ],
+     "venues": [
+      "阪神"
+     ],
+     "distances": [
+      1600
+     ]
+    },
+    {
+     "surfaces": [
+      "turf"
+     ],
+     "venues": [
+      "京都"
+     ],
+     "distances": [
+      2000
+     ]
+    },
+    {
+     "surfaces": [
+      "turf"
+     ],
+     "venues": [
+      "东京"
+     ],
+     "distances": [
+      2400
+     ]
+    }
    ]
   },
   "wisdomScaled": true,
@@ -32771,18 +33513,40 @@
    ]
   },
   "restriction": {
-   "surfaces": [
-    "turf"
-   ],
-   "venues": [
-    "阪神",
-    "京都",
-    "东京"
-   ],
-   "distances": [
-    1600,
-    2000,
-    2400
+   "anyOf": [
+    {
+     "surfaces": [
+      "turf"
+     ],
+     "venues": [
+      "阪神"
+     ],
+     "distances": [
+      1600
+     ]
+    },
+    {
+     "surfaces": [
+      "turf"
+     ],
+     "venues": [
+      "京都"
+     ],
+     "distances": [
+      2000
+     ]
+    },
+    {
+     "surfaces": [
+      "turf"
+     ],
+     "venues": [
+      "东京"
+     ],
+     "distances": [
+      2400
+     ]
+    }
    ]
   },
   "wisdomScaled": true,
@@ -32874,7 +33638,10 @@
   "restriction": {
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -32947,7 +33714,7 @@
   "nameJa": "堅実なる秘策",
   "nameTrad": "穩紮穩打的妙計",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -32966,6 +33733,9 @@
    "tactics": [
     "sashi"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -32997,6 +33767,9 @@
   "restriction": {
    "distanceTypes": [
     "mid"
+   ],
+   "motivations": [
+    "best"
    ]
   },
   "wisdomScaled": true,
@@ -33128,6 +33901,9 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -33316,6 +34092,9 @@
     "mile",
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -33554,7 +34333,13 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "motivations": [
+    "best"
+   ],
+   "statsAtLeast": {
+    "speed": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -33566,7 +34351,7 @@
   "name": "这么可爱真是抱歉♡(2)",
   "nameJa": "愛されすぎてマジごめん♡",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -33584,7 +34369,16 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "motivations": [
+    "worst",
+    "bad",
+    "normal",
+    "good"
+   ],
+   "statsAtLeast": {
+    "speed": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -33613,6 +34407,9 @@
   "restriction": {
    "distanceTypes": [
     "mid"
+   ],
+   "motivations": [
+    "best"
    ]
   },
   "restrictionText": "中距离",
@@ -33671,6 +34468,9 @@
     66.66666666666667
    ]
   },
+  "restriction": {
+   "abroad": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -33722,6 +34522,7 @@
    "distances": [
     400
    ],
+   "basisDistance": true,
    "distanceMin": 1600,
    "distanceMax": 2500
   },
@@ -33888,6 +34689,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "中距离",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -34019,6 +34823,9 @@
    "tactics": [
     "senko"
    ],
+   "statsAtLeast": {
+    "power": 1200
+   },
    "distanceMin": 2400,
    "distanceMax": 2500
   },
@@ -34294,7 +35101,7 @@
   "nameJa": "邁進アン・レール",
   "nameTrad": "朝空中邁進",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -34304,6 +35111,9 @@
   "durationSec": 3,
   "condition": {
    "kind": "finalStraight"
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -34355,7 +35165,9 @@
   ],
   "durationSec": 1.2,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "tactics": [
@@ -34364,6 +35176,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -34419,7 +35234,9 @@
   ],
   "durationSec": 1.2,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "tactics": [
@@ -34428,6 +35245,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -34441,7 +35261,7 @@
   "nameJa": "果てへの面舵",
   "nameTrad": "右滿舵邁向盡頭",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -34457,6 +35277,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "rotations": [
+    1
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -34489,7 +35314,10 @@
    ],
    "venues": [
     "中山"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "追马",
   "wisdomScaled": true,
@@ -34552,7 +35380,10 @@
    ],
    "distanceTypes": [
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "追马",
   "wisdomScaled": true,
@@ -34681,6 +35512,9 @@
     "short"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "逃马",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -34721,7 +35555,7 @@
   "name": "迅光一闪！(2)",
   "nameJa": "起光一迅！",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -34743,6 +35577,9 @@
    "distanceTypes": [
     "short"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -34803,6 +35640,9 @@
    "distanceTypes": [
     "short"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -35080,7 +35920,7 @@
   "name": "占据上风(2)",
   "nameJa": "風上に立て",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -35103,6 +35943,9 @@
    "venues": [
     "东京"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -35171,6 +36014,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "先行",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -35233,7 +36079,8 @@
   "restriction": {
    "distanceTypes": [
     "long"
-   ]
+   ],
+   "distanceMin": 3200
   },
   "restrictionText": "长距离",
   "wisdomScaled": true,
@@ -35279,7 +36126,7 @@
   "nameJa": "猛き獣は太陽に吼える",
   "nameTrad": "對太陽咆哮的猛獸",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -35296,7 +36143,11 @@
    ],
    "distanceTypes": [
     "long"
-   ]
+   ],
+   "distanceMin": 3200
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -35323,7 +36174,10 @@
   "restriction": {
    "tactics": [
     "senko"
-   ]
+   ],
+   "statsAtLeast": {
+    "stamina": 1000
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -35385,7 +36239,10 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "guts": 1000
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -35444,7 +36301,10 @@
   "restriction": {
    "tactics": [
     "senko"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -35518,7 +36378,7 @@
   "name": "确信的胜利(2)",
   "nameJa": "確信された勝利",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -35536,6 +36396,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -35566,7 +36429,10 @@
    ],
    "distanceTypes": [
     "mile"
-   ]
+   ],
+   "statsAtLeast": {
+    "guts": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -35679,16 +36545,51 @@
    ]
   },
   "restriction": {
-   "tactics": [
-    "senko",
-    "sashi"
-   ],
-   "distanceTypes": [
-    "mile",
-    "mid"
-   ],
-   "surfaces": [
-    "turf"
+   "anyOf": [
+    {
+     "tactics": [
+      "senko"
+     ],
+     "distanceTypes": [
+      "mile"
+     ],
+     "surfaces": [
+      "turf"
+     ]
+    },
+    {
+     "tactics": [
+      "senko"
+     ],
+     "distanceTypes": [
+      "mid"
+     ],
+     "surfaces": [
+      "turf"
+     ]
+    },
+    {
+     "tactics": [
+      "sashi"
+     ],
+     "distanceTypes": [
+      "mile"
+     ],
+     "surfaces": [
+      "turf"
+     ]
+    },
+    {
+     "tactics": [
+      "sashi"
+     ],
+     "distanceTypes": [
+      "mid"
+     ],
+     "surfaces": [
+      "turf"
+     ]
+    }
    ]
   },
   "restrictionText": "先行",
@@ -35758,7 +36659,6 @@
   },
   "restriction": {
    "distanceTypes": [
-    "short",
     "mile"
    ]
   },
@@ -35789,8 +36689,7 @@
   },
   "restriction": {
    "distanceTypes": [
-    "short",
-    "mile"
+    "short"
    ]
   },
   "restrictionText": "短距离",
@@ -35861,7 +36760,6 @@
   },
   "restriction": {
    "distanceTypes": [
-    "mile",
     "short",
     "mid",
     "long"
@@ -35933,7 +36831,10 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -35997,7 +36898,8 @@
    ],
    "surfaces": [
     "turf"
-   ]
+   ],
+   "abroad": true
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -36023,12 +36925,25 @@
    "part": "firstHalf"
   },
   "restriction": {
-   "distanceTypes": [
-    "mid"
-   ],
-   "surfaces": [
-    "turf",
-    "dirt"
+   "anyOf": [
+    {
+     "distanceTypes": [
+      "mid"
+     ],
+     "surfaces": [
+      "turf"
+     ],
+     "abroad": false
+    },
+    {
+     "distanceTypes": [
+      "mid"
+     ],
+     "surfaces": [
+      "dirt"
+     ],
+     "abroad": true
+    }
    ]
   },
   "restrictionText": "中距离",
@@ -36063,7 +36978,8 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "abroad": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -36245,7 +37161,10 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -36307,6 +37226,9 @@
   "restriction": {
    "tactics": [
     "sashi"
+   ],
+   "motivations": [
+    "best"
    ]
   },
   "restrictionText": "差行",
@@ -36398,6 +37320,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "差行",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -36441,7 +37366,7 @@
   "name": "旅行心得(2)",
   "nameJa": "旅の心得",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -36461,6 +37386,9 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "差行",
   "wisdomScaled": true,
@@ -36494,6 +37422,11 @@
   "restriction": {
    "tactics": [
     "sashi"
+   ]
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "204452"
    ]
   },
   "restrictionText": "差行",
@@ -36560,6 +37493,11 @@
     "sashi"
    ]
   },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "204452"
+   ]
+  },
   "restrictionText": "差行",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -36618,6 +37556,11 @@
   "restriction": {
    "tactics": [
     "nige"
+   ]
+  },
+  "prereq": {
+   "usedSkillBaseIds": [
+    "202051"
    ]
   },
   "restrictionText": "逃马",
@@ -36776,6 +37719,9 @@
    ],
    "distanceMin": 2000
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "先行",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -36836,6 +37782,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -36932,6 +37881,9 @@
     "sashi"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "差马",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -36959,8 +37911,7 @@
   },
   "restriction": {
    "distanceTypes": [
-    "mid",
-    "long"
+    "mid"
    ]
   },
   "restrictionText": "中距离",
@@ -36987,7 +37938,6 @@
   },
   "restriction": {
    "distanceTypes": [
-    "mid",
     "long"
    ]
   },
@@ -37037,7 +37987,7 @@
   "name": "完美无瑕(2)",
   "nameJa": "Impeccable",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -37057,6 +38007,9 @@
    "distances": [
     2400
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -37140,7 +38093,11 @@
   "restriction": {
    "surfaces": [
     "turf"
-   ]
+   ],
+   "distanceMax": 2500
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "randomPosition": true,
@@ -37171,8 +38128,8 @@
   },
   "restriction": {
    "tactics": [
-    "oikomi",
-    "senko"
+    "senko",
+    "oikomi"
    ],
    "distanceTypes": [
     "mid"
@@ -37205,8 +38162,8 @@
   },
   "restriction": {
    "tactics": [
-    "oikomi",
-    "senko"
+    "senko",
+    "oikomi"
    ],
    "distanceTypes": [
     "mid"
@@ -37241,13 +38198,39 @@
    "kind": "downhillFastest"
   },
   "restriction": {
-   "tactics": [
-    "sashi",
-    "senko"
-   ],
-   "distanceTypes": [
-    "mile",
-    "mid"
+   "anyOf": [
+    {
+     "tactics": [
+      "senko"
+     ],
+     "distanceTypes": [
+      "mile"
+     ]
+    },
+    {
+     "tactics": [
+      "sashi"
+     ],
+     "distanceTypes": [
+      "mile"
+     ]
+    },
+    {
+     "tactics": [
+      "senko"
+     ],
+     "distanceTypes": [
+      "mid"
+     ]
+    },
+    {
+     "tactics": [
+      "sashi"
+     ],
+     "distanceTypes": [
+      "mid"
+     ]
+    }
    ]
   },
   "restrictionText": "差马",
@@ -37274,8 +38257,8 @@
   },
   "restriction": {
    "tactics": [
-    "sashi",
-    "senko"
+    "senko",
+    "sashi"
    ],
    "distanceTypes": [
     "mile",
@@ -37321,7 +38304,7 @@
   "name": "近前者，斩!(2)",
   "nameJa": "寄らば斬る！",
   "rarity": "evolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -37338,7 +38321,14 @@
    "distanceTypes": [
     "mile",
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1000,
+    "guts": 1000
+   }
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -37352,7 +38342,7 @@
   "nameTrad": "威風凜凜，揭夢！",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -37372,6 +38362,13 @@
     "中山"
    ]
   },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   }
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -37383,7 +38380,7 @@
   "nameTrad": "威風凜凜，揭夢！",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -37402,6 +38399,13 @@
    "venues": [
     "中山"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -37530,7 +38534,7 @@
   "name": "荣耀归于你！(1)",
   "nameJa": "Gloire à toi!",
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -37539,12 +38543,22 @@
   ],
   "durationSec": 4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 50,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "basisDistance": true
+  },
+  "prereq": {
+   "counters": {
+    "laterHalf": {
+     "min": 1
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -37555,7 +38569,7 @@
   "name": "荣耀归于你！(2)",
   "nameJa": "Gloire à toi!",
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -37564,12 +38578,21 @@
   ],
   "durationSec": 4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 50,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "laterHalf": {
+     "min": 1
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -37786,6 +38809,9 @@
    "fromMeters": 399,
    "toMeters": 401
   },
+  "restriction": {
+   "basisDistance": false
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -37865,23 +38891,23 @@
   },
   "restriction": {
    "tactics": [
-    "sashi",
-    "senko"
+    "senko",
+    "sashi"
    ],
    "surfaces": [
     "turf"
    ],
    "venues": [
-    "东京",
-    "中山",
-    "京都",
     "阪神",
-    "札幌",
-    "函馆",
-    "新潟",
+    "东京",
     "福岛",
+    "函馆",
+    "京都",
+    "小仓",
+    "新潟",
+    "札幌",
     "中京",
-    "小仓"
+    "中山"
    ]
   },
   "restrictionText": "差马",
@@ -37917,23 +38943,23 @@
   },
   "restriction": {
    "tactics": [
-    "sashi",
-    "senko"
+    "senko",
+    "sashi"
    ],
    "surfaces": [
     "turf"
    ],
    "venues": [
-    "东京",
-    "中山",
-    "京都",
     "阪神",
-    "札幌",
-    "函馆",
-    "新潟",
+    "东京",
     "福岛",
+    "函馆",
+    "京都",
+    "小仓",
+    "新潟",
+    "札幌",
     "中京",
-    "小仓"
+    "中山"
    ]
   },
   "restrictionText": "差马",
@@ -38059,6 +39085,9 @@
    "surfaces": [
     "turf"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "逃马",
   "wisdomScaled": true,
@@ -38232,6 +39261,9 @@
     "long"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "差行",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -38337,7 +39369,7 @@
   "nameJa": "全力全開！サイクロン",
   "nameTrad": "火力全開！旋風",
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -38356,6 +39388,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -38574,6 +39609,9 @@
    "kind": "distanceLeft",
    "fromMeters": 349,
    "toMeters": 351
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -39021,7 +40059,6 @@
   },
   "restriction": {
    "distanceTypes": [
-    "mid",
     "short",
     "mile",
     "long"
@@ -39087,6 +40124,9 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -39190,6 +40230,13 @@
     "long"
    ]
   },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 3
+    }
+   }
+  },
   "restrictionText": "先行",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -39200,7 +40247,7 @@
   "name": "为你献上，全力以赴的一碗！(2)",
   "nameJa": "一杯全力、お届けします！",
   "rarity": "unique5",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -39224,6 +40271,13 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 3
+    }
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -39280,7 +40334,7 @@
   "nameTrad": "順時針◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39291,6 +40345,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "rotations": [
+    1
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -39303,7 +40362,7 @@
   "nameTrad": "順時針○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39314,6 +40373,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "rotations": [
+    1
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -39326,7 +40390,7 @@
   "nameTrad": "順時針×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39337,6 +40401,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "rotations": [
+    1
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -39349,7 +40418,7 @@
   "nameTrad": "順時針之鬼",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39365,6 +40434,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "rotations": [
+    1
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -39377,7 +40451,7 @@
   "nameTrad": "逆時針◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39388,6 +40462,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "rotations": [
+    2
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -39400,7 +40479,7 @@
   "nameTrad": "逆時針○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39411,6 +40490,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "rotations": [
+    2
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -39423,7 +40507,7 @@
   "nameTrad": "逆時針×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39435,6 +40519,11 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "rotations": [
+    2
+   ]
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -39445,7 +40534,7 @@
   "nameJa": "左回りの鬼",
   "nameTrad": "逆時針之鬼",
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39462,6 +40551,11 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "rotations": [
+    2
+   ]
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -39473,7 +40567,7 @@
   "nameTrad": "東京賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39501,7 +40595,7 @@
   "nameTrad": "東京賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39529,7 +40623,7 @@
   "nameTrad": "東京賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39556,7 +40650,7 @@
   "nameJa": "府中の申し子",
   "nameTrad": "府中奇才",
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39594,7 +40688,7 @@
   "nameTrad": "中山賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39622,7 +40716,7 @@
   "nameTrad": "中山賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39650,7 +40744,7 @@
   "nameTrad": "中山賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39678,7 +40772,7 @@
   "nameTrad": "阪神賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39706,7 +40800,7 @@
   "nameTrad": "阪神賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39734,7 +40828,7 @@
   "nameTrad": "阪神賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39762,7 +40856,7 @@
   "nameTrad": "京都賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39790,7 +40884,7 @@
   "nameTrad": "京都賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39818,7 +40912,7 @@
   "nameTrad": "京都賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39846,7 +40940,7 @@
   "nameTrad": "淀之奇才",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39884,7 +40978,7 @@
   "nameTrad": "中京賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39912,7 +41006,7 @@
   "nameTrad": "中京賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39940,7 +41034,7 @@
   "nameTrad": "中京賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39968,7 +41062,7 @@
   "nameTrad": "札幌賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -39996,7 +41090,7 @@
   "nameTrad": "札幌賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40024,7 +41118,7 @@
   "nameTrad": "札幌賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40052,7 +41146,7 @@
   "nameTrad": "函館賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40080,7 +41174,7 @@
   "nameTrad": "函館賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40108,7 +41202,7 @@
   "nameTrad": "函館賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40136,7 +41230,7 @@
   "nameTrad": "福島賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40164,7 +41258,7 @@
   "nameTrad": "福島賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40192,7 +41286,7 @@
   "nameTrad": "福島賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40220,7 +41314,7 @@
   "nameTrad": "新潟賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40248,7 +41342,7 @@
   "nameTrad": "新潟賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40276,7 +41370,7 @@
   "nameTrad": "新潟賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40304,7 +41398,7 @@
   "nameTrad": "小倉賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40332,7 +41426,7 @@
   "nameTrad": "小倉賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40360,7 +41454,7 @@
   "nameTrad": "小倉賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40388,7 +41482,7 @@
   "nameTrad": "主要距離◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40399,6 +41493,9 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "basisDistance": true
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40411,7 +41508,7 @@
   "nameTrad": "主要距離○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40422,6 +41519,9 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "basisDistance": true
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40434,7 +41534,7 @@
   "nameTrad": "主要距離×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40445,6 +41545,9 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "basisDistance": true
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40457,7 +41560,7 @@
   "nameTrad": "非主要距離◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40468,6 +41571,9 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "basisDistance": false
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40480,7 +41586,7 @@
   "nameTrad": "非主要距離○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40491,6 +41597,9 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "basisDistance": false
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40503,7 +41612,7 @@
   "nameTrad": "非主要距離×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40514,6 +41623,9 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "basisDistance": false
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40526,7 +41638,7 @@
   "nameTrad": "良好場地◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40554,7 +41666,7 @@
   "nameTrad": "良好場地○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40582,7 +41694,7 @@
   "nameTrad": "良好場地×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40610,7 +41722,7 @@
   "nameTrad": "良好場地之鬼",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40643,7 +41755,7 @@
   "nameTrad": "路況差勁◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40673,7 +41785,7 @@
   "nameTrad": "路況差勁○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40703,7 +41815,7 @@
   "nameTrad": "路況差勁×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40733,7 +41845,7 @@
   "nameTrad": "路況差勁之鬼",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40768,7 +41880,7 @@
   "nameTrad": "春賽馬娘◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40779,6 +41891,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    1,
+    5
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40791,7 +41909,7 @@
   "nameTrad": "春賽馬娘○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40802,6 +41920,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    1,
+    5
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40814,7 +41938,7 @@
   "nameTrad": "春賽馬娘×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40825,6 +41949,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    1,
+    5
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40837,7 +41967,7 @@
   "nameTrad": "春初暖風",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40853,6 +41983,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    1,
+    5
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40865,7 +42001,7 @@
   "nameTrad": "夏賽馬娘◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40876,6 +42012,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    2
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40888,7 +42029,7 @@
   "nameTrad": "夏賽馬娘○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40899,6 +42040,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    2
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40911,7 +42057,7 @@
   "nameTrad": "夏賽馬娘×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40922,6 +42068,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    2
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40934,7 +42085,7 @@
   "nameTrad": "青嵐",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40950,6 +42101,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    2
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40962,7 +42118,7 @@
   "nameTrad": "秋賽馬娘◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40973,6 +42129,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    3
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -40985,7 +42146,7 @@
   "nameTrad": "秋賽馬娘○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -40996,6 +42157,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    3
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41008,7 +42174,7 @@
   "nameTrad": "秋賽馬娘×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41019,6 +42185,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    3
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41031,7 +42202,7 @@
   "nameTrad": "秋初強風",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41047,6 +42218,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    3
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41059,7 +42235,7 @@
   "nameTrad": "冬賽馬娘◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41070,6 +42246,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    4
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41082,7 +42263,7 @@
   "nameTrad": "冬賽馬娘○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41093,6 +42274,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    4
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41105,7 +42291,7 @@
   "nameTrad": "冬賽馬娘×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41116,6 +42302,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    4
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41128,7 +42319,7 @@
   "nameTrad": "冷冽之風",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41145,6 +42336,11 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "seasons": [
+    4
+   ]
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -41156,7 +42352,7 @@
   "nameTrad": "晴天◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41167,6 +42363,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "weathers": [
+    1
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41179,7 +42380,7 @@
   "nameTrad": "晴天○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41190,6 +42391,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "weathers": [
+    1
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41202,7 +42408,7 @@
   "nameTrad": "陰天◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41213,6 +42419,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "weathers": [
+    2
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41225,7 +42436,7 @@
   "nameTrad": "陰天○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41236,6 +42447,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "weathers": [
+    2
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41248,7 +42464,7 @@
   "nameTrad": "下雨天◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41259,6 +42475,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "weathers": [
+    3
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41271,7 +42492,7 @@
   "nameTrad": "下雨天○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41282,6 +42503,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "weathers": [
+    3
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41294,7 +42520,7 @@
   "nameTrad": "下雨天×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41305,6 +42531,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "weathers": [
+    3
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41317,7 +42548,7 @@
   "nameTrad": "下雪天◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41328,6 +42559,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "weathers": [
+    4
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41340,7 +42576,7 @@
   "nameTrad": "下雪天○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41351,6 +42587,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "weathers": [
+    4
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -41363,7 +42604,7 @@
   "nameTrad": "擅長內側閘位◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41386,7 +42627,7 @@
   "nameTrad": "擅長內側閘位○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41409,7 +42650,7 @@
   "nameTrad": "不擅長內側閘位",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41432,7 +42673,7 @@
   "nameTrad": "擅長外側閘位◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41455,7 +42696,7 @@
   "nameTrad": "擅長外側閘位○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41478,7 +42719,7 @@
   "nameTrad": "不擅長外側閘位",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41662,7 +42903,7 @@
   "nameTrad": "伏兵◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41685,7 +42926,7 @@
   "nameTrad": "伏兵○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41708,7 +42949,7 @@
   "nameTrad": "不擅長GⅠ",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -41731,7 +42972,7 @@
   "nameTrad": "膽小",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -44621,7 +45862,7 @@
   "nameTrad": "大井賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -44649,7 +45890,7 @@
   "nameTrad": "大井賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -44677,7 +45918,7 @@
   "nameTrad": "大井賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -48817,7 +50058,7 @@
   "nameTrad": "超級幸運7",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -48850,7 +50091,7 @@
   "nameTrad": "幸運7",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -49000,7 +50241,7 @@
   "nameTrad": "打好基礎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -49009,7 +50250,15 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 0
+  },
+  "prereq": {
+   "counters": {
+    "start": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -49022,7 +50271,7 @@
   "nameTrad": "磐石的架式",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -49031,7 +50280,15 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 0
+  },
+  "prereq": {
+   "counters": {
+    "start": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -49044,7 +50301,7 @@
   "nameTrad": "豎起尾巴",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -49053,7 +50310,15 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 1
+  },
+  "prereq": {
+   "counters": {
+    "middle": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -49066,7 +50331,7 @@
   "nameTrad": "尾巴躍龍門",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -49075,7 +50340,15 @@
   ],
   "durationSec": 3,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 1
+  },
+  "prereq": {
+   "counters": {
+    "middle": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -49088,7 +50361,7 @@
   "nameTrad": "使盡全力",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "heal",
@@ -49097,7 +50370,15 @@
   ],
   "durationSec": null,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phaseAfter",
+   "phase": 2
+  },
+  "prereq": {
+   "counters": {
+    "endAfter": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -49147,11 +50428,18 @@
   ],
   "durationSec": null,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "surfaces": [
     "turf"
+   ]
+  },
+  "prereq": {
+   "ownedSkillBaseIds": [
+    "201631"
    ]
   },
   "restrictionText": "草地",
@@ -49543,7 +50831,7 @@
   "nameTrad": "立體美甲",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50623,7 +51911,7 @@
   "nameTrad": "99 Problems",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50719,7 +52007,7 @@
   "nameTrad": "川崎賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50747,7 +52035,7 @@
   "nameTrad": "川崎賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50775,7 +52063,7 @@
   "nameTrad": "川崎賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50803,7 +52091,7 @@
   "nameTrad": "船橋賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50831,7 +52119,7 @@
   "nameTrad": "船橋賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50859,7 +52147,7 @@
   "nameTrad": "船橋賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50887,7 +52175,7 @@
   "nameTrad": "盛岡賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50915,7 +52203,7 @@
   "nameTrad": "盛岡賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50943,7 +52231,7 @@
   "nameTrad": "盛岡賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50971,7 +52259,7 @@
   "nameTrad": "夜間賽◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -50994,7 +52282,7 @@
   "nameTrad": "夜間賽○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51017,7 +52305,7 @@
   "nameTrad": "夜間賽×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51040,7 +52328,7 @@
   "nameTrad": "急彎◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51054,12 +52342,12 @@
   },
   "restriction": {
    "venues": [
-    "札幌",
-    "函馆",
-    "福岛",
-    "小仓",
     "川崎",
-    "船桥"
+    "船桥",
+    "福岛",
+    "函馆",
+    "小仓",
+    "札幌"
    ]
   },
   "wisdomScaled": false,
@@ -51073,7 +52361,7 @@
   "nameTrad": "急彎○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51087,12 +52375,12 @@
   },
   "restriction": {
    "venues": [
-    "札幌",
-    "函馆",
-    "福岛",
-    "小仓",
     "川崎",
-    "船桥"
+    "船桥",
+    "福岛",
+    "函馆",
+    "小仓",
+    "札幌"
    ]
   },
   "wisdomScaled": false,
@@ -51106,7 +52394,7 @@
   "nameTrad": "急彎×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51120,12 +52408,12 @@
   },
   "restriction": {
    "venues": [
-    "札幌",
-    "函馆",
-    "福岛",
-    "小仓",
     "川崎",
-    "船桥"
+    "船桥",
+    "福岛",
+    "函馆",
+    "小仓",
+    "札幌"
    ]
   },
   "wisdomScaled": false,
@@ -51139,7 +52427,7 @@
   "nameTrad": "交流主要競賽◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51162,7 +52450,7 @@
   "nameTrad": "交流主要競賽○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51185,7 +52473,7 @@
   "nameTrad": "交流主要競賽×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51207,7 +52495,7 @@
   "nameJa": "交流重賞の鬼",
   "nameTrad": "交流主要競賽之鬼",
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51441,6 +52729,13 @@
     "dirt"
    ]
   },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 1
+    }
+   }
+  },
   "restrictionText": "泥地",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -51474,6 +52769,13 @@
    "surfaces": [
     "dirt"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 1
+    }
+   }
   },
   "restrictionText": "泥地",
   "wisdomScaled": false,
@@ -51697,7 +52999,7 @@
   "nameTrad": "超群的邁步",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51712,7 +53014,10 @@
   "restriction": {
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1200
+   }
   },
   "restrictionText": "泥地",
   "wisdomScaled": true,
@@ -51726,7 +53031,7 @@
   "nameTrad": "超群的邁步",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51741,7 +53046,13 @@
   "restriction": {
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1000
+   },
+   "statsBelow": {
+    "power": 1200
+   }
   },
   "restrictionText": "泥地",
   "wisdomScaled": true,
@@ -51755,7 +53066,7 @@
   "nameTrad": "熟練邁步",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51770,7 +53081,10 @@
   "restriction": {
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1200
+   }
   },
   "restrictionText": "泥地",
   "wisdomScaled": false,
@@ -51784,7 +53098,7 @@
   "nameTrad": "熟練邁步",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51799,7 +53113,13 @@
   "restriction": {
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1000
+   },
+   "statsBelow": {
+    "power": 1200
+   }
   },
   "restrictionText": "泥地",
   "wisdomScaled": false,
@@ -51813,7 +53133,7 @@
   "nameTrad": "泥巴大師",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51851,7 +53171,7 @@
   "nameTrad": "玩泥巴◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51884,7 +53204,7 @@
   "nameTrad": "玩泥巴○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -51917,7 +53237,7 @@
   "nameTrad": "玩泥巴×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -52546,7 +53866,7 @@
   "nameTrad": "賭徒",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -52579,7 +53899,7 @@
   "nameTrad": "賭徒",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -52612,7 +53932,7 @@
   "nameTrad": "投機取巧",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -52645,7 +53965,7 @@
   "nameTrad": "投機取巧",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -53545,7 +54865,7 @@
   "nameTrad": "冷性發光",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -53554,12 +54874,21 @@
   ],
   "durationSec": 2.4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 13
+    }
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -53573,7 +54902,7 @@
   "nameTrad": "點火",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -53582,12 +54911,21 @@
   ],
   "durationSec": 2.4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
   },
   "restriction": {
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 13
+    }
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": false,
@@ -53783,7 +55121,7 @@
   "nameTrad": "虎嘯風生",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -53804,7 +55142,11 @@
    "distanceTypes": [
     "mile",
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1000,
+    "power": 1000
+   }
   },
   "restrictionText": "英里",
   "wisdomScaled": true,
@@ -53818,7 +55160,7 @@
   "nameTrad": "自信家",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -53839,7 +55181,11 @@
    "distanceTypes": [
     "mile",
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1000,
+    "power": 1000
+   }
   },
   "restrictionText": "英里",
   "wisdomScaled": false,
@@ -54103,7 +55449,7 @@
   "nameTrad": "奇異點",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -54121,7 +55467,11 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200,
+    "wisdom": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -54135,7 +55485,7 @@
   "nameTrad": "奇異點",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -54153,7 +55503,13 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200
+   },
+   "statsBelow": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": true,
@@ -54167,7 +55523,7 @@
   "nameTrad": "探求心",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -54185,7 +55541,11 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200,
+    "wisdom": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": false,
@@ -54199,7 +55559,7 @@
   "nameTrad": "探求心",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -54217,7 +55577,13 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200
+   },
+   "statsBelow": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "先行",
   "wisdomScaled": false,
@@ -54353,7 +55719,7 @@
   "nameTrad": "隆尚賽場◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -54381,7 +55747,7 @@
   "nameTrad": "隆尚賽場○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -54409,7 +55775,7 @@
   "nameTrad": "隆尚賽場×",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -54437,7 +55803,7 @@
   "nameTrad": "隆尚奇才",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -54949,7 +56315,7 @@
   "nameTrad": "打call&回應",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -54965,6 +56331,13 @@
    "surfaces": [
     "dirt"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   }
   },
   "restrictionText": "泥地",
   "wisdomScaled": true,
@@ -54978,7 +56351,7 @@
   "nameTrad": "打call&回應",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -54995,6 +56368,14 @@
     "dirt"
    ]
   },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   },
+   "requiresFirstBlock": true
+  },
   "restrictionText": "泥地",
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -55007,7 +56388,7 @@
   "nameTrad": "未雨綢繆",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -55024,6 +56405,13 @@
     "dirt"
    ]
   },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   }
+  },
   "restrictionText": "泥地",
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -55036,7 +56424,7 @@
   "nameTrad": "未雨綢繆",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -55052,6 +56440,14 @@
    "surfaces": [
     "dirt"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   },
+   "requiresFirstBlock": true
   },
   "restrictionText": "泥地",
   "wisdomScaled": false,
@@ -57114,6 +58510,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "中距离",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -57173,6 +58572,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "restrictionText": "中距离",
   "wisdomScaled": false,
@@ -57327,6 +58729,10 @@
    ],
    "distanceTypes": [
     "long"
+   ],
+   "motivations": [
+    "good",
+    "best"
    ]
   },
   "restrictionText": "逃马",
@@ -57678,7 +59084,7 @@
   "nameJa": "無意識の枷",
   "nameTrad": "不自覺的枷鎖",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -60626,6 +62032,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "英里",
   "wisdomScaled": true,
   "randomPosition": true,
@@ -60686,6 +62095,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "restrictionText": "英里",
   "wisdomScaled": false,
   "randomPosition": true,
@@ -60698,7 +62110,7 @@
   "nameJa": "精神力",
   "nameTrad": "堅定意志",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -60716,7 +62128,11 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200,
+    "power": 1200
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": false,
@@ -60729,7 +62145,7 @@
   "nameJa": "精神力",
   "nameTrad": "堅定意志",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -60747,7 +62163,13 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200
+   },
+   "statsBelow": {
+    "power": 1200
+   }
   },
   "restrictionText": "差行",
   "wisdomScaled": false,
@@ -61443,7 +62865,7 @@
   "name": "麒麟儿",
   "nameJa": "麒麟児",
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -61464,7 +62886,10 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -61476,7 +62901,7 @@
   "name": "天才",
   "nameJa": "天才肌",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -61492,7 +62917,10 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": false,
@@ -62554,7 +63982,7 @@
   "name": "外柔内刚",
   "nameJa": "気丈夫",
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -62575,7 +64003,10 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "stamina": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": true,
@@ -62587,7 +64018,7 @@
   "name": "活力满满",
   "nameJa": "あふれる活力",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -62603,7 +64034,10 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "stamina": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": false,
@@ -62895,7 +64329,7 @@
   "name": "战略家",
   "nameJa": "戦略家",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -62916,7 +64350,11 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1000,
+    "power": 1000
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": false,
@@ -63014,7 +64452,7 @@
   "name": "圣塔安妮塔公园赛场◎",
   "nameJa": "サンタアニタパークレース場◎",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -63040,7 +64478,7 @@
   "name": "圣塔安妮塔公园赛场○",
   "nameJa": "サンタアニタパークレース場○",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -63066,7 +64504,7 @@
   "name": "圣塔安妮塔公园赛场×",
   "nameJa": "サンタアニタパークレース場×",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -63092,7 +64530,7 @@
   "name": "德尔玛赛场◎",
   "nameJa": "デルマーレース場◎",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -63118,7 +64556,7 @@
   "name": "德尔玛赛场○",
   "nameJa": "デルマーレース場○",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -63144,7 +64582,7 @@
   "name": "德尔玛赛场×",
   "nameJa": "デルマーレース場×",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -63170,7 +64608,7 @@
   "name": "隠れた閃光",
   "nameJa": "隠れた閃光",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -63861,7 +65299,7 @@
   "name": "避其锋芒",
   "nameJa": "秘められた最強",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -63911,7 +65349,7 @@
   "name": "潜藏的红",
   "nameJa": "潜む紅",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -64636,7 +66074,7 @@
   "name": "比赛直觉(1)",
   "nameJa": "勝負勘",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -64654,7 +66092,11 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200,
+    "wisdom": 1200
+   }
   },
   "restrictionText": "逃马",
   "wisdomScaled": false,
@@ -64666,7 +66108,7 @@
   "name": "比赛直觉(2)",
   "nameJa": "勝負勘",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -64684,7 +66126,13 @@
    ],
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200
+   },
+   "statsBelow": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "逃马",
   "wisdomScaled": false,
@@ -64821,7 +66269,7 @@
   "name": "我我我！！",
   "nameJa": "アタシアタシアタシ！！",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -64853,6 +66301,13 @@
   "condition": {
    "kind": "phase",
    "phase": 1
+  },
+  "prereq": {
+   "counters": {
+    "heir": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": false,
   "randomPosition": true,
@@ -65299,7 +66754,7 @@
   "name": "玩心(1)",
   "nameJa": "遊び心",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -65315,7 +66770,11 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200,
+    "wisdom": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": false,
@@ -65327,7 +66786,7 @@
   "name": "玩心(2)",
   "nameJa": "遊び心",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -65343,7 +66802,13 @@
    "distanceTypes": [
     "mid",
     "long"
-   ]
+   ],
+   "statsAtLeast": {
+    "speed": 1200
+   },
+   "statsBelow": {
+    "wisdom": 1200
+   }
   },
   "restrictionText": "中距离",
   "wisdomScaled": false,
@@ -65945,7 +67410,7 @@
   "nameTrad": "競賽的精髓．智慧",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -65954,7 +67419,16 @@
   ],
   "durationSec": 2,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 50,
+   "toPct": 100
+  },
+  "prereq": {
+   "counters": {
+    "laterHalf": {
+     "min": 2
+    }
+   }
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -65967,7 +67441,7 @@
   "nameTrad": "競賽的精髓．心得",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -65988,6 +67462,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "motivations": [
+    "good",
+    "best"
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -66269,7 +67749,10 @@
    "distanceTypes": [
     "mile",
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "guts": 1200
+   }
   },
   "wisdomScaled": false,
   "randomPosition": true,
@@ -66300,7 +67783,10 @@
    "distanceTypes": [
     "mile",
     "mid"
-   ]
+   ],
+   "statsBelow": {
+    "guts": 1200
+   }
   },
   "wisdomScaled": false,
   "randomPosition": true,
@@ -66391,7 +67877,10 @@
    "distanceTypes": [
     "short",
     "mile"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1200
+   }
   },
   "restrictionText": "短距离",
   "wisdomScaled": false,
@@ -66742,7 +68231,7 @@
   "nameTrad": "止不住的渴望",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -66770,7 +68259,7 @@
   "nameTrad": "始終如一",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -66781,6 +68270,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "seasons": [
+    4
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -66793,7 +68287,7 @@
   "nameTrad": "奔向理想的景色",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -66816,7 +68310,7 @@
   "nameTrad": "擔憂擴散",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -66977,7 +68471,7 @@
   "nameTrad": "抬頭挺胸打比賽馬娘",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -67000,7 +68494,7 @@
   "nameTrad": "身為隊伍的一員",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -67070,7 +68564,7 @@
   "nameJa": "匣の抑圧",
   "nameTrad": "匣的壓抑",
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -67177,6 +68671,9 @@
   "condition": {
    "kind": "phase",
    "phase": 3
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -69164,7 +70661,7 @@
   "nameTrad": "引擎全開！大噴射！(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -69175,6 +70672,9 @@
   "condition": {
    "kind": "phase",
    "phase": 3
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -69603,9 +71103,9 @@
   },
   "restriction": {
    "venues": [
-    "大井",
     "川崎",
-    "船桥"
+    "船桥",
+    "大井"
    ]
   },
   "wisdomScaled": true,
@@ -70065,6 +71565,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -70366,6 +71869,9 @@
     100
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -70534,7 +72040,7 @@
   "nameTrad": "Vivace Volare(繼承)",
   "cnReleased": false,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -70548,6 +72054,9 @@
     45,
     60
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -70592,7 +72101,12 @@
   ],
   "durationSec": 2.4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 0,
+   "toPct": 100
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -70684,6 +72198,13 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 7
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -70836,6 +72357,9 @@
     100
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -70925,6 +72449,9 @@
    "kind": "distanceLeft",
    "fromMeters": 799,
    "toMeters": 801
+  },
+  "restriction": {
+   "basisDistance": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -71190,6 +72717,9 @@
     100
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -71346,14 +72876,43 @@
    "kind": "straightFastest"
   },
   "restriction": {
-   "distanceTypes": [
-    "mid",
-    "long"
-   ],
-   "venues": [
-    "中山",
-    "阪神"
+   "anyOf": [
+    {
+     "distanceTypes": [
+      "mid"
+     ],
+     "venues": [
+      "中山"
+     ]
+    },
+    {
+     "distanceTypes": [
+      "long"
+     ],
+     "venues": [
+      "中山"
+     ]
+    },
+    {
+     "distanceTypes": [
+      "mid"
+     ],
+     "venues": [
+      "阪神"
+     ]
+    },
+    {
+     "distanceTypes": [
+      "long"
+     ],
+     "venues": [
+      "阪神"
+     ]
+    }
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -71622,6 +73181,9 @@
     "mile"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -71751,7 +73313,7 @@
   "nameTrad": "黄金を訪ねて(繼承)",
   "cnReleased": false,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -71764,6 +73326,9 @@
   },
   "restriction": {
    "distanceMin": 2000
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -71864,7 +73429,7 @@
   "nameTrad": "光れ！弾けろ！超新星爆発！(繼承)",
   "cnReleased": false,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
@@ -71877,6 +73442,9 @@
   },
   "restriction": {
    "distanceMin": 2000
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -71934,6 +73502,9 @@
     "mid"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -71971,7 +73542,7 @@
   "nameTrad": "エパヌイスマンの大号令(繼承)",
   "cnReleased": false,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -71987,6 +73558,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -72059,7 +73633,7 @@
   "nameTrad": "烈々と咲く(繼承)",
   "cnReleased": false,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -72074,6 +73648,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -72101,6 +73678,13 @@
   "condition": {
    "kind": "phase",
    "phase": 1
+  },
+  "prereq": {
+   "counters": {
+    "middle": {
+     "min": 2
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -72199,6 +73783,13 @@
    "fromPct": 50,
    "toPct": 100
   },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 1
+    }
+   }
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -72232,7 +73823,7 @@
   "nameTrad": "聖夜的奇蹟跑者！(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -72252,6 +73843,13 @@
    "kind": "distanceRate",
    "fromPct": 50,
    "toPct": 100
+  },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -72565,6 +74163,13 @@
    "fromMeters": 399,
    "toMeters": 401
   },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 7
+    }
+   }
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -72588,6 +74193,13 @@
    "kind": "distanceLeft",
    "fromMeters": 399,
    "toMeters": 401
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "max": 6
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -72754,7 +74366,7 @@
   "nameTrad": "火神鳴(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -72767,7 +74379,15 @@
   ],
   "durationSec": 3.6,
   "condition": {
-   "kind": "raceStart"
+   "kind": "phase",
+   "phase": 1
+  },
+  "prereq": {
+   "counters": {
+    "middle": {
+     "min": 2
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -73560,6 +75180,9 @@
     "mile"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -73733,15 +75356,23 @@
    ]
   },
   "restriction": {
-   "distanceTypes": [
-    "mid"
-   ],
-   "venues": [
-    "中山",
-    "东京"
-   ],
-   "distances": [
-    2500
+   "anyOf": [
+    {
+     "venues": [
+      "中山"
+     ],
+     "distances": [
+      2500
+     ]
+    },
+    {
+     "distanceTypes": [
+      "mid"
+     ],
+     "venues": [
+      "东京"
+     ]
+    }
    ]
   },
   "wisdomScaled": true,
@@ -73793,6 +75424,11 @@
    "kind": "distanceRate",
    "fromPct": 40,
    "toPct": 50
+  },
+  "restriction": {
+   "motivations": [
+    "best"
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -73872,6 +75508,9 @@
    "kind": "phase",
    "phase": 1,
    "part": "laterHalf"
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "randomPosition": true,
@@ -74053,6 +75692,11 @@
   "durationSec": 3,
   "condition": {
    "kind": "finalStraight"
+  },
+  "restriction": {
+   "motivations": [
+    "best"
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -74531,7 +76175,10 @@
   "restriction": {
    "distanceTypes": [
     "mid"
-   ]
+   ],
+   "statsAtLeast": {
+    "power": 1200
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -74654,7 +76301,7 @@
   "nameTrad": "Illuminate you(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -74665,6 +76312,14 @@
   "condition": {
    "kind": "phaseAfter",
    "phase": 2
+  },
+  "restriction": {
+   "statsAtLeast": {
+    "stamina": 1200
+   }
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -74721,6 +76376,13 @@
     10000
    ]
   },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 1
+    }
+   }
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -74744,6 +76406,13 @@
    "kind": "distanceRate",
    "fromPct": 45,
    "toPct": 100
+  },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 1
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -74854,6 +76523,9 @@
    "kind": "distanceRate",
    "fromPct": 40,
    "toPct": 50
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -75091,7 +76763,10 @@
   "restriction": {
    "distanceTypes": [
     "short"
-   ]
+   ],
+   "statsAtLeast": {
+    "wisdom": 1200
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -75570,6 +77245,9 @@
     100
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -75686,18 +77364,40 @@
    ]
   },
   "restriction": {
-   "surfaces": [
-    "turf"
-   ],
-   "venues": [
-    "阪神",
-    "京都",
-    "东京"
-   ],
-   "distances": [
-    1600,
-    2000,
-    2400
+   "anyOf": [
+    {
+     "surfaces": [
+      "turf"
+     ],
+     "venues": [
+      "阪神"
+     ],
+     "distances": [
+      1600
+     ]
+    },
+    {
+     "surfaces": [
+      "turf"
+     ],
+     "venues": [
+      "京都"
+     ],
+     "distances": [
+      2000
+     ]
+    },
+    {
+     "surfaces": [
+      "turf"
+     ],
+     "venues": [
+      "东京"
+     ],
+     "distances": [
+      2400
+     ]
+    }
    ]
   },
   "wisdomScaled": true,
@@ -75862,6 +77562,9 @@
     "long"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -75997,7 +77700,7 @@
   "nameTrad": "威風凜凜，揭夢！(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -76017,6 +77720,13 @@
     "中山"
    ]
   },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   }
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -76028,7 +77738,7 @@
   "nameTrad": "威風凜凜，揭夢！(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -76042,6 +77752,13 @@
     66.66666666666667,
     100
    ]
+  },
+  "prereq": {
+   "counters": {
+    "all": {
+     "min": 1
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -76169,7 +77886,7 @@
   "nameTrad": "Gloire à toi!(繼承)",
   "cnReleased": false,
   "rarity": "uniqueHeir",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -76178,7 +77895,16 @@
   ],
   "durationSec": 2.4,
   "condition": {
-   "kind": "raceStart"
+   "kind": "distanceRate",
+   "fromPct": 50,
+   "toPct": 100
+  },
+  "prereq": {
+   "counters": {
+    "laterHalf": {
+     "min": 1
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -76313,6 +78039,9 @@
    "kind": "distanceLeft",
    "fromMeters": 399,
    "toMeters": 401
+  },
+  "restriction": {
+   "basisDistance": false
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -76626,7 +78355,7 @@
   "nameTrad": "火力全開！旋風(繼承)",
   "cnReleased": false,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "targetSpeed",
@@ -76645,6 +78374,9 @@
    "distanceTypes": [
     "mid"
    ]
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -76828,6 +78560,9 @@
    "kind": "distanceLeft",
    "fromMeters": 349,
    "toMeters": 351
+  },
+  "prereq": {
+   "requiresFirstBlock": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
@@ -77243,6 +78978,9 @@
     "long"
    ]
   },
+  "prereq": {
+   "requiresFirstBlock": true
+  },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -77316,7 +79054,7 @@
   "nameTrad": "一杯全力、お届けします！(繼承)",
   "cnReleased": false,
   "rarity": "uniqueHeir",
-  "precision": "approx",
+  "precision": "precise",
   "effects": [
    {
     "type": "currentSpeed",
@@ -77340,6 +79078,13 @@
    "distanceTypes": [
     "long"
    ]
+  },
+  "prereq": {
+   "counters": {
+    "heal": {
+     "min": 3
+    }
+   }
   },
   "wisdomScaled": true,
   "source": "BWIKI 继承技页面 + 触发代码(模块:技能数据库内容2)",

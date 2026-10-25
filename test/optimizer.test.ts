@@ -69,4 +69,55 @@ describe('optimize', () => {
   it('未知技能 id 报错', () => {
     expect(() => optimize({ course, runner, candidates: [{ id: 'nope', pt: 100 }], budget: 500 })).toThrow(/不存在/);
   });
+
+  it('装配限制不满足的候选标为「不适配」而非「无收益」,且不会被选中', () => {
+    const nige = SKILLS.find(s => s.name === '抢先')!; // 仅限逃马
+    const r = optimize({ course, runner, candidates: [{ id: nige.id, pt: 90 }], budget: 500 });
+    expect(r.chosen).toHaveLength(0);
+    const rej = r.rejected.find(x => x.id === nige.id)!;
+    expect(rej.reason).toBe('inapplicable');
+    expect(rej.detail).toContain('逃马');
+    expect(rej.soloBody).toBe(0);
+  });
+
+  it('效果未建模的候选标为「不适配」,并给出原因', () => {
+    const unsupported = SKILLS.find(
+      s => s.precision === 'unsupported' && !(s.effects.length > 0 && s.effects.every(e => e.type === 'passive')),
+    )!;
+    const r = optimize({ course, runner, candidates: [{ id: unsupported.id, pt: 100 }], budget: 500 });
+    expect(r.rejected[0]!.reason).toBe('inapplicable');
+    expect(r.rejected[0]!.detail).toContain('未建模');
+  });
+
+  it('绿技能(常时被动)进入候选池并产生正收益', () => {
+    const green = SKILLS.find(
+      s => s.precision === 'precise' && s.restriction === undefined && s.effects.length > 0 && s.effects.every(e => e.type === 'passive'),
+    )!;
+    const r = optimize({ course, runner, candidates: [{ id: green.id, pt: 100 }], budget: 500 });
+    expect(r.chosen).toHaveLength(1);
+    expect(r.totalBody).toBeGreaterThan(0);
+  });
+
+  it('受季节限制的绿技能:默认春标为不适配,改成秋季后生效有收益', () => {
+    const autumn = SKILLS.find(s => s.name === '风霜高洁')!; // 仅限秋季
+    const spring = optimize({ course, runner, candidates: [{ id: autumn.id, pt: 100 }], budget: 500 });
+    const rej = spring.rejected.find(x => x.id === autumn.id)!;
+    expect(rej.reason).toBe('inapplicable');
+    expect(rej.detail).toContain('秋');
+
+    const fall = optimize({
+      course, runner: { ...runner, season: 3 }, candidates: [{ id: autumn.id, pt: 100 }], budget: 500,
+    });
+    expect(fall.chosen).toHaveLength(1);
+    expect(fall.totalBody).toBeGreaterThan(0);
+  });
+
+  it('能发动但无收益的技能仍是「无收益」,与不适配区分开', () => {
+    const heal = SKILLS.find(s => s.id === '200352')!; // 弯道恢复○:纯回复
+    const r = optimize({ course, runner, candidates: [{ id: heal.id, pt: 90 }], budget: 500 });
+    const rej = r.rejected.find(x => x.id === heal.id)!;
+    expect(rej.reason).toBe('no-gain');
+    // 若本赛道体力跑不空,会附上"体力未耗尽"的说明
+    expect(rej.detail === '' || rej.detail.includes('体力')).toBe(true);
+  });
 });

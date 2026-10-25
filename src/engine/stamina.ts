@@ -3,13 +3,13 @@ import { effectiveStatsOf } from './effstats';
 import type { Course, GroundCondition, PhaseId, RunnerConfig } from './types';
 
 /** 体力上限 = 0.8 × 跑法系数 × 有效耐力(软上限+干劲;绿技能不参与) + 距离 */
-export function maxHpOf(course: Course, runner: RunnerConfig): number {
-  return 0.8 * HP_STRATEGY_COEF[runner.tactic] * effectiveStatsOf(runner, course).stamina + course.distance;
+export function maxHpOf(course: Course, runner: RunnerConfig, inert?: ReadonlySet<string>): number {
+  return 0.8 * HP_STRATEGY_COEF[runner.tactic] * effectiveStatsOf(runner, course, inert).stamina + course.distance;
 }
 
 /** 终盘起的根性消耗系数 = 1 + 200/√(600×有效根性) */
-export function gutsDrainModifier(runner: RunnerConfig): number {
-  return 1 + 200 / Math.sqrt(600 * effectiveStatsOf(runner).guts);
+export function gutsDrainModifier(runner: RunnerConfig, course?: Course, inert?: ReadonlySet<string>): number {
+  return 1 + 200 / Math.sqrt(600 * effectiveStatsOf(runner, course, inert).guts);
 }
 
 export interface DrainOpts {

@@ -1,4 +1,4 @@
-import { BODY_LENGTH_METERS, sampleableSpans, simulate } from '../engine/index.js';
+import { BODY_LENGTH_METERS, sampleableSpans, simulate, skillApplicable } from '../engine/index.js';
 import type { Course, Region, RunnerConfig } from '../engine/index.js';
 
 /** 区段随机类技能的期望位置采样数(在满足区段全长上均匀取点;用于逐位置明细) */
@@ -42,6 +42,25 @@ export interface AblationRow {
   readonly expectedBody?: number;
   /** 各抽样组下该技能边际收益的 [min, max](环境波动区间) */
   readonly bodyRange?: readonly [number, number];
+  /**
+   * 当前赛道/环境配置下装配限制是否满足(false = 整场不生效,如 逆时针◎ 在顺时针赛道)。
+   * UI 对 false 的行标注「不生效」:收益恒 0,不代表技能本身无用。
+   */
+  readonly applicable: boolean;
+  /**
+   * 依赖本技能「先发动」的其他已选技能(其 prereq 指向本技能)。
+   * 说明为何「从牌组里删掉它」的损失可能大于本行收益:它一停,这些技能也不发动。
+   */
+  readonly dependentIds?: readonly string[];
+  /**
+   * **存速**:进入末脚(最终冲刺)那一帧仍然生效的速度加成(m/s)。
+   * 缺省 = 该技能在末脚起点之前就已结束(或没有持续型速度效果)。
+   * 这段速度会以「更高的起步速度」带进终盘加速段 —— 加速段不必从原速重新爬,
+   * 收益 ≈ 存速值 × 剩余加速时长(2400m 约 0.4 m/s²×10s)。
+   */
+  readonly carryOverSpeed?: number;
+  /** 存速还能保持多久(秒,自末脚起点起算;超过加速段的部分会在上限处被吃掉) */
+  readonly carryOverLeftSec?: number;
 }
 
 export interface AblationReport {
@@ -51,6 +70,8 @@ export interface AblationReport {
   readonly totalDeltaSec: number;
   /** 单项收益之和;与 totalDeltaSec 的差 = 技能间交互(回体改变后续发动位置等),UI 需同时展示 */
   readonly sumDeltaSec: number;
+  /** 全技能总收益的马身口径(= totalDeltaSec × 末脚目标速度 / 2.5,与逐行同一换算) */
+  readonly totalDeltaBody: number;
   readonly rows: readonly AblationRow[];
   /** 联合蒙特卡洛组数;undefined = 未启用(无随机位置技能) */
   readonly mcDraws?: number;
@@ -101,6 +122,11 @@ function quantileToMeter(spans: readonly Region[], u: number): number {
  * leave-one-out 消融:对每个技能跑一次"去掉它"的模拟。
  * 注意不能用增量法(逐个累加):技能间存在位置/体力耦合,消融法才能如实度量单项贡献。
  *
+ * **「去掉」的口径是「只去掉效果、保留发动」**(`inertSkills`),不是从牌组里删掉:
+ * 技能仍按规则判定条件/前提并记入发动史,因此别的技能的 prereq(如「已发动回复技能≥3」)照常满足。
+ * 否则 3 个回复技能会各自背上「大招因此不发动」的 1.77 马身,同一份收益被重复计 3 次、Σ 项远大于总收益。
+ * 依赖关系另外用 `dependentIds` 提示(从牌组删掉它才会连带失去那些技能)。
+ *
  * 位置随机技能(触发代码含 *_random,randomPosition)的处理分两层:
  * 1. 逐位置明细(positionSamples):满足区段全长均匀取 K 点,强制发动后消融,
  *    其余技能按规则发动——展示"位置不同收益不同"的确定性曲线;
@@ -147,7 +173,7 @@ export function ablate(course: Course, runner: RunnerConfig): AblationReport {
       const fullD = simulate(course, runner, { positionOverrides: ov });
       totals.push(none.finishTimeSec - fullD.finishTimeSec);
       mcSkills.forEach((e, i) => {
-        const withoutD = simulate(course, { ...runner, skills: runner.skills.filter(s => s.id !== e.skill.id) }, { positionOverrides: ov });
+        const withoutD = simulate(course, runner, { positionOverrides: ov, inertSkills: new Set([e.skill.id]) });
         // 该技能在联合随机环境 d 下的边际贡献 = 去掉它后变慢的幅度(其余随机技能保持本组位置)
         marginals[i]!.push(withoutD.finishTimeSec - fullD.finishTimeSec);
       });
@@ -160,11 +186,73 @@ export function ablate(course: Course, runner: RunnerConfig): AblationReport {
       ? 1.96 * Math.sqrt(totals.reduce((a, v) => a + (v - totalExpectedSec!) ** 2, 0) / (totals.length - 1)) / Math.sqrt(totals.length)
       : 0;
 
+  /**
+   * 本技能是否是别的已选技能的「先发前提」提供者。
+   * 只认「必须已发动」的依赖(usedSkillBaseIds / requiresFirstBlock);
+   * ownedSkillBaseIds 是持有即满足,与发动无关,不算依赖。
+   */
+  const baseIdOf = (id: string): string => id.replace(/-b\d+$/, '');
+  const dependents = new Map<string, string[]>();
+  for (const dep of runner.skills) {
+    const p = dep.prereq;
+    if (p === undefined) continue;
+    const providers = new Set<string>();
+    for (const clause of p.anyOf ?? [p]) {
+      if (clause.requiresFirstBlock === true) providers.add(`${baseIdOf(dep.id)}-b1`);
+      for (const id of clause.usedSkillBaseIds ?? []) {
+        for (const s2 of runner.skills) if (baseIdOf(s2.id) === id) providers.add(s2.id);
+      }
+    }
+    for (const id of providers) {
+      if (id === dep.id) continue;
+      const list = dependents.get(id) ?? [];
+      if (!list.includes(dep.id)) list.push(dep.id);
+      dependents.set(id, list);
+    }
+  }
+  const dependentsOf = (id: string): string[] => dependents.get(id) ?? [];
+
+  /**
+   * 存速:进入末脚(最终冲刺)那一帧的「起步速度」被持续型速度技能抬高了多少。
+   * 直接取「完整模拟 − 只去掉该技能效果」在同一位置的瞬时速度差(**精确值**,不做衰减建模:
+   * 技能若在末脚起点前不久结束,这段时间按阶段减速度已经衰减掉一部分,差值自动反映)。
+   * 只对带持续时间的速度技能计算(绿技能/被动是常时,不算存速)。
+   */
+  const spurtM = full.spurtStartMeter;
+  const speedAt = (r: typeof full, meter: number): number | null => {
+    for (let i = 1; i < r.x.length; i++) {
+      if (r.x[i - 1]! < meter && r.x[i]! >= meter) return r.v[i - 1]!;
+    }
+    return null;
+  };
+  const carryOverOf = (
+    skill: RunnerConfig['skills'][number],
+    without: typeof full,
+    acts: readonly { atSec: number }[],
+  ): { speed: number; leftSec: number } | null => {
+    if (spurtM === null) return null;
+    const dur = skill.durationSec !== null && skill.durationSec > 0 ? skill.durationSec * distScale : 0;
+    if (dur <= 0) return null;
+    if (!skill.effects.some(e => e.type === 'targetSpeed' || e.type === 'currentSpeed')) return null;
+    const a = speedAt(full, spurtM);
+    const b = speedAt(without, spurtM);
+    if (a === null || b === null) return null;
+    const speed = a - b;
+    if (speed <= 0.01) return null;
+    // 剩余时长(负值 = 已在进入末脚前 X 秒结束,残余部分靠衰减)
+    const covering = acts.filter(x => x.atSec <= full.spurtStartSec!).pop();
+    const leftSec = covering !== undefined ? covering.atSec + dur - full.spurtStartSec! : 0;
+    return { speed, leftSec };
+  };
+  const distScale = course.distance / 1000;
+
   const rows: AblationRow[] = runner.skills.map(skill => {
-    const without = simulate(course, {
-      ...runner,
-      skills: runner.skills.filter(s => s.id !== skill.id),
-    });
+    // 装配限制是否满足(不满足 = 整场不生效:绿技能不计入属性,普通技能不发动)
+    const applicable = skillApplicable(skill, course, runner);
+    // 常时被动(绿技能):无发动点,常时生效(引擎已并入起跑属性),视为已发动
+    const isPassiveRaceStart =
+      applicable && skill.effects.length > 0 && skill.effects.every(e => e.type === 'passive') && skill.condition?.kind === 'raceStart';
+    const without = simulate(course, runner, { inertSkills: new Set([skill.id]) });
     const acts = full.activations.filter(a => a.skillId === skill.id);
     const deltaSec = without.finishTimeSec - full.finishTimeSec;
     const deltaMeter = deltaSec * endV;
@@ -196,13 +284,19 @@ export function ablate(course: Course, runner: RunnerConfig): AblationReport {
     return {
       skillId: skill.id,
       name: skill.name,
-      activated: acts.length > 0,
+      activated: isPassiveRaceStart ? true : acts.length > 0,
       activatedAtMeter: acts[0]?.atMeter ?? null,
       activatedAtSec: acts[0]?.atSec ?? null,
       activationCount: acts.length,
       deltaSec,
       deltaMeter,
       deltaBody: deltaMeter / BODY_LENGTH_METERS,
+      applicable,
+      ...(dependentsOf(skill.id).length > 0 ? { dependentIds: dependentsOf(skill.id) } : {}),
+      ...(() => {
+        const carry = carryOverOf(skill, without, acts);
+        return carry !== null ? { carryOverSpeed: carry.speed, carryOverLeftSec: carry.leftSec } : {};
+      })(),
       ...(positionSamples !== undefined ? { positionSamples } : {}),
       ...(expectedBody !== undefined ? { expectedBody, bodyRange } : {}),
     };
@@ -223,7 +317,8 @@ export function ablate(course: Course, runner: RunnerConfig): AblationReport {
     totalDeltaSec,
     sumDeltaSec,
     rows,
-    /** 各合计的马身口径(与逐行同一换算):Σ规则 / Σ期望 / 总期望 */
+    /** 各合计的马身口径(与逐行同一换算):总收益 / Σ规则 / Σ期望 / 总期望 */
+    totalDeltaBody: toBody(totalDeltaSec),
     sumDeltaBody: toBody(sumDeltaSec),
     ...(mcDraws !== undefined
       ? {

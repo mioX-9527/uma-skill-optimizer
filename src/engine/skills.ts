@@ -1,5 +1,8 @@
 import { LAST_SPURT_EXT_ACCEL_SCALE, MOTIVATION_WISDOM_MULT, RARITY_LEVEL_FACTOR, WISDOM_BASE_MULT } from './constants';
-import type { Course, PhaseId, RunnerConfig, SkillConfig, SkillRestriction } from './types';
+import { passiveBonusOf } from './effstats';
+import type { Course, PhaseId, RunnerConfig, SkillConfig } from './types';
+
+export { restrictionSatisfied, skillApplicable } from './restriction';
 
 export interface Buff {
   readonly skill: SkillConfig;
@@ -8,22 +11,9 @@ export interface Buff {
   readonly mult: number;
 }
 
-/** 装配型限制(脚质/距离档/场地/赛场/场地状态/精确距离/距离范围)是否满足;不满足则整场不发动 */
-export function restrictionSatisfied(r: SkillRestriction, runner: RunnerConfig, course: Course): boolean {
-  if (r.tactics !== undefined && !r.tactics.includes(runner.tactic)) return false;
-  if (r.distanceTypes !== undefined && (course.distanceType === undefined || !r.distanceTypes.includes(course.distanceType))) return false;
-  if (r.surfaces !== undefined && !r.surfaces.includes(course.surface)) return false;
-  if (r.venues !== undefined && !r.venues.includes(course.venue)) return false;
-  if (r.grounds !== undefined && !r.grounds.includes(runner.groundCondition ?? 0)) return false;
-  if (r.distances !== undefined && !r.distances.includes(course.distance)) return false;
-  if (r.distanceMin !== undefined && course.distance < r.distanceMin) return false;
-  if (r.distanceMax !== undefined && course.distance > r.distanceMax) return false;
-  return true;
-}
-
-/** 参照智力 =(面板+绿技能)×干劲(614tools 说明文字口径;干劲表见 constants) */
-export function referenceWisdom(runner: RunnerConfig): number {
-  return (runner.stats.wisdom + (runner.greenBonus.wisdom ?? 0)) * MOTIVATION_WISDOM_MULT[runner.motivation];
+/** 参照智力 =(面板+绿技能)×干劲(614tools 说明文字口径;绿加成经 passiveBonusOf,含回转方向判定) */
+export function referenceWisdom(runner: RunnerConfig, course?: Course): number {
+  return (runner.stats.wisdom + passiveBonusOf(runner, course).wisdom) * MOTIVATION_WISDOM_MULT[runner.motivation];
 }
 
 /**
@@ -48,10 +38,10 @@ export function wisdomCorrection(w: number): number {
  * 差[.19,.18,.23,.24] 追[.15,.17,.25,.27]),按发动时的阶段锁定;
  * 仅对正值的目标/即时速度效果生效(负值不缩放)。
  */
-export function effectMultiplier(skill: SkillConfig, runner: RunnerConfig, phase: PhaseId): number {
+export function effectMultiplier(skill: SkillConfig, runner: RunnerConfig, phase: PhaseId, course?: Course): number {
   if (!skill.wisdomScaled || skill.rarity === 'normal') return 1;
   const base = WISDOM_BASE_MULT[runner.tactic][phase];
-  return 1 + base * wisdomCorrection(referenceWisdom(runner)) * RARITY_LEVEL_FACTOR[skill.rarity];
+  return 1 + base * wisdomCorrection(referenceWisdom(runner, course)) * RARITY_LEVEL_FACTOR[skill.rarity];
 }
 
 /** 正值按增幅缩放,负值原样(614tools 口径) */

@@ -3,6 +3,8 @@ export * from './constants';
 export * from './phase';
 export * from './stamina';
 export * from './conditions';
+export * from './restriction';
+export * from './prereq';
 export * from './effstats';
 export * from './speed';
 export * from './skills';

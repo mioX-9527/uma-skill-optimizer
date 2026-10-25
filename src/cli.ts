@@ -21,7 +21,15 @@ const TACTICS: readonly Tactic[] = ['nige', 'senko', 'sashi', 'oikomi'];
 const APTITUDES: readonly Aptitude[] = ['S', 'A', 'B', 'C', 'D', 'E', 'F', 'G'];
 const MOTIVATIONS: readonly Motivation[] = ['best', 'good', 'normal', 'bad', 'worst'];
 const TACTIC_LABEL: Record<Tactic, string> = { nige: '逃马', senko: '先行', sashi: '差行', oikomi: '追马' };
-const REASON_LABEL = { unaffordable: '超预算', 'no-gain': '组合内无正收益', outbid: '被更优组合挤出' } as const;
+const REASON_LABEL = {
+  unaffordable: '超预算',
+  inapplicable: '不适配本配置',
+  'no-gain': '组合内无正收益',
+  outbid: '被更优组合挤出',
+} as const;
+const GROUND_LABEL = ['良', '稍重', '重', '不良'];
+const WEATHER_LABEL = ['', '晴', '阴', '雨', '雪'];
+const SEASON_LABEL = ['', '春', '夏', '秋', '冬', '樱花'];
 
 interface PlanSkillInput {
   readonly id?: string;
@@ -40,6 +48,10 @@ interface PlanInput {
     readonly motivation?: Motivation;
     readonly greenBonus?: Partial<Stats>;
     readonly groundCondition?: 0 | 1 | 2 | 3;
+    /** 天气(技能条件用):1 晴 / 2 阴 / 3 雨 / 4 雪,缺省晴 */
+    readonly weather?: 1 | 2 | 3 | 4;
+    /** 季节(技能条件用):1 春 / 2 夏 / 3 秋 / 4 冬 / 5 樱花,缺省春 */
+    readonly season?: 1 | 2 | 3 | 4 | 5;
     readonly courseFix?: number | 'auto';
   };
   readonly skills: readonly PlanSkillInput[];
@@ -109,6 +121,17 @@ function validateRunner(raw: PlanInput['runner']): RunnerConfig {
       fail(`runner.${key} 取值 ${v} 无效,允许: ${allowed.join('/')}`);
     }
   }
+  const envNum = (key: 'groundCondition' | 'weather' | 'season', min: number, max: number) => {
+    const v = raw[key];
+    if (v === undefined) return undefined;
+    if (typeof v !== 'number' || !Number.isInteger(v) || v < min || v > max) {
+      fail(`runner.${key} 取值 ${String(v)} 无效,允许整数 ${min}~${max}`);
+    }
+    return v;
+  };
+  const groundCondition = envNum('groundCondition', 0, 3);
+  const weather = envNum('weather', 1, 4);
+  const season = envNum('season', 1, 5);
   return {
     stats: raw.stats,
     greenBonus: raw.greenBonus ?? {},
@@ -116,7 +139,9 @@ function validateRunner(raw: PlanInput['runner']): RunnerConfig {
     distanceAptitude: raw.distanceAptitude ?? 'A',
     surfaceAptitude: raw.surfaceAptitude ?? 'A',
     motivation: raw.motivation ?? 'normal',
-    ...(raw.groundCondition !== undefined ? { groundCondition: raw.groundCondition } : {}),
+    ...(groundCondition !== undefined ? { groundCondition: groundCondition as 0 | 1 | 2 | 3 } : {}),
+    ...(weather !== undefined ? { weather: weather as 1 | 2 | 3 | 4 } : {}),
+    ...(season !== undefined ? { season: season as 1 | 2 | 3 | 4 | 5 } : {}),
     courseFix: raw.courseFix ?? 'auto',
     skills: [],
   };
@@ -147,6 +172,7 @@ function main(): void {
   const ptOf = new Map(candidates.map(c => [c.id, c.pt] as const));
 
   console.log(`赛道: ${course.name}(${course.id})  跑法: ${TACTIC_LABEL[runner.tactic]}  预算: ${budget}pt  候选: ${candidates.length} 条`);
+  console.log(`环境: 场地 ${GROUND_LABEL[runner.groundCondition ?? 0]}  天气 ${WEATHER_LABEL[runner.weather ?? 1]}  季节 ${SEASON_LABEL[runner.season ?? 1]}(只影响「绿技能/环境条件类技能」是否生效)`);
   if (estPt.length > 0) {
     console.log(`[注意] 以下技能未提供 pt,使用兜底估算价(游戏内有折扣时请以实际显示价为准):\n  ${estPt.join('、')}`);
   }
@@ -178,13 +204,20 @@ function main(): void {
   if (result.rejected.length > 0) {
     console.log('');
     console.log('未购买技能(按剩余边际收益排序):');
-    console.log(tableRow(['技能', 'PT', '单独马身', '原因', '差PT'], [W.name, W.pt, W.solo, 16, 7], ['left', 'right', 'right', 'left', 'right']));
+    const hasDetail = result.rejected.some(r => r.detail !== '');
+    const RW = { name: W.name, pt: W.pt, solo: W.solo, reason: 16, miss: 7, note: 30 };
+    const widths = hasDetail ? [RW.name, RW.pt, RW.solo, RW.reason, RW.miss, RW.note] : [RW.name, RW.pt, RW.solo, RW.reason, RW.miss];
+    const aligns = hasDetail
+      ? (['left', 'right', 'right', 'left', 'right', 'left'] as const)
+      : (['left', 'right', 'right', 'left', 'right'] as const);
+    console.log(tableRow(hasDetail ? ['技能', 'PT', '单独马身', '原因', '差PT', '说明'] : ['技能', 'PT', '单独马身', '原因', '差PT'], widths, aligns));
     for (const r of result.rejected) {
-      console.log(tableRow(
-        [r.name, String(r.pt), fmtBody(r.soloBody), REASON_LABEL[r.reason], r.reason === 'outbid' && r.missingPt > 0 ? String(r.missingPt) : ''],
-        [W.name, W.pt, W.solo, 16, 7],
-        ['left', 'right', 'right', 'left', 'right'],
-      ));
+      const cells = [
+        r.name, String(r.pt), fmtBody(r.soloBody), REASON_LABEL[r.reason],
+        r.reason === 'outbid' && r.missingPt > 0 ? String(r.missingPt) : '',
+      ];
+      if (hasDetail) cells.push(r.detail);
+      console.log(tableRow(cells, widths, aligns));
     }
   }
 

@@ -1,6 +1,6 @@
 import { COURSES } from '../../src/data.js';
 import { optimize, type OptimizerResult } from '../../src/optimizer.js';
-import type { Aptitude, Motivation, RunnerConfig, Stats, Tactic } from '../../src/engine/index.js';
+import type { Aptitude, GroundCondition, Motivation, RunnerConfig, Season, Stats, Tactic, Weather } from '../../src/engine/index.js';
 
 interface WorkerInput {
   readonly seq: number;
@@ -11,6 +11,9 @@ interface WorkerInput {
   readonly distanceAptitude: Aptitude;
   readonly surfaceAptitude: Aptitude;
   readonly motivation: Motivation;
+  readonly groundCondition: GroundCondition;
+  readonly weather: Weather;
+  readonly season: Season;
   readonly skills: readonly { id: string; pt: number }[];
 }
 
@@ -33,6 +36,9 @@ ctx.addEventListener('message', (e: MessageEvent) => {
     distanceAptitude: input.distanceAptitude,
     surfaceAptitude: input.surfaceAptitude,
     motivation: input.motivation,
+    groundCondition: input.groundCondition,
+    weather: input.weather,
+    season: input.season,
     courseFix: 'auto',
     skills: [],
   };

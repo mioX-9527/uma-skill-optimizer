@@ -50,6 +50,15 @@ export interface Course {
   readonly baseSpeed?: number;
   /** 赛道补正门槛属性(course_set_status),用于赛道补正公式 */
   readonly courseSetStatus?: readonly PassiveStat[];
+  /** 海外赛场(触发代码 is_abroad:隆尚/圣安妮塔公园/德尔马) */
+  readonly overseas?: boolean;
+  /**
+   * 赛场回转方向:1=顺时针(中山/京都/阪神/札幌/函馆/福岛/小仓/大井/隆尚),
+   * 2=逆时针(东京/中京/新潟/川崎/船桥/盛冈/圣安妮塔公园/德尔马);
+   * 直線赛道(新潟草1000m)无回转,缺省 → 回转方向类技能一律不生效。
+   * 来源:game course_data.json 的 turn 字段(1=右/2=左/4=直線),与 JRA 官方口径一致。
+   */
+  readonly rotation?: 1 | 2;
 }
 
 export interface Stats {
@@ -134,6 +143,70 @@ export type SkillCondition =
   | { readonly kind: 'elapsedSec'; readonly seconds: number; readonly base: ConditionBase }
   | { readonly kind: 'positionPct'; readonly pct: number };
 
+/** 一次技能发动记录(供 prereq 计数器与「需已发动某技能」判定) */
+export interface FiredSkill {
+  readonly skillId: string;
+  /** 发动时所处阶段 */
+  readonly phase: PhaseId;
+  /** 发动位置(米) */
+  readonly meter: number;
+  /** 是否为回复(耐力恢复)技能 */
+  readonly heal: boolean;
+}
+
+/** 前提判定上下文 */
+export interface PrereqContext {
+  readonly course: Course;
+  readonly runner: RunnerConfig;
+  /** 本技能基础 id(去掉 -b1/-b2 后缀),用于 requiresFirstBlock */
+  readonly baseId: string;
+  /** 已发动技能(同一帧内先于本技能发动的也计入) */
+  readonly fired: readonly FiredSkill[];
+}
+
+/** 技能发动计数器的种类(触发代码 activate_count_* / is_activate_* 的判定对象) */
+export type ActivationCounter =
+  /** activate_count_all:已发动技能总数 */
+  | 'all'
+  /** activate_count_start:序盘(phase 0)发动的技能数 */
+  | 'start'
+  /** activate_count_middle:中盘(phase 1)发动的技能数 */
+  | 'middle'
+  /** activate_count_later_half:比赛后半段(行进 ≥50%)发动的技能数 */
+  | 'laterHalf'
+  /** activate_count_end_after:终盘及之后(phase ≥2)发动的技能数 */
+  | 'endAfter'
+  /** activate_count_heal / is_activate_heal_skill:发动的回复技能数 */
+  | 'heal'
+  /** activate_count_param_skill:生效的绿技能(被动参数技能)数 */
+  | 'green'
+  /** succession_skill_count:继承技能数 */
+  | 'heir';
+
+/** 单个计数器约束(值域闭区间;== 时 min=max) */
+export interface CounterReq {
+  readonly min?: number;
+  readonly max?: number;
+}
+
+/**
+ * 技能发动前提(触发代码里依赖「自身技能发动史 / 持有技能」的条件)。
+ * 与 restriction 的区别:restriction 是赛道与比赛环境的静态适配(装配限制),
+ * 这里是在比赛过程中才能满足的前置状态 —— 不满足时该技能不发动,而不是整场判为不适用。
+ */
+export interface SkillPrereq {
+  /** 计数器约束,字段间为「与」 */
+  readonly counters?: Readonly<Partial<Record<ActivationCounter, CounterReq>>>;
+  /** 需要已发动过的技能(触发代码 is_used_skill_id==X;按基础 id 匹配,忽略 -b1/-b2) */
+  readonly usedSkillBaseIds?: readonly string[];
+  /** 需要已选入牌组的技能(触发代码 is_exist_skill_id==X) */
+  readonly ownedSkillBaseIds?: readonly string[];
+  /** 需要本技能第一段效果已发动(触发代码 is_activate_other_skill_detail==1,即 -b2 依赖 -b1) */
+  readonly requiresFirstBlock?: boolean;
+  /** 多分支:任一前提满足即可(@ 变体之间为「或」) */
+  readonly anyOf?: readonly SkillPrereq[];
+}
+
 export interface SkillConfig {
   readonly id: string;
   readonly name: string;
@@ -151,6 +224,11 @@ export interface SkillConfig {
   readonly condition: SkillCondition;
   /** 脚质/场地/赛场等装配型限制 */
   readonly restriction?: SkillRestriction;
+  /**
+   * 发动前提(已发动技能数/已发动回复技能数/需已发动的具体技能等)。
+   * 见 ActivationCounter;不满足则该次不发动(不是"不适用")。
+   */
+  readonly prereq?: SkillPrereq;
   /** 是否受智力增幅(固有/レア) */
   readonly wisdomScaled: boolean;
   /**
@@ -163,8 +241,17 @@ export interface SkillConfig {
 /** 场地状态:0=良 1=稍重 2=重 3=不良(触发代码 ground_condition 1良~4不良,映射为代码−1) */
 export type GroundCondition = 0 | 1 | 2 | 3;
 
-/** 技能的脚质/场地/赛场等装配型限制(不满足则整场不发动) */
-export interface SkillRestriction {
+/** 天气:1=晴 2=阴 3=雨 4=雪(触发代码 weather==N;仅作技能条件,不进物理公式) */
+export type Weather = 1 | 2 | 3 | 4;
+
+/** 季节:1=春 2=夏 3=秋 4=冬 5=樱花(触发代码 season==N;仅作技能条件,不进物理公式) */
+export type Season = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * 单条限制子句(全部字段为「与」关系:都满足才成立)。
+ * 触发代码里同一支(& 连接)的多条限定都落在这里。
+ */
+export interface RestrictionClause {
   /** 脚质(大逃并入逃马) */
   readonly tactics?: readonly Tactic[];
   readonly distanceTypes?: readonly ('short' | 'mile' | 'mid' | 'long')[];
@@ -176,8 +263,40 @@ export interface SkillRestriction {
   /** 比赛距离范围(米,触发代码 course_distance>=/<=) */
   readonly distanceMin?: number;
   readonly distanceMax?: number;
+  /**
+   * 是否为「标准距离」赛道(触发代码 is_basis_distance==1/0)。
+   * 游戏定义:赛程全长是 **400 米的整数倍** ⇒ 标准距离(如 1200/1600/2000/2400/3200);
+   * 否则为非标准距离(如 1400/1800/2200/2500)。注意它**不是距离档**(短/英里/中/长),
+   * 2500 属长距离但非 400 倍数,1600 属英里但是 400 倍数。
+   */
+  readonly basisDistance?: boolean;
+  /** 赛场回转方向(触发代码 rotation==N:1=顺时针,2=逆时针;直線赛道不匹配) */
+  readonly rotations?: readonly number[];
+  /** 天气(触发代码 weather==N:1晴/2阴/3雨/4雪) */
+  readonly weathers?: readonly Weather[];
+  /** 季节(触发代码 season==N:1春/2夏/3秋/4冬/5樱花) */
+  readonly seasons?: readonly Season[];
+  /** 干劲(触发代码 motivation==N/>=N/<=N:1绝不调~5绝好调) */
+  readonly motivations?: readonly Motivation[];
+  /** 是否为海外赛场(触发代码 is_abroad==0/1) */
+  readonly abroad?: boolean;
+  /** 面板属性下限(含,触发代码 base_speed>=N 等;取面板值,不含绿技能与干劲) */
+  readonly statsAtLeast?: Readonly<Partial<Record<PassiveStat, number>>>;
+  /** 面板属性上限(不含,触发代码 base_wiz<N 等) */
+  readonly statsBelow?: Readonly<Partial<Record<PassiveStat, number>>>;
   /** 原始限制文本(展示用) */
   readonly rawText?: string;
+}
+
+/**
+ * 技能的脚质/场地/赛场等装配型限制(不满足则整场不发动;绿技能则不计入起跑属性)。
+ * 单子句时直接用本层字段;触发代码存在多分支(@ 变体或 condition_1/condition_2)时
+ * 用 `anyOf` 表示「任一支满足即生效」——分支之间是 OR,不能压成一层并集,
+ * 否则「A 分支限短距离、B 分支不限」会被错压成「限短距离」。
+ */
+export interface SkillRestriction extends RestrictionClause {
+  /** 多分支子句:任一满足即生效;缺省 = 使用本层扁平字段 */
+  readonly anyOf?: readonly RestrictionClause[];
 }
 
 export interface RunnerConfig {
@@ -189,6 +308,10 @@ export interface RunnerConfig {
   readonly surfaceAptitude: Aptitude;
   readonly motivation: Motivation;
   readonly groundCondition?: GroundCondition;
+  /** 天气(技能条件;缺省 1=晴) */
+  readonly weather?: Weather;
+  /** 季节(技能条件;缺省 1=春) */
+  readonly season?: Season;
   /**
    * 赛道补正:'auto'(缺省)= 按赛道门槛属性(courseSetStatus)与五维计算:
    * 1 + 平均((1+floor(min(属性,901)/300.01))×0.05)(uma-skill-tools CourseHelpers.courseSpeedModifier;
@@ -224,6 +347,12 @@ export interface SimOptions {
    * 仍受装配限制约束);后续发动照常按冷却规则衔接。未指定的技能按条件规则发动。
    */
   readonly positionOverrides?: ReadonlyMap<string, number>;
+  /**
+   * 消融「只去掉效果、保留发动」:这些技能照常判定条件/前提并记入发动史(供其他技能的
+   * prereq 计数),但不施加任何效果(不改速度/体力/属性)。用于把单项收益从「前置连带」里
+   * 剥出来 —— 否则 3 个回复技能各自都会背上「大招因此不发动」的收益,重复计账。
+   */
+  readonly inertSkills?: ReadonlySet<string>;
 }
 
 export interface SimResult {
@@ -231,6 +360,14 @@ export interface SimResult {
   readonly finishTimeSec: number;
   /** 末脚目标速度(m/s,有效属性口径);马身差换算基准(614tools 口径) */
   readonly spurtTargetSpeed: number;
+  /**
+   * 末脚(最终冲刺)起点:位置(米)。体力充足时 = 终盘分界,体力不足时由 HP 预算解算推迟;
+   * null = 全程未进入末脚(极端体力不足)。**「存速」的判定基准**:
+   * 进入末脚的瞬时速度由中盘速度技能抬高,这段速度会被带进终盘加速段(不需要"还回去")。
+   */
+  readonly spurtStartMeter: number | null;
+  /** 末脚起点时刻(秒);判定技能在进入末脚时是否仍生效(存速) */
+  readonly spurtStartSec: number | null;
   /** 逐帧序列(下标对齐);用 Float64 保存体力等大数值的帧间精度 */
   readonly t: Float64Array;
   readonly x: Float64Array;

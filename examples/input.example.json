@@ -6,18 +6,25 @@
     "tactic": "senko",
     "distanceAptitude": "A",
     "surfaceAptitude": "A",
-    "motivation": "normal"
+    "motivation": "normal",
+    "groundCondition": 0,
+    "weather": 1,
+    "season": 1
   },
   "skills": [
-    { "name": "中距离直线◎", "pt": 180 },
     { "name": "迅疾如风", "pt": 180 },
-    { "id": "901121", "pt": 120 },
-    { "name": "弯道恢复○", "pt": 90 },
-    { "name": "直线恢复", "pt": 90 },
-    { "name": "一鼓作气", "pt": 90 },
-    { "name": "抢先", "pt": 90 },
-    { "name": "弯里横", "pt": 90 },
-    { "name": "随势而动", "pt": 90 },
-    { "name": "放学后的乐趣", "pt": 90 }
+    { "name": "中距离直线◎", "pt": 130 },
+    { "name": "短兵相接", "pt": 180 },
+    { "name": "直线能手", "pt": 100 },
+    { "name": "Seirios(继承)(1)", "pt": 150 },
+    { "name": "中距离直线○", "pt": 90 },
+    { "name": "博弈者(1)", "pt": 200 },
+    { "name": "瞬息万变", "pt": 200 },
+    { "name": "亲手把握未来", "pt": 110 },
+    { "name": "春初暖风", "pt": 180 },
+    { "name": "跟前直线◎", "pt": 130 },
+    { "name": "Into High Gear!(继承)(1)", "pt": 150 },
+    { "name": "王道征途", "pt": 180 },
+    { "name": "愿者上钩(继承)", "pt": 120 }
   ]
 }

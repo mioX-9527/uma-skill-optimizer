@@ -1,8 +1,8 @@
 {
-  "syncedAt": "2026-10-25T07:33:10.173Z",
+  "syncedAt": "2026-10-25T10:10:25.409Z",
   "from": "C:\\Users\\mio\\Desktop\\uma-race-sim",
   "version": {
-    "version": "0.5.0-possample",
+    "version": "0.8.2-spurt-carry",
     "generatedAt": "2026-10-25",
     "sources": [
       "BWIKI 技能速查表(api.php action=ask,1907 条原始;tools/scrape-once.ts)",
@@ -17,15 +17,16 @@
       "skills": 2641
     },
     "skillPrecision": {
-      "precise": 118,
-      "approx": 2055,
-      "unsupported": 468,
+      "precise": 409,
+      "approx": 1988,
+      "unsupported": 244,
       "excludedEvolution": 47,
       "codeParsed": 1857,
       "textFallback": 2,
       "uniqueHeir": 383,
       "uniqueHeirCnReleased": 217,
-      "evolved": 826
+      "evolved": 826,
+      "passiveRaceStart": 213
     },
     "notes": [
       "技能条件以触发代码优先解析(1224 条命中解包数据,2 条回退中文文本规则):distance_rate/remain_distance 数值窗口、corner 序号、is_finalcorner/_laterhalf、is_last_straight、is_lastspurt、straight_front_type==2(看台对面直线)、@ 分隔的\"或\"变体(限制取并集)",
@@ -37,11 +38,23 @@
       "继承固有(900xxx,383 条含双分支)单独成条:数值/持续时间/触发条件与本体不同(逐对核对 271/271,仅 2 个负面分支继承时数值不变),智力增幅系数恒 1.0;名称取 BWIKI 继承技页面,有简中页(217 条)= 国服已实装",
       "进化技能(1M+ 段,826 条含 193 双分支)纳入:速查表进化行 ID 与 解包数据直接对齐(633 条,触发代码级解析),与本体技能二选一(进化后数值/条件以进化版为准);智力增幅系数 1.0;47 条无解包数据的剧本技能维持排除",
       "区段随机技能位置采样(方案二):触发代码含 *_random 的技能标记 randomPosition(1118 条,其中近似 1005),消融时在满足区段全长均匀取 7 点强制发动后分别消融,马身收益报期望与区间,可展开逐位置明细;名次类近似技能不采样(发动依赖名次状态),维持规则取位;引擎新增 SimOptions.positionOverrides 支持强制发动位置",
+      "绿技能(常时被动)支持:raceStart 条件的纯被动(213 条)标 precise,引擎并入起跑属性(614tools ZP 口径:面板+绿逐项相加后统一过软上限与干劲;耐力对决参照 sfRef 中绿不吃干劲);常时被动一律不进入发动通道;条件型被动(非常时)仍 unsupported",
       "赛道:阶段分界=距离的 1/6、2/3、5/6;基准速度=20−(距离−2000)/1000;坡度已换算为百分比;straights.frontType 1=看台前 2=看台对面;「直線」类条件以解包 straights 列表为准(28/138 赛道存在既非直线也非弯道的过渡区,如 有馬記念中山2500 起跑 0-100m)",
       "场地状态枚举修正为 0良/1稍重/2重/3不良(触发代码 ground_condition 1良~4不良 映射为代码−1)",
       "赛场映射:10001-10010=JRA 十场(东京 10006/中山 10005/京都 10008 已用坡度指纹验证);地方 10101-10105 与海外 10201-10203 按游戏内顺序映射,精度中等,待与 BWIKI 抽查确认",
       "赛道补正默认自动计算(uma-skill-tools CourseHelpers.courseSpeedModifier):1 + 平均((1+floor(min(参照属性,901)/300.01))×0.05),参照属性 = 门槛属性种类(courseSetStatus)上的 (面板+绿)×干劲;空门槛赛道(52 条,含东京2400)→ ×1.0;UI 可手动覆盖 ×1.2/×1.0。东京2400 自动档与游戏实录偏差由 −0.62s 收敛至 −0.26s",
-      "注:引擎 v0.2 的双马对比等次级功能沿用 simulate 输出;courseSetStatus 的门槛属性种类由 make-courses.ts 从 stat-kind ID(1速度/2耐力/3力量/4根性/5智力)映射为属性名"
+      "注:引擎 v0.2 的双马对比等次级功能沿用 simulate 输出;courseSetStatus 的门槛属性种类由 make-courses.ts 从 stat-kind ID(1速度/2耐力/3力量/4根性/5智力)映射为属性名",
+      "赛场回转方向取自解包 course_data.json 的 turn 字段:1=右回り(顺时针)/2=左回り(逆时针)/4=直線;与 JRA 官方口径一致(逆时针=东京/中京/新潟,其余顺时针),分布 74 顺时针 / 63 逆时针 / 1 无回转(新潟草1000m 直線,回转方向类技能不生效)",
+      "天气与季节不进物理公式(解包 RaceSolver/HpPolicy 与 614tools worker 均无对应项),仅决定 weather==N / season==N 类技能是否生效;场地状态只进体力消耗系数(草地 良1.0/稍重1.0/重1.02/不良1.02,泥地 良1.0/稍重1.0/重1.01/不良1.02),不改速度与加速度",
+      "装配限制(触发代码级):running_style / distance_type / is_basis_distance / ground_type / ground_condition(含 !=、>=、<=)/ track_id(含范围成对合并)/ course_distance(精确与范围)/ rotation / weather / season / motivation / is_abroad / base_speed·base_stamina·base_power·base_guts·base_wiz,任一不满足 ⇒ 整场不生效;绿技能(213 条)中 164 条带限制",
+      "标准距离 is_basis_distance = 赛程全长为 400 米整数倍(1200/1600/2000/2400/3200...),与距离档(短/英里/中/长)是两条独立的轴:1600 属英里但是 400 倍数、2500 属长距离但非 400 倍数。存为独立布尔 restriction.basisDistance(6 条绿技能:标准距离◎○× / 非标准距离◎○×);此前误映射为 distanceTypes(标准→中/长),已修正",
+      "装配限制采用 DNF 子句:同一支(& 连接)= 与,同字段取交集;`@` 变体 = 或,输出 restriction.anyOf(任一满足即生效);condition_1 / condition_2 是两组独立效果块(拆成 -b1/-b2),不是或分支;单字段差异分支化简回扁平结构,仅 10 条异构技能保留 anyOf",
+      "仍未建模的 token(单马模型无法判断,按满足处理并记入 skill-notes.json):popularity / post_number / fan_count / grade(100=G1)/ is_dirtgrade(交流重赏)/ lane_type / furlong / time / visiblehorse / random_lot(_shared)/ succession_skill_count / is_move_lane / remain_distance_viewer_id / is_exist_*;is_tight_track(小回り)由文本侧落成 venues(札幌/函馆/福岛/小仓/川崎/船桥)",
+      "技能发动前提(prereq)建模:触发代码里依赖自身技能发动史的 token 不再当作近似丢掉 —— activate_count_all/start/middle/later_half/end_after/heal/param_skill、succession_skill_count、is_activate_any_skill、is_activate_heal_skill、is_used_skill_id(±with_detail_one)、is_exist_skill_id、is_activate_other_skill_detail(即 -b2 依赖 -b1),共 200 条技能带前提(129 条为 -b2 依赖 -b1)",
+      "前提不满足 = 本帧不发动、后续帧继续判(不是整场禁用):计数器为 all/start/middle/laterHalf/endAfter/heal/green/heir,闭区间;只有前提无位置锚点的技能按前提统计范围重建可发动区间(start→序盘、middle→中盘、laterHalf→50%~终点、endAfter→终盘起),否则只会在起跑帧判一次而永不发动;带前提的常时被动不并入起跑属性(标不支持)",
+      "仍未建模的前提类 token(单马模型无法判断):activate_count_all_team(队伍)、is_activate_other_character_activate_advantage_skill、running_style_count_*(他马跑法统计);is_used_skill_id_with_detail_one 只建模「该技能已发动」,细节条件忽略并保留 approx",
+      "消融口径:逐技能收益 = 「只去掉效果、保留发动」(inertSkills,仍记入发动史供其他技能前提计数),不再从牌组删掉 —— 否则需「回复技能≥3」的技能会让每个回复技能都背上大招收益、重复计 N 次;「从牌组删掉会连带失去谁」用 AblationRow.dependentIds(UI「被依赖」角标)单独提示",
+      "存速(Spurt Speed Carry-over)核对:速度技能抬高的是目标速度上限而非加速度,马以固定加速度爬到上限(2400m 约 9~10 秒);进入末脚那一帧仍在生效的技能把起步速度整体抬高,加速段全程少爬该差值且技能结束后不需还回去 —— 收益 ≈ 值×加速段时长。SimResult 新增 spurtStartMeter/spurtStartSec,AblationRow 新增 carryOverSpeed/carryOverLeftSec(完整−只去掉效果 的同位置速度差),收益表以「存速 +x」角标显示"
     ]
   }
 }

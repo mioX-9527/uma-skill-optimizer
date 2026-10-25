@@ -23,6 +23,7 @@ import {
 } from './conditions';
 import { effectiveStatsOf, passiveBonusOf } from './effstats';
 import { phaseAt } from './phase';
+import { baseIdOf, prereqSatisfied } from './prereq';
 import { baseAccelOf, baseSpeedOf, lastSpurtSpeedOf, minSpeedOf, phaseTargetSpeed } from './speed';
 import {
   accelerationBonus,
@@ -34,7 +35,7 @@ import {
   type Buff,
 } from './skills';
 import { gutsDrainModifier, maxHpOf, staminaDrainPerSecond } from './stamina';
-import type { Activation, Course, RunnerConfig, SimOptions, SimResult, SkillConfig, Slope } from './types';
+import type { Activation, Course, FiredSkill, RunnerConfig, SimOptions, SimResult, SkillConfig, Slope } from './types';
 
 const MAX_SECONDS = 600;
 
@@ -60,14 +61,15 @@ function solveSpurtTransition(
   course: Course,
   runner: RunnerConfig,
   ctx: SpurtCtx,
+  inert?: ReadonlySet<string>,
 ): number {
   const baseV = baseSpeedOf(course);
-  const gutsMod = gutsDrainModifier(runner);
+  const gutsMod = gutsDrainModifier(runner, course);
   const ground = runner.groundCondition ?? 0;
   const drainAt = (v: number): number =>
     staminaDrainPerSecond(v, baseV, course, { statusCoef: 1, ground, gutsModifier: gutsMod, phase: 2 });
-  const spurtV = lastSpurtSpeedOf(course, runner);
-  const target2 = phaseTargetSpeed(course, runner, 2);
+  const spurtV = lastSpurtSpeedOf(course, runner, inert);
+  const target2 = phaseTargetSpeed(course, runner, 2, inert);
   const late = course.phaseBounds.lateStart;
 
   // 体力足以全程末脚:从终盘分界开始
@@ -106,15 +108,17 @@ function solveSpurtTransition(
 export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions = {}): SimResult {
   const ignoreExhaustion = opts.ignoreExhaustion === true;
   const positionOverrides = opts.positionOverrides;
+  /** 消融「只去掉效果、保留发动」的技能 id(仍计入 fired / activations) */
+  const inert = opts.inertSkills;
   const baseV = baseSpeedOf(course);
-  const maxHp = maxHpOf(course, runner);
-  const minSpeed = minSpeedOf(course, runner);
-  const gutsMod = gutsDrainModifier(runner);
-  const spurtV = lastSpurtSpeedOf(course, runner);
+  const maxHp = maxHpOf(course, runner, inert);
+  const minSpeed = minSpeedOf(course, runner, inert);
+  const gutsMod = gutsDrainModifier(runner, course, inert);
+  const spurtV = lastSpurtSpeedOf(course, runner, inert);
   const ground = runner.groundCondition ?? 0;
   const distScale = course.distance / 1000;
   const late = course.phaseBounds.lateStart;
-  const eff = effectiveStatsOf(runner, course);
+  const eff = effectiveStatsOf(runner, course, inert);
 
   // 序盘 PDM(取位放缓):仅非逃马,0~int(d/24);发动目标/即时速度技能时提前解除(614tools)
   const pdmApplies = runner.tactic !== 'nige';
@@ -128,15 +132,15 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
   let ashiiroDone = false;
   const sfOn = (runner.assumeStaminaFight ?? true) && staminaFightDistCoef(course.distance) > 0;
   // 耐力对决参照值:面板×干劲 + 绿加成(绿不吃干劲,614tools worker Je 口径)
-  const sfGreen = passiveBonusOf(runner).stamina;
+  const sfGreen = passiveBonusOf(runner, course, inert).stamina;
   const sfRef = runner.stats.stamina * MOTIVATION_WISDOM_MULT[runner.motivation] + sfGreen;
   const sfBonus = sfOn && sfRef > 1200 ? Math.sqrt(sfRef - 1200) * 0.0085 * staminaFightDistCoef(course.distance) : 0;
 
   // 全开冲刺:速度 ≥2001(含绿加成,614tools B2 口径)且进入末脚后速度达冲刺目标(含坡度修正)时
   const fsOn =
     (runner.fullSpurtEnabled ?? true) &&
-    runner.stats.speed + passiveBonusOf(runner).speed >= FULL_SPURT_SPEED_GATE;
-  const fsRate = fsOn ? (FULL_SPURT_RATE * baseAccelOf(course, runner, 2, false)) / Math.pow(distScale, 1.5) : 0;
+    runner.stats.speed + passiveBonusOf(runner, course, inert).speed >= FULL_SPURT_SPEED_GATE;
+  const fsRate = fsOn ? (FULL_SPURT_RATE * baseAccelOf(course, runner, 2, false, inert)) / Math.pow(distScale, 1.5) : 0;
   let fsStarted = false;
   let fsExtra = 0;
 
@@ -151,20 +155,43 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
   let tempering = false;
   let spurtOn = false;
   let spurtTransition: number | null = null;
+  /** 末脚起点的位置/时刻(首次进入末脚那一帧;存速判定基准) */
+  let spurtStartMeter: number | null = null;
+  let spurtStartSec: number | null = null;
   let startDash = true;
   let exhaustedAtMeter: number | null = null;
   const buffs: Buff[] = [];
   const activations: Activation[] = [];
   /** 一次性技能的已发动标记(冷却缺失或 ≥ 一场最长冷却 500s) */
   const activated = new Set<string>();
+  /** 已发动技能史(供 prereq 计数器:已发动数量 / 回复数量 / 某技能是否发动过) */
+  const fired: FiredSkill[] = [];
   /** 带冷却技能的下次可发动时刻(秒,基准值已按 距离/1000 缩放) */
   const readyAt = new Map<string, number>();
   /** 位置采样:已按强制位置发动过的技能 */
   const overrideFired = new Set<string>();
 
+  /** 前提是否满足(已发动技能数 / 回复数 / 指定技能 / 本技能第一段) */
+  const prereqOk = (s: SkillConfig): boolean =>
+    s.prereq === undefined ||
+    prereqSatisfied(s.prereq, { course, runner, baseId: baseIdOf(s.id), fired });
+
+  /** 记录一次发动(供后续技能的前提判定) */
+  const noteFired = (s: SkillConfig, frame: FrameState): void => {
+    fired.push({
+      skillId: s.id,
+      phase: frame.phase,
+      meter: frame.x,
+      // 回复类技能计数:按效果类型判定(负值的「回复×」也属回复技能分类)
+      heal: s.effects.some(e => e.type === 'heal'),
+    });
+  };
+
   /** 发动效果入栈(共用路径:规则发动与位置采样强制发动) */
   const applyFire = (s: SkillConfig, frame: FrameState): void => {
-    const mult = effectMultiplier(s, runner, frame.phase);
+    // 消融「只去掉效果」:照常算发动(已记入 fired/activations),但不施加效果
+    if (inert?.has(s.id) === true) return;
+    const mult = effectMultiplier(s, runner, frame.phase, course);
     const dur = s.durationSec !== null && s.durationSec > 0 ? s.durationSec * distScale : 0;
     if (dur > 0) buffs.push({ skill: s, untilSec: t + dur, mult });
     const st = applyInstant(s, { v, hp, maxHp }, mult);
@@ -190,9 +217,13 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
     const p2 = strategyPhase(phase);
 
     if (phase >= 2 && spurtTransition === null) {
-      spurtTransition = solveSpurtTransition(course, runner, { pos: x, hp });
+      spurtTransition = solveSpurtTransition(course, runner, { pos: x, hp }, inert);
     }
-    if (!spurtOn && spurtTransition !== null && x >= spurtTransition) spurtOn = true;
+    if (!spurtOn && spurtTransition !== null && x >= spurtTransition) {
+      spurtOn = true;
+      spurtStartMeter = x;
+      spurtStartSec = t;
+    }
     if (pdmActive && x >= pdmEndM) pdmActive = false;
     if (ashiiroOn && !ashiiroDone && x >= late) {
       ashiiroRemaining = ASHIIRO_DURATION_SEC;
@@ -206,9 +237,9 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
       target = spurtV;
     } else if (p2 === 0) {
       // 序盘 PDM(取位放缓):出闸后前 int(d/24) m 目标压低(614tools sim1!AG2)
-      target = phaseTargetSpeed(course, runner, 0) * (pdmActive ? PDM_SLOWDOWN_RATIO : 1);
+      target = phaseTargetSpeed(course, runner, 0, inert) * (pdmActive ? PDM_SLOWDOWN_RATIO : 1);
     } else {
-      target = phaseTargetSpeed(course, runner, phase);
+      target = phaseTargetSpeed(course, runner, phase, inert);
     }
     target += targetSpeedBonus(buffs, t);
     // 前提:耐力对决(终盘起概算加速)
@@ -229,7 +260,7 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
       accel = PHASE_DECEL[p2];
     } else {
       accel =
-        baseAccelOf(course, runner, phase, slope !== null && slope.gradient > 0) +
+        baseAccelOf(course, runner, phase, slope !== null && slope.gradient > 0, inert) +
         accelerationBonus(buffs, t) +
         (ashiiroRemaining > 0 ? ashiiroBonus : 0);
     }
@@ -278,10 +309,13 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
       if (overrideM !== undefined && !overrideFired.has(s.id)) {
         if (x < overrideM) continue;
         if (s.restriction !== undefined && !restrictionSatisfied(s.restriction, runner, course)) continue;
+        // 强制位置也尊重发动前提:前提未满足时继续等待(否则消融会凭空发动)
+        if (!prereqOk(s)) continue;
         overrideFired.add(s.id);
         if (once) activated.add(s.id);
         else readyAt.set(s.id, t + s.cooldownSec * distScale);
         activations.push({ skillId: s.id, name: s.name, atSec: t, atMeter: x, precision: s.precision });
+        noteFired(s, frame);
         applyFire(s, frame);
         continue;
       }
@@ -289,9 +323,12 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
       const hit = activationRegions(s.condition, course).some(r => inRegion(r, x));
       if (!hit) continue;
       if (!dynamicSatisfied(s.condition, frame)) continue;
+      // 发动前提(已发动技能数/回复数/需先发动的技能):不满足则本帧不发动,后续帧继续尝试
+      if (!prereqOk(s)) continue;
       if (once) activated.add(s.id);
       else readyAt.set(s.id, t + s.cooldownSec * distScale);
       activations.push({ skillId: s.id, name: s.name, atSec: t, atMeter: x, precision: s.precision });
+      noteFired(s, frame);
       applyFire(s, frame);
     }
 
@@ -306,6 +343,8 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
   return {
     finishTimeSec: interp + START_DELAY_EXPECTED,
     spurtTargetSpeed: spurtV,
+    spurtStartMeter,
+    spurtStartSec,
     t: Float64Array.from(tArr),
     x: Float64Array.from(xArr),
     v: Float64Array.from(vArr),

@@ -1,4 +1,4 @@
-import type { Aptitude, Motivation, Stats, Tactic } from '../../src/engine/index.js';
+import type { Aptitude, GroundCondition, Motivation, Season, Stats, Tactic, Weather } from '../../src/engine/index.js';
 import { COURSES, SKILLS, type SkillEntry } from '../../src/data.js';
 import { normalizeName } from '../../src/lookup.js';
 import basePt from '../../src/base-pt.json';
@@ -22,6 +22,12 @@ export interface PlanState {
   readonly distanceAptitude: Aptitude;
   readonly surfaceAptitude: Aptitude;
   readonly motivation: Motivation;
+  /** 场地状态(进体力消耗;也用于「良场地◎」类技能判定) */
+  readonly groundCondition: GroundCondition;
+  /** 天气(仅用于技能条件判定) */
+  readonly weather: Weather;
+  /** 季节(仅用于技能条件判定) */
+  readonly season: Season;
   readonly skills: readonly PlanSkill[];
 }
 
@@ -41,12 +47,19 @@ const EFFECT_LABEL: Record<string, (v: number) => string> = {
   acceleration: v => `加速度${v >= 0 ? '+' : ''}${v}`,
   lastSpurtExtension: v => `末脚延展+${v}`,
   heal: v => `回复${(v * 100).toFixed(2)}%体力`,
-  passive: () => '被动(引擎暂不计入)',
+  passive: () => '被动',
   unsupported: () => '未建模效果',
 };
 
+const STAT_LABEL: Record<string, string> = { speed: '速度', stamina: '耐力', power: '力量', guts: '根性', wisdom: '智力' };
+
 export function describeEffects(skill: SkillEntry): string {
-  const parts = skill.effects.map(e => (EFFECT_LABEL[e.type] ?? (() => e.type))('value' in e ? (e.value as number) : 0));
+  const parts = skill.effects.map(e =>
+    e.type === 'passive'
+      // 绿技能:引擎把它并入起跑属性(不占发动位置),这里直接标成属性加成
+      ? `绿技能 ${STAT_LABEL[e.stat] ?? e.stat}${e.value >= 0 ? '+' : ''}${e.value}`
+      : (EFFECT_LABEL[e.type] ?? (() => e.type))('value' in e ? (e.value as number) : 0),
+  );
   const dur = skill.durationSec === null ? '' : ` · ${skill.durationSec}s`;
   return parts.join(' / ') + dur;
 }
@@ -99,6 +112,9 @@ export function exportPlan(state: PlanState): string {
         distanceAptitude: state.distanceAptitude,
         surfaceAptitude: state.surfaceAptitude,
         motivation: state.motivation,
+        groundCondition: state.groundCondition,
+        weather: state.weather,
+        season: state.season,
       },
       skills: state.skills.map(s => ({ id: s.id, name: s.name, pt: s.pt })),
     },
@@ -150,6 +166,8 @@ export function importPlan(text: string): PlanState {
   const stats: Stats = { speed: stat('speed'), stamina: stat('stamina'), power: stat('power'), guts: stat('guts'), wisdom: stat('wisdom') };
   const pick = <T extends string>(v: unknown, allowed: readonly T[], dflt: T): T =>
     typeof v === 'string' && (allowed as readonly string[]).includes(v) ? (v as T) : dflt;
+  const int = (v: unknown, min: number, max: number, dflt: number): number =>
+    typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max ? v : dflt;
   return {
     courseId: course.id,
     budget,
@@ -158,6 +176,9 @@ export function importPlan(text: string): PlanState {
     distanceAptitude: pick(r.distanceAptitude, APTITUDES, 'A'),
     surfaceAptitude: pick(r.surfaceAptitude, APTITUDES, 'A'),
     motivation: pick(r.motivation, MOTIVATIONS, 'normal'),
+    groundCondition: int(r.groundCondition, 0, 3, 0) as GroundCondition,
+    weather: int(r.weather, 1, 4, 1) as Weather,
+    season: int(r.season, 1, 5, 1) as Season,
     skills,
   };
 }
@@ -196,6 +217,9 @@ export interface RunInput {
   readonly distanceAptitude: Aptitude;
   readonly surfaceAptitude: Aptitude;
   readonly motivation: Motivation;
+  readonly groundCondition: GroundCondition;
+  readonly weather: Weather;
+  readonly season: Season;
   readonly skills: readonly { id: string; pt: number }[];
 }
 
@@ -209,6 +233,9 @@ function runOnMain(input: RunInput): Promise<OptimizerResult> {
     distanceAptitude: input.distanceAptitude,
     surfaceAptitude: input.surfaceAptitude,
     motivation: input.motivation,
+    groundCondition: input.groundCondition,
+    weather: input.weather,
+    season: input.season,
     courseFix: 'auto',
     skills: [],
   };

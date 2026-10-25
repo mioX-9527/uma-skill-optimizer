@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Aptitude, Motivation, Tactic } from '../../src/engine/index.js';
+import type { Aptitude, GroundCondition, Motivation, Season, Tactic, Weather } from '../../src/engine/index.js';
 import { SKILLS } from '../../src/data.js';
 import {
   courseOf, courseOptions, defaultPt, describeEffects, exportPlan, importPlan,
@@ -21,8 +21,17 @@ const APTITUDE_OPTIONS: readonly Aptitude[] = ['S', 'A', 'B', 'C', 'D', 'E', 'F'
 const MOTIVATION_OPTIONS: readonly { v: Motivation; label: string }[] = [
   { v: 'best', label: '绝好调' }, { v: 'good', label: '好调' }, { v: 'normal', label: '普通' }, { v: 'bad', label: '不调' }, { v: 'worst', label: '绝不调' },
 ];
+const GROUND_OPTIONS: readonly { v: GroundCondition; label: string }[] = [
+  { v: 0, label: '良' }, { v: 1, label: '稍重' }, { v: 2, label: '重' }, { v: 3, label: '不良' },
+];
+const WEATHER_OPTIONS: readonly { v: Weather; label: string }[] = [
+  { v: 1, label: '晴' }, { v: 2, label: '阴' }, { v: 3, label: '雨' }, { v: 4, label: '雪' },
+];
+const SEASON_OPTIONS: readonly { v: Season; label: string }[] = [
+  { v: 1, label: '春' }, { v: 2, label: '夏' }, { v: 3, label: '秋' }, { v: 4, label: '冬' }, { v: 5, label: '樱花' },
+];
 const REASON_LABEL: Record<string, string> = {
-  unaffordable: '超预算', 'no-gain': '组合内无正收益', outbid: '被更优组合挤出',
+  unaffordable: '超预算', inapplicable: '不适配本配置', 'no-gain': '组合内无正收益', outbid: '被更优组合挤出',
 };
 
 const STORAGE_KEY = 'uma-skill-optimizer-plan-v1';
@@ -43,11 +52,15 @@ const EXAMPLE = {
   runner: {
     stats: { speed: 1200, stamina: 1000, power: 1100, guts: 700, wisdom: 900 },
     tactic: 'senko', distanceAptitude: 'A', surfaceAptitude: 'A', motivation: 'normal',
+    groundCondition: 0, weather: 1, season: 1,
   },
+  // 与 examples/input.example.json 保持一致
   skills: [
-    { name: '中距离直线◎', pt: 180 }, { name: '迅疾如风', pt: 180 }, { id: '901121', pt: 120 },
-    { name: '弯道恢复○', pt: 90 }, { name: '直线恢复', pt: 90 }, { name: '一鼓作气', pt: 90 },
-    { name: '抢先', pt: 90 }, { name: '弯里横', pt: 90 }, { name: '随势而动', pt: 90 }, { name: '放学后的乐趣', pt: 90 },
+    { name: '迅疾如风', pt: 180 }, { name: '中距离直线◎', pt: 130 }, { name: '短兵相接', pt: 180 },
+    { name: '直线能手', pt: 100 }, { name: 'Seirios(继承)(1)', pt: 150 }, { name: '中距离直线○', pt: 90 },
+    { name: '博弈者(1)', pt: 200 }, { name: '瞬息万变', pt: 200 }, { name: '亲手把握未来', pt: 110 },
+    { name: '春初暖风', pt: 180 }, { name: '跟前直线◎', pt: 130 }, { name: 'Into High Gear!(继承)(1)', pt: 150 },
+    { name: '王道征途', pt: 180 }, { name: '愿者上钩(继承)', pt: 120 },
   ],
 };
 
@@ -100,6 +113,9 @@ export default function App() {
         distanceAptitude: plan.distanceAptitude,
         surfaceAptitude: plan.surfaceAptitude,
         motivation: plan.motivation,
+        groundCondition: plan.groundCondition,
+        weather: plan.weather,
+        season: plan.season,
         skills: plan.skills.map(s => ({ id: s.id, pt: s.pt })),
       });
       setResult(r);
@@ -222,6 +238,20 @@ export default function App() {
               {MOTIVATION_OPTIONS.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
             </select>
           </div>
+
+          <div className="field row">
+            <span>场地状态 / 天气 / 季节</span>
+            <select value={plan.groundCondition} onChange={e => { patch({ groundCondition: Number(e.target.value) as GroundCondition }); setResult(null); }}>
+              {GROUND_OPTIONS.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
+            </select>
+            <select value={plan.weather} onChange={e => { patch({ weather: Number(e.target.value) as Weather }); setResult(null); }}>
+              {WEATHER_OPTIONS.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
+            </select>
+            <select value={plan.season} onChange={e => { patch({ season: Number(e.target.value) as Season }); setResult(null); }}>
+              {SEASON_OPTIONS.map(o => <option key={o.v} value={o.v}>{o.label}</option>)}
+            </select>
+          </div>
+          <p className="field-note">场地状态会改变体力消耗;天气/季节只决定「晴天◎」「秋季优俊少女◎」这类绿技能与环境条件技能是否生效</p>
         </section>
 
         {/* ── 右列:技能 ── */}
@@ -315,7 +345,10 @@ export default function App() {
               <h3>未购买(按剩余边际收益排序)</h3>
               <table>
                 <thead>
-                  <tr><th>技能</th><th className="num">PT</th><th className="num">单独马身</th><th>原因</th><th className="num">差PT</th></tr>
+                  <tr>
+                    <th>技能</th><th className="num">PT</th><th className="num">单独马身</th><th>原因</th><th className="num">差PT</th>
+                    {result.rejected.some(r => r.detail !== '') && <th>说明</th>}
+                  </tr>
                 </thead>
                 <tbody>
                   {result.rejected.map(r => (
@@ -325,6 +358,7 @@ export default function App() {
                       <td className="num">{r.soloBody.toFixed(2)}</td>
                       <td>{REASON_LABEL[r.reason]}</td>
                       <td className="num">{r.reason === 'outbid' && r.missingPt > 0 ? r.missingPt : ''}</td>
+                      {result.rejected.some(x => x.detail !== '') && <td className="dim">{r.detail}</td>}
                     </tr>
                   ))}
                 </tbody>
