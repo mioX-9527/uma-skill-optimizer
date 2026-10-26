@@ -34,15 +34,17 @@ class Bridge:
     def __init__(self, serial: str | None = None):
         # 不写死序列号:多模拟器共存时 5555 未必是赛马娘那台(实测被 MuMu 占过)。
         # 前端会先调 devices() 让用户选,再把选中的 serial 传进来。
-        self.serial = serial
+        self._serial = serial
         self._index: SkillIndex | None = None
         self._last_plan: list[dict] = []
         self._pt_balance: int | None = None
         self._busy = threading.Lock()
 
     # ── 工具 ────────────────────────────────────────────────
-    @property
-    def index(self) -> SkillIndex:
+    def _get_index(self) -> SkillIndex:
+        """技能库(懒加载)。**名字必须带下划线**:pywebview 会遍历 js_api 的公开属性,
+        暴露成 property 的话,窗口初始化时就会触发加载 —— 打包后若缺数据文件,
+        遍历期抛的错只会在日志里留一句「Error while processing index」,功能静默变残废。"""
         if self._index is None:
             self._index = SkillIndex.load()
         return self._index
@@ -52,7 +54,7 @@ class Bridge:
 
     def _resolve(self, serial: str | None) -> str:
         """选定要读哪台设备(逻辑在 adb.resolve_serial,CLI 共用同一份)。"""
-        return resolve_serial(serial or self.serial)
+        return resolve_serial(serial or self._serial)
 
     # ── 前端 API ────────────────────────────────────────────
     def devices(self, force: bool = False) -> dict:
@@ -75,7 +77,7 @@ class Bridge:
             recommend = next((r["serial"] for r in online if r.get("isUma")), None)
             if recommend is None and len(online) == 1:
                 recommend = online[0]["serial"]
-            return {"ok": True, "devices": out, "recommended": recommend, "serial": self.serial}
+            return {"ok": True, "devices": out, "recommended": recommend, "serial": self._serial}
         except (AdbError, FileNotFoundError, OSError) as exc:
             return self._err(exc)
 
@@ -107,7 +109,7 @@ class Bridge:
             from .ocr import Ocr
 
             result = capture_all(adb, meta, profile, Ocr())
-            matches = resolve_rows(result.rows, self.index)
+            matches = resolve_rows(result.rows, self._get_index())
             skills = to_plan_skills(matches)
             self._last_plan = skills
             self._pt_balance = result.pt_balance
@@ -119,7 +121,7 @@ class Bridge:
 
             # 进化关系:进化后的技能不在候选里(金技能免费变来的),得单独告诉前端
             warning_lines: list[str] = []
-            evolutions = evolutions_of(matches, self.index, note=warning_lines.append)
+            evolutions = evolutions_of(matches, self._get_index(), note=warning_lines.append)
 
             confirm = [
                 {"row": str(m), "alternatives": [a.name for a in m.alternatives]}

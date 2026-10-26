@@ -6,10 +6,11 @@
 
 **两种启动方式**:
 
+0. **开箱即用(推荐)** —— 到 [Releases](https://github.com/mioX-9527/uma-skill-optimizer/releases/latest) 下载 `uma-skill-optimizer-desktop-win64-*.zip`(约 145MB,已内含 Python 与 OCR 引擎),解压后双击 `uma-skill-optimizer.exe`,无需装 Python;要自动读模拟器同样点「从模拟器读取」。需要 Win10/11 x64 + WebView2 Runtime(Win10/11 一般自带)。
 1. **单文件网页版(免安装)** —— 双击根目录的 [`打开规划器.html`](打开规划器.html) 即可在浏览器打开(无需 Node)。在界面里手动添加候选技能、填上你号上看到的实际价格,一键算出推荐购买组合。
-2. **桌面版(推荐,可自动抓取)** —— 双击 [`启动桌面版.bat`](启动桌面版.bat),把游戏停在技能购买界面后点「从模拟器读取」,会**自动连上模拟器逐屏抓取**:读出所有可学技能和你号上的实际价格、自动识别可进化技能(进化前后分别计价)、单双圈升级与金技能前置关系,结果直接填进规划器,不用手抄(需 Python 环境,首次运行自动装依赖)。
+2. **桌面版(源码运行)** —— 双击 [`启动桌面版.bat`](启动桌面版.bat)(需已装 Python,首次运行自动装依赖),功能与 Releases 的 exe 相同:把游戏停在技能购买界面后点「从模拟器读取」,会**自动连上模拟器逐屏抓取**:读出所有可学技能和你号上的实际价格、自动识别可进化技能(进化前后分别计价)、单双圈升级与金技能前置关系,结果直接填进规划器,不用手抄。
 
-两种方式共用同一套优化器与界面;桌面版读完后也可以切回手动微调。
+重新打包 exe:改完代码后运行 `<python> -m PyInstaller --noconfirm --distpath packaging/dist --workpath packaging/build build_desktop.spec`(详见 `build_desktop.spec` 注释)。
 
 ## 状态
 

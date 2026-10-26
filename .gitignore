@@ -8,3 +8,8 @@ __pycache__/
 *.pyc
 # 调试产物:截图、校准标注图、临时 plan
 app/_debug/
+
+# 打包产物(Release 挂 zip,仓库不进这些)
+packaging/dist/
+packaging/build/
+packaging/*.zip
