@@ -622,7 +622,10 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         const next = chosen.filter(x => x !== a);
         const nextIds = new Set(next.map(x => x.id));
         const inCost = costOf(b, nextIds);
-        if (inCost > remaining() + a.pt) continue;
+        // 预算必须**按换完之后的真实总额**判:换出 a 不只腾出它的价,还可能让别的技能变贵
+        // (换掉前置白会让金技能涨回全额),用 `remaining() + a.pt` 会高估可用预算
+        // —— 实测出现 2533 预算花出 2595 的超支。
+        if (totalSpent(next) + inCost > budget) continue;
         const gain = timeGain(cur, simSearch(combine(skillsOf(next), b.withSkills)));
         if (gain > eps && (best === null || gain > best.gain)) best = { out: a, in: b, gain };
       }
@@ -738,7 +741,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       ...byMarginal.filter(a => costOf(a, new Set(chosen.filter(x => x !== a).map(x => x.id))) >= need),
       ...byMarginal,
     ].slice(0, 12);
-    let best: { out: Cand; delta: number } | null = null;
+    let best: { out: Cand; delta: number; with?: Cand } | null = null;
     for (const a of outs) {
       const next = chosen.filter(x => x !== a);
       const nextIds = new Set(next.map(x => x.id));
@@ -747,15 +750,40 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       const delta = finalSim.finishTimeSec - t;                        // 正 = 换完更快
       if (best === null || delta > best.delta) best = { out: a, delta };
     }
+    // 2 换 1:用户常问「追击+十万火急 换掉内侧体验行不行」——单独看每一项都被挤掉,
+    // 但两项合起来可能更划算。这里顺带试一次(搭档只取池里边际最高的 3 个)。
+    const partners = pool().filter(x => x.id !== c.id).slice(0, 3);
+    for (const d of partners) {
+      for (const a of outs) {
+        const next = chosen.filter(x => x !== a);
+        const nextIds = new Set(next.map(x => x.id));
+        const cost = costOf(c, nextIds) + costOf(d, new Set([...nextIds, c.id]));
+        if (totalSpent(next) + cost > budget) continue;
+        const t = simExpected(combine(skillsOf(next), c.withSkills, d.withSkills)).finishTimeSec;
+        const delta = finalSim.finishTimeSec - t;
+        if (delta > eps && (best === null || delta > best.delta)) best = { out: a, delta, with: d };
+      }
+    }
     if (best === null) return '换掉任何一项都装不下它(预算不够)';
     const d = best.delta * bodyPerSec;
+    const outName = best.with !== undefined
+      ? `「${best.out.skill.name}」换成「${c.skill.name}+${best.with.skill.name}」`
+      : `「${best.out.skill.name}」换成它`;
     return d > 0
-      ? `换掉「${best.out.skill.name}」就能换入它,总收益还能多 ${d.toFixed(2)} 马身`
-      : `换掉「${best.out.skill.name}」换入它后总收益会少 ${Math.abs(d).toFixed(2)} 马身,所以不换`;
+      ? `${outName},总收益还能多 ${d.toFixed(2)} 马身`
+      : `${outName},总收益会少 ${Math.abs(d).toFixed(2)} 马身,所以不换`;
   };
 
   const rejected: RejectedSkill[] = [];
   const chosenSet = new Set(chosen.map(c => c.id));
+  // 换出建议要做 1换1 + 2换1 的模拟,很贵 —— 只给"边际最高"的前 8 项算,其余给结论性文案
+  const hintIds = new Set(
+    cands
+      .filter(c => c.state !== 'chosen')
+      .sort((a, b) => b.lastMarginal - a.lastMarginal)
+      .slice(0, 8)
+      .map(c => c.id),
+  );
   // 「已经买到手的技能」:已选技能本身 + 它自带的前置白 + 双圈所需的单圈。
   // 买金技能 = 连下位白一起买了(价格里已经含了),所以那个白**不能再出现在「未购买」里**
   // —— 用户 2026-10-26 直接指出这一点。
@@ -793,7 +821,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       pt: costOf(c, chosenSet),
       soloBody: c.soloSec * bodyPerSec,
       reason,
-      detail: c.blockedDetail ?? (prereqNote !== '' ? prereqNote : (healIdle !== '' ? healIdle : (reason === 'outbid' ? swapHintOf(c) : ''))),
+      detail: c.blockedDetail ?? (prereqNote !== '' ? prereqNote : (healIdle !== '' ? healIdle : (reason === 'outbid' && hintIds.has(c.id) ? swapHintOf(c) : ''))),
       ...(c.evolved !== undefined ? { evolvesTo: c.evolved.name } : {}),
       ...(c.skill.prereq !== undefined && c.soloSec <= eps ? { soloUnavailable: true } : {}),
       ...(c.ptInferred === true ? { ptInferred: true } : {}),

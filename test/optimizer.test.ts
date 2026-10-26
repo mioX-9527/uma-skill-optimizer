@@ -260,6 +260,31 @@ describe('区段随机取位技能按期望计价', () => {
  * 买金技能 = 连下位白一起买(价格里已含)。所以那个白**不能**再出现在「未购买」里
  * —— 用户 2026-10-26 直接指出:「买了金技能不就相当于把下位白技能买了吗」。
  */
+/**
+ * 预算不能被突破 —— 曾经有 bug:交换循环用「remaining + a.pt(标价)」估可用预算,
+ * 换出前置白会让金技能涨回全额,于是 2533 的预算花出了 2595。
+ */
+describe('预算不超支', () => {
+  it('多档预算 × 多档面板都花不超过 budget', () => {
+    const course = COURSES.find(c => c.name.includes('中山') && c.distance === 2500)!;
+    const pool = SKILLS.filter(s => s.cnReleased !== false && s.rarity !== 'unsupported' && s.pt === undefined)
+      .slice(0, 40)
+      .map((s, i) => ({ id: s.id, pt: 60 + (i % 7) * 40 }));
+    for (const budget of [600, 2000]) {
+      for (const stamina of [900]) {
+        const runner = {
+          stats: { speed: 1200, stamina, power: 1100, guts: 700, wisdom: 900 },
+          greenBonus: {}, tactic: 'sashi' as const, distanceAptitude: 'A' as const,
+          surfaceAptitude: 'A' as const, motivation: 'normal' as const, groundCondition: 0 as const,
+          weather: 1 as const, season: 1 as const, courseFix: 'auto' as const, skills: [],
+        };
+        const r = optimize({ course, runner, budget, candidates: pool });
+        expect(r.totalPt).toBeLessThanOrEqual(budget);
+      }
+    }
+  }, 60_000);
+});
+
 describe('金技能自带下位白', () => {
   const course = COURSES.find(c => c.name.includes('中山') && c.distance === 2500)!;
   const runner = {
