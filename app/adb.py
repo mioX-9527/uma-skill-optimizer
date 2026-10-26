@@ -25,6 +25,11 @@ from dataclasses import dataclass
 
 from PIL import Image
 
+# 窗口模式(桌面版 exe / pythonw)里起 adb.exe 会**每次弹一个黑色控制台窗口**:
+# 刷新设备要连 8 个端口 + 列设备 + 每屏截图,一次操作闪十几下黑框。
+# CREATE_NO_WINDOW 让子进程不创建控制台(控制台版无影响,照常工作)。
+_NO_WINDOW = 0x08000000 if os.name == "nt" else 0
+
 # 兜底序列号(单实例、且只有一台在线时才会用到;正常走「先选设备」)
 DEFAULT_SERIAL = "127.0.0.1:5555"
 LDPPLAYER_ADB_CANDIDATES = (
@@ -90,7 +95,8 @@ class Adb:
         cmd = [self.adb, "-s", self.serial, *args]
         try:
             proc = subprocess.run(
-                cmd, capture_output=True, timeout=timeout or self.timeout, check=False
+                cmd, capture_output=True, timeout=timeout or self.timeout, check=False,
+                creationflags=_NO_WINDOW,
             )
         except FileNotFoundError as exc:  # adb 路径错
             raise AdbError(f"adb 无法执行:{self.adb}") from exc
@@ -196,6 +202,7 @@ def connect_candidates(adb_path: str, timeout: float = 1.5) -> None:
             subprocess.run(
                 [adb_path, "connect", f"127.0.0.1:{port}"],
                 capture_output=True, timeout=timeout, check=False,
+                creationflags=_NO_WINDOW,
             )
         except (OSError, subprocess.TimeoutExpired):
             pass
@@ -206,7 +213,10 @@ def connect_candidates(adb_path: str, timeout: float = 1.5) -> None:
 
 def _raw_devices(path: str) -> list[dict]:
     try:
-        proc = subprocess.run([path, "devices", "-l"], capture_output=True, timeout=20, check=False)
+        proc = subprocess.run(
+            [path, "devices", "-l"], capture_output=True, timeout=20, check=False,
+            creationflags=_NO_WINDOW,
+        )
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise AdbError(f"列不出设备(`adb devices -l` 失败):{exc}") from exc
     out = proc.stdout.decode("utf-8", "ignore")

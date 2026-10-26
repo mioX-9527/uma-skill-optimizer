@@ -22,6 +22,9 @@ datas = [
     (os.path.join(HERE, "打开规划器.html"), "."),
     # OCR 匹配/前置链/价格表都要读 data/(app/match.py、app/chains.py 按 __file__ 相对推导)
     (os.path.join(HERE, "data"), "data"),
+    # 版式文件(app/layout.py 按 __file__ 找 app/layouts/<宽>x<高>.json);
+    # 漏掉的话 exe 里「刷新设备/读取」会报「没有 720x1280 的版式文件」
+    (os.path.join(HERE, "app", "layouts"), os.path.join("app", "layouts")),
 ]
 binaries = []
 hiddenimports = [

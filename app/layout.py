@@ -15,6 +15,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -143,9 +144,14 @@ def load_profile(width: int, height: int) -> Profile:
     path = LAYOUT_DIR / f"{width}x{height}.json"
     if not path.is_file():
         available = ", ".join(p.stem for p in LAYOUT_DIR.glob("*.json")) or "(无)"
+        # 打包版(pyinstaller)没有 python 环境,别让用户对着 `python -m app.cli` 发愣
+        how = (
+            "把模拟器分辨率改成上面已有的一种(推荐 720x1280),或联系作者要一份新分辨率的版式。"
+            if getattr(sys, "frozen", False)
+            else "复制一份改名后跑 `python -m app.cli calibrate` 校准。"
+        )
         raise FileNotFoundError(
-            f"没有 {width}x{height} 的版式文件 {path}。已有:{available}。\n"
-            f"  复制一份改名后跑 `python -m app.cli calibrate` 校准。"
+            f"没有 {width}x{height} 的版式文件 {path}。已有:{available}。\n  {how}"
         )
     with open(path, encoding="utf-8") as fh:
         return Profile(json.load(fh))
