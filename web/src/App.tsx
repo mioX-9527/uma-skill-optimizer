@@ -482,7 +482,7 @@ export default function App() {
 
           <table>
             <thead>
-              <tr><th>#</th><th>技能</th><th className="num">PT</th><th className="num">单独马身</th><th className="num">集内边际</th><th className="num">边际(秒)</th></tr>
+              <tr><th>#</th><th>技能</th><th className="num">PT</th><th className="num">单独马身</th><th className="num">集内边际</th><th className="num" title="集内边际马身 ÷ 实付PT × 100:每 100pt 换多少马身,用来横比「一个金」和「几个白」">马身/100pt</th><th className="num">边际(秒)</th></tr>
             </thead>
             <tbody>
               {result.chosen.map((c, i) => (
@@ -512,6 +512,7 @@ export default function App() {
                     ) : c.soloBody.toFixed(2)}
                   </td>
                   <td className="num good">{c.finalMarginalBody.toFixed(2)}</td>
+                  <td className="num">{c.bodyPer100Pt.toFixed(2)}</td>
                   <td className="num">{c.finalMarginalSec.toFixed(3)}</td>
                 </tr>
               ))}

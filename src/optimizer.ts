@@ -102,6 +102,8 @@ export interface ChosenSkill {
   readonly filler?: boolean;
   /** 价格是按单圈折扣推算的(双圈 ◎ 看板上没有价),界面上标 ≈ */
   readonly ptInferred?: boolean;
+  /** 性价比:集内边际马身 ÷ 实付 PT × 100(即"每 100pt 换多少马身"),用于跨技能横比 */
+  readonly bodyPer100Pt: number;
   /**
    * 单独买不会发动(发动前提要先有别的技能发动过),所以**单独马身不成立**——
    * 界面上别显示 0.00(会被读成"没收益"),显示「—」,真实价值看「集内边际」。
@@ -793,6 +795,20 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   if (simsUsed >= maxSims * 0.98) {
     notes.push(`已接近模拟次数上限(${simsUsed}/${maxSims}),搜索提前收敛;可用 --max-sims 提高上限获得更优解。`);
   }
+  {
+    const kind = (r: string) => (r === 'normal' ? '白' : r.startsWith('unique') ? '继承' : '金');
+    const tally = new Map<string, { n: number; pt: number }>();
+    for (const c of chosen) {
+      const k = kind(c.skill.rarity);
+      const t = tally.get(k) ?? { n: 0, pt: 0 };
+      tally.set(k, { n: t.n + 1, pt: t.pt + costOf(c, chosenSet) });
+    }
+    const parts = [...tally.entries()].map(([k, v]) => `${k} ${v.n} 项 / ${v.pt}pt`);
+    if (parts.length > 1) {
+      notes.push(`买入构成:${parts.join('、')} —— 白技能是独立候选,金技能的价格已含它的下位白;` +
+        `要不要为了金多花那部分 PT,按「马身/100pt」横比即可。`);
+    }
+  }
   if (polishMoves > 0) {
     notes.push(
       `搜索阶段用「区段中点」快速估计,收尾又按 12 点期望复核了一遍:据此调整了 ${polishMoves} 处` +
@@ -830,10 +846,20 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         ...(c.skill.prereq !== undefined && c.soloSec <= eps
           ? { note: `${describePrereq(c.skill.prereq)}。单独买不会发动 → 单独马身记「—」,真实价值看「集内边际」` }
           : {}),
+        // 单圈自己边际为 0 是因为双圈顶掉了它 —— 但买它正是为了能点双圈,别让人以为白买了
+        ...(() => {
+          const up = CIRCLE_UPGRADES.get(c.id);
+          if (up === undefined || !chosenSet.has(up.upId) || finalMarginals.get(c.id) === undefined) return {};
+          if ((finalMarginals.get(c.id) ?? 0) * bodyPerSec > eps) return {};
+          return { note: `买它是为了点「${up.upName}」——双圈顶掉单圈后,它自己的边际为 0 是正常的` };
+        })(),
         finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
         finalMarginalSec: finalMarginals.get(c.id) ?? 0,
         ...(c.filler === true ? { filler: true } : {}),
         ...(c.ptInferred === true ? { ptInferred: true } : {}),
+        bodyPer100Pt: costOf(c, chosenSet) > 0
+          ? ((finalMarginals.get(c.id) ?? 0) * bodyPerSec) / costOf(c, chosenSet) * 100
+          : 0,
         ...(c.skill.prereq !== undefined && c.soloSec <= eps ? { soloUnavailable: true } : {}),
       ...(c.ptInferred === true ? { ptInferred: true } : {}),
       };
