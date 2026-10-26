@@ -13,3 +13,5 @@ app/_debug/
 packaging/dist/
 packaging/build/
 packaging/*.zip
+# 根目录的单文件版 exe(151MB,只放本地;分发走 Release 的 onedir zip)
+/uma-skill-optimizer.exe

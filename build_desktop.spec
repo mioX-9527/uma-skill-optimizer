@@ -2,16 +2,21 @@
 """桌面版 PyInstaller spec。构建:
 
     <python> -m PyInstaller --noconfirm --distpath packaging/dist --workpath packaging/build build_desktop.spec
+    BP_ONEFILE=1 <python> -m PyInstaller --noconfirm --distpath packaging/dist-onefile --workpath packaging/build build_desktop.spec
 
-产物:packaging/dist/uma-skill-optimizer/ 整个文件夹(onedir,双击里面 exe)。
+产物:
+- 默认 onedir:packaging/dist/uma-skill-optimizer/ 整个文件夹(Release 用,双击里面 exe)
+- BP_ONEFILE=1:单文件 exe(~300MB;免解压目录但**每次启动都要把 300MB 解到 temp**,启动明显更慢,
+  杀软误报率也更高 —— 日常建议用 onedir,单文件版只作"拷一个文件就走"的场景)
+
 说明:
-- onedir 比 onefile 稳(启动快、杀软误报少),Release 只发 onedir 的 zip。
-- cv2 / onnxruntime / rapidocr(含内置 PP-OCR 模型)都必须收进去,合计 ~200MB。
+- cv2 / onnxruntime / rapidocr(含内置 PP-OCR 模型)都必须收进去,合计 ~300MB。
 - `打开规划器.html` 以 datas 平铺到 _internal 根,与 app/main.py 的 ROOT 推导对齐。
 """
 import os
 
 HERE = SPECPATH                      # PyInstaller 注入:spec 所在目录
+ONEFILE = os.environ.get("BP_ONEFILE", "") == "1"
 
 datas = [
     (os.path.join(HERE, "打开规划器.html"), "."),
@@ -60,14 +65,23 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 
-exe = EXE(
-    pyz, a.scripts, [], exclude_binaries=True,
-    name="uma-skill-optimizer",
-    debug=False, strip=False, upx=False,
-    console=False,                       # 双击无黑窗
-)
-coll = COLLECT(
-    exe, a.binaries, a.datas,
-    strip=False, upx=False,
-    name="uma-skill-optimizer",
-)
+if ONEFILE:
+    exe = EXE(
+        pyz, a.scripts, a.binaries, a.datas, [],
+        name="uma-skill-optimizer",
+        debug=False, strip=False, upx=False,
+        console=False,
+        runtime_tmpdir=None,             # 每次启动解到 temp;300MB 级别启动会慢,是已知代价
+    )
+else:
+    exe = EXE(
+        pyz, a.scripts, [], exclude_binaries=True,
+        name="uma-skill-optimizer",
+        debug=False, strip=False, upx=False,
+        console=False,                       # 双击无黑窗
+    )
+    coll = COLLECT(
+        exe, a.binaries, a.datas,
+        strip=False, upx=False,
+        name="uma-skill-optimizer",
+    )
