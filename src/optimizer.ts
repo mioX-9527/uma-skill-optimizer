@@ -98,6 +98,8 @@ export interface ChosenSkill {
   readonly finalMarginalBody: number;
   /** 在最终组合内的边际时间收益(秒) */
   readonly finalMarginalSec: number;
+  /** 收尾凑数项:把剩余 PT 换掉的(边际约 0,不影响成绩,但 PT 不结转,留着也是浪费) */
+  readonly filler?: boolean;
   /**
    * 需要说明的一句话(如:发动前提是「中盘已发动≥3个技能」,单看自己不发动、
    * 单独马身显示 0 但组合里生效)。没有要解释的就不给。
@@ -175,6 +177,8 @@ interface Cand {
   circleChain?: boolean;
   /** 单双圈链的单圈候选 id(circleChain 时必有) */
   baseId?: string;
+  /** 收尾"花完预算"时装入的(边际约 0,只为不浪费 PT) */
+  filler?: boolean;
 }
 
 const DEFAULT_MAX_SIMS = 30000;
@@ -597,6 +601,36 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     greedyFill();
   }
 
+  // ── 花完剩余预算:PT **不结转**,留着就是纯浪费 ──────────────────
+  // 主搜索只装"边际 > 阈值(约 0.003 马身)"的技能,收尾常剩几十上百 PT。
+  // 两轮清掉:① 先装边际为正但没到阈值的(有收益,只是小);
+  //          ② 再装边际 ≈0 的(不影响成绩,纯粹把 PT 换掉)。
+  // 负收益的一律不要 —— 那会真的变慢(如自带速度惩罚的回复技能)。
+  const spendDown = () => {
+    for (const allowZero of [false, true]) {
+      for (;;) {
+        const feasible = pool().filter(c => costIn(c) <= remaining());
+        if (feasible.length === 0) break;
+        const cur = simSearch(skillsOf(chosen));
+        let best: { cand: Cand; gain: number } | null = null;
+        for (const c of feasible) {
+          const gain = timeGain(cur, simSearch(combine(skillsOf(chosen), c.withSkills)));
+          c.lastMarginal = gain;
+          if (gain < -eps) continue;
+          if (!allowZero && gain <= eps) continue;
+          if (best === null || gain > best.gain) best = { cand: c, gain };
+        }
+        if (best === null) break;
+        best.cand.state = 'chosen';
+        best.cand.filler = true;
+        chosen.push(best.cand);
+        spent = totalSpent(chosen);
+      }
+    }
+  };
+  spendDown();
+  const fillerCount = chosen.filter(c => c.filler === true).length;
+
   // ── 汇报:最终组合的 leave-one-out 边际 + 未上车技能分类 ────────────
   const finalSim = simExpected(skillsOf(chosen));
   const bodyPerSec = finalSim.spurtTargetSpeed / BODY_LENGTH_METERS;
@@ -663,6 +697,17 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   if (simsUsed >= maxSims * 0.98) {
     notes.push(`已接近模拟次数上限(${simsUsed}/${maxSims}),搜索提前收敛;可用 --max-sims 提高上限获得更优解。`);
   }
+  if (fillerCount > 0) {
+    notes.push(
+      `已把剩余 PT 尽量花完:其中 ${fillerCount} 项是「凑数」技能(边际≈0,不改变成绩)——` +
+      `PT 不结转,留着等于白扔,所以标了 ⓘ 的那些照买即可。`,
+    );
+  }
+  if (remaining() > 0) {
+    notes.push(
+      `还剩 ${remaining()} PT:未选技能最便宜的一档也买不起了(或买了会变慢,如自带速度惩罚的回复技能)。`,
+    );
+  }
 
   return {
     chosen: chosen.map(c => {
@@ -685,6 +730,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
           : {}),
         finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
         finalMarginalSec: finalMarginals.get(c.id) ?? 0,
+        ...(c.filler === true ? { filler: true } : {}),
       };
     }),
     totalBody: (baseSim.finishTimeSec - finalSim.finishTimeSec) * bodyPerSec,

@@ -471,6 +471,7 @@ export default function App() {
                   <td>{i + 1}</td>
                   <td>
                     {c.name}
+                    {c.filler === true && <span className="dim"> (凑数·花完PT)</span>}
                     {c.note !== undefined && <div className="dim">ⓘ {c.note}</div>}
                   </td>
                   <td className="num">{c.pt}</td>
