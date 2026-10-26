@@ -18,3 +18,8 @@ packaging/*.zip
 packaging/dist-onefile/
 packaging/*_log.txt
 packaging/dist-v011/
+
+# 基准测试的生成物(脚本/证据要进仓库,派生副本不要)
+tools/bench/_traced/
+tools/bench/_backup/
+tools/bench/__pycache__/

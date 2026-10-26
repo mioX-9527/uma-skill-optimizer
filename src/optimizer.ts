@@ -72,6 +72,24 @@ export interface OptimizerInput {
   /** 视为有效收益的最小时间差(秒),默认 0.0005s ≈ 0.003 马身 */
   readonly minImprovementSec?: number;
   readonly onProgress?: (line: string) => void;
+  /**
+   * 各精修阶段的开关。**纯增量**:不传时全部为 true,行为与历史版本逐字一致。
+   * 只用于基准测试/回归:关掉某个阶段就能量化它对最终收益的实际贡献,
+   * 避免"看起来有用"但从不验证的改动。
+   */
+  readonly stages?: OptimizerStages;
+}
+
+/** 阶段开关(见 OptimizerInput.stages) */
+export interface OptimizerStages {
+  /** 1 换 1 交换局部搜索(SWAP_ROUNDS 轮) */
+  readonly swap?: boolean;
+  /** 把剩余 PT 花完的收尾补选 */
+  readonly spendDown?: boolean;
+  /** 期望口径复核(12 点期望下的加入/换出) */
+  readonly polish?: boolean;
+  /** 多换一(N 个便宜技能换掉一个贵的) */
+  readonly groupSwap?: boolean;
 }
 
 export interface ChosenSkill {
@@ -316,6 +334,12 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const maxSims = input.maxSims ?? DEFAULT_MAX_SIMS;
   const eps = input.minImprovementSec ?? DEFAULT_MIN_IMPROVEMENT_SEC;
   const notes: string[] = [];
+  // 阶段开关缺省全部开启 —— 不传 stages 时代码路径与历史版本完全一致
+  const stages = input.stages ?? {};
+  const doSwap = stages.swap ?? true;
+  const doSpendDown = stages.spendDown ?? true;
+  const doPolish = stages.polish ?? true;
+  const doGroupSwap = stages.groupSwap ?? true;
 
   let simsUsed = 0;
   const sim = (skills: readonly SkillConfig[], opts?: SimOptions): SimResult => {
@@ -409,7 +433,11 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       id: c.id,
       skill,
       pt: c.pt,
-      withSkills: [...preSkills, evolved ?? skill],
+      // 买了金技能后,下位白的效果被金**替换**(0.15×3 → 0.35×3),不是叠加。
+      // 游戏内实测口径(用户 2026-10-27):买金的总支出 = 白价 + 金价,换来的是
+      // 「一个 0.35×3 的技能」,白的 0.15×3 不再单独生效。与 ○/◎ 同构。
+      // 所以模拟里只装金自己;若组合里同时选了白,由 combine() 把白删掉。
+      withSkills: [evolved ?? skill],
       requires: preListed ? [c.requires!] : [],
       requiresPt: prePt,
       preSkills,
@@ -512,15 +540,16 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       // (进化是免费的,方向之间互斥 —— 只能变其中一种,所以这里取 max 而不是求和。)
       let best = c.evoCands[0]!;
       for (const dir of c.evoCands) {
-        const sec = baseSim.finishTimeSec - simExpected([...c.preSkills, dir]).finishTimeSec;
+        const sec = baseSim.finishTimeSec - simExpected([dir]).finishTimeSec;
         c.evoSecs.set(dir.id, sec);
         if (sec > (c.evoSecs.get(best.id) ?? -Infinity)) best = dir;
       }
       c.evolved = best;
-      c.withSkills = [...c.preSkills, best];
+      c.withSkills = [best];
       c.soloSec = c.evoSecs.get(best.id)!;
     } else {
-      // 带前置的候选,单独买等于把前置一起买了,所以按 withSkills 算单项收益
+      // 单独买金 = 连下位白一起买下,但白的效果被金替换掉 —— 收益只算金自己那一份。
+      // (价格仍然是"白价+金价"的总和,由 costOf/totalSpent 保证,与顺序无关。)
       c.soloSec = baseSim.finishTimeSec - simExpected(c.withSkills).finishTimeSec;
     }
     // 进化前的对照值:只看这个技能本身,不含前置
@@ -540,14 +569,20 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     if (c.state === 'pool' && c.pt > budget) c.state = 'no-gain';
   }
 
-  // 去重合并:前置技能可能已经被别的候选带进来了,同一技能在模拟里只能出现一次
   // 去重合并:前置技能可能已经被别的候选带进来了,同一技能在模拟里只能出现一次;
   // 另外单双圈占同一格,**买了 ◎ 之后 ○ 不再重复生效**(◎ 是升级版,同格替换不叠加)
   const combine = (...groups: readonly (readonly SkillConfig[])[]): SkillConfig[] => {
     const m = new Map<string, SkillConfig>();
     for (const g of groups) for (const s of g) m.set(s.id, s);
+    // 单双圈:◎ 顶掉 ○
     for (const [upId, baseId] of CIRCLE_BASE) {
       if (m.has(upId) && m.has(baseId)) m.delete(baseId);
+    }
+    // 金技能顶掉它的下位白:与 ○/◎ 同构的"升级替换"关系。
+    // 少了这一步,组合里同时选了金和白时,白那 0.15×3 会被当成额外收益算进去。
+    for (const c of cands) {
+      const baseId = c.requires.length === 1 ? c.requires[0]! : undefined;
+      if (baseId !== undefined && m.has(c.id) && m.has(baseId)) m.delete(baseId);
     }
     return [...m.values()];
   };
@@ -608,7 +643,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // ── 交换局部搜索:换出已选、换入未选,收益提升则交换并回填预算 ────────
   const SWAP_ROUNDS = 10;
   const SWAP_POOL = 50;
-  for (let round = 0; round < SWAP_ROUNDS; round++) {
+  for (let round = 0; round < (doSwap ? SWAP_ROUNDS : 0); round++) {
     if (chosen.length === 0 || pool().length === 0) break;
     // 换入候选只看最近边际靠前的一批(池太大时剪枝)
     const insertCands = pool()
@@ -666,7 +701,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       }
     }
   };
-  spendDown();
+  if (doSpendDown) spendDown();
 
   // ── 期望口径复核(把"猜"清掉)────────────────────────────────────
   // 搜索阶段为了速度,对随机取位技能用**区段中点单点**估计(simSearch,1 次模拟);
@@ -674,7 +709,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // 这里用**期望口径**对最终组合再核一遍:加入 / 换出,真变快才动。
   // 用户明确要求:马身必须是模拟出来的,不能是估算。
   let polishMoves = 0;
-  for (let round = 0; round < 2; round++) {
+  for (let round = 0; round < (doPolish ? 2 : 0); round++) {
     const cur = simExpected(skillsOf(chosen));
     const outs = chosen.slice().sort((a, b) => a.lastMarginal - b.lastMarginal).slice(0, 2);
     const ins = pool().slice().sort((a, b) => b.lastMarginal - a.lastMarginal).slice(0, 6);
@@ -710,7 +745,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   //    可能三个白 ≈ 一个金)。贪心按 马身/PT 排序,天然不会主动"拆金成三个白",
   //    这里补一次:枚举「换出 1 项 × 换入 1~3 项」,用期望口径实跑比较。
   let groupMoves = 0;
-  for (let round = 0; round < 2; round++) {
+  for (let round = 0; round < (doGroupSwap ? 2 : 0); round++) {
     const cur = simExpected(skillsOf(chosen));
     const weakest = chosen.slice().sort((a, b) => a.lastMarginal - b.lastMarginal).slice(0, 2);
     const priciest = chosen.slice().sort((a, b) => costOf(b, chosenIds()) - costOf(a, chosenIds()))[0];
