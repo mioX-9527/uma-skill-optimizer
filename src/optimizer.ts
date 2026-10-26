@@ -636,6 +636,45 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     }
   };
   spendDown();
+
+  // ── 期望口径复核(把"猜"清掉)────────────────────────────────────
+  // 搜索阶段为了速度,对随机取位技能用**区段中点单点**估计(simSearch,1 次模拟);
+  // 而展示给用户的每个马身都是 simExpected(12 点期望)。两套口径可能给出不同结论 ——
+  // 这里用**期望口径**对最终组合再核一遍:加入 / 换出,真变快才动。
+  // 用户明确要求:马身必须是模拟出来的,不能是估算。
+  let polishMoves = 0;
+  for (let round = 0; round < 2; round++) {
+    const cur = simExpected(skillsOf(chosen));
+    const outs = chosen.slice().sort((a, b) => a.lastMarginal - b.lastMarginal).slice(0, 2);
+    const ins = pool().slice().sort((a, b) => b.lastMarginal - a.lastMarginal).slice(0, 6);
+    let best: { out: Cand | null; into: Cand; delta: number } | null = null;
+    for (const into of ins) {
+      if (costIn(into) <= remaining()) {
+        const t = simExpected(combine(skillsOf(chosen), into.withSkills)).finishTimeSec;
+        const delta = cur.finishTimeSec - t;
+        if (delta > eps && (best === null || delta > best.delta)) best = { out: null, into, delta };
+      }
+      for (const a of outs) {
+        const next = chosen.filter(x => x !== a);
+        const nextIds = new Set(next.map(x => x.id));
+        if (costOf(into, nextIds) > budget - totalSpent(next)) continue;
+        const t = simExpected(combine(skillsOf(next), into.withSkills)).finishTimeSec;
+        const delta = cur.finishTimeSec - t;
+        if (delta > eps && (best === null || delta > best.delta)) best = { out: a, into, delta };
+      }
+    }
+    if (best === null) break;
+    if (best.out !== null) {
+      chosen.splice(chosen.indexOf(best.out), 1);
+      best.out.state = 'pool';
+      best.out.lastMarginal = 0;
+    }
+    best.into.state = 'chosen';
+    best.into.filler = false;
+    chosen.push(best.into);
+    spent = totalSpent(chosen);
+    polishMoves++;
+  }
   const fillerCount = chosen.filter(c => c.filler === true).length;
 
   // ── 汇报:最终组合的 leave-one-out 边际 + 未上车技能分类 ────────────
@@ -737,6 +776,12 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
   if (simsUsed >= maxSims * 0.98) {
     notes.push(`已接近模拟次数上限(${simsUsed}/${maxSims}),搜索提前收敛;可用 --max-sims 提高上限获得更优解。`);
+  }
+  if (polishMoves > 0) {
+    notes.push(
+      `搜索阶段用「区段中点」快速估计,收尾又按 12 点期望复核了一遍:据此调整了 ${polishMoves} 处` +
+      `(上表所有马身都是模拟值,不是公式估算)。`,
+    );
   }
   if (fillerCount > 0) {
     notes.push(
