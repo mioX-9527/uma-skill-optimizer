@@ -17,3 +17,4 @@ packaging/*.zip
 /uma-skill-optimizer.exe
 packaging/dist-onefile/
 packaging/*_log.txt
+packaging/dist-v011/
