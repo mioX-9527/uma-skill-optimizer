@@ -104,6 +104,8 @@ export interface ChosenSkill {
   readonly ptInferred?: boolean;
   /** 性价比:集内边际马身 ÷ 实付 PT × 100(即"每 100pt 换多少马身"),用于跨技能横比 */
   readonly bodyPer100Pt: number;
+  /** 这是双圈 ◎ 且单圈 ○ 也在候选里时,给出单圈名 —— 界面上显示「单圈 → 双圈」 */
+  readonly circleFrom?: string;
   /**
    * 单独买不会发动(发动前提要先有别的技能发动过),所以**单独马身不成立**——
    * 界面上别显示 0.00(会被读成"没收益"),显示「—」,真实价值看「集内边际」。
@@ -135,6 +137,8 @@ export interface RejectedSkill {
   readonly soloUnavailable?: boolean;
   /** 价格是按单圈折扣推算的(双圈 ◎ 看板上没有价) */
   readonly ptInferred?: boolean;
+  /** 双圈 ◎:单圈的名字(界面显示「单圈 → 双圈」) */
+  readonly circleFrom?: string;
   /** 还差多少 PT 能上车(仅 outbid 时,预算用尽后有意义的字段) */
   readonly missingPt: number;
   readonly lastMarginalBody: number;
@@ -525,6 +529,13 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       : baseSim.finishTimeSec - simExpected([c.skill]).finishTimeSec;
     c.lastMarginal = c.soloSec;
   }
+  // 双圈 ◎ 的"对照值"取单圈 ○ 的单项收益 —— 这样界面上能显示「单圈 0.29 → 双圈 0.43」,
+  // 一眼看清双圈是**完整效果**还是**增量**。集内边际那列才是增量(◎−○)。
+  for (const c of cands) {
+    if (c.circleChain !== true || c.baseId === undefined) continue;
+    const base = cands.find(x => x.id === c.baseId);
+    if (base !== undefined && base.state !== 'blocked') c.soloSecBefore = base.soloSec;
+  }
   for (const c of cands) {
     if (c.state === 'pool' && c.pt > budget) c.state = 'no-gain';
   }
@@ -786,6 +797,9 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       ...(c.evolved !== undefined ? { evolvesTo: c.evolved.name } : {}),
       ...(c.skill.prereq !== undefined && c.soloSec <= eps ? { soloUnavailable: true } : {}),
       ...(c.ptInferred === true ? { ptInferred: true } : {}),
+      ...(c.circleChain === true && c.baseId !== undefined && SKILL_INDEX.get(c.baseId) !== undefined
+        ? { circleFrom: SKILL_INDEX.get(c.baseId)!.name }
+        : {}),
       missingPt: Math.max(0, costOf(c, chosenSet) - remaining()),
       lastMarginalBody: c.lastMarginal * bodyPerSec,
     });
@@ -873,6 +887,9 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         finalMarginalSec: finalMarginals.get(c.id) ?? 0,
         ...(c.filler === true ? { filler: true } : {}),
         ...(c.ptInferred === true ? { ptInferred: true } : {}),
+        ...(c.circleChain === true && c.baseId !== undefined && SKILL_INDEX.get(c.baseId) !== undefined
+          ? { circleFrom: SKILL_INDEX.get(c.baseId)!.name }
+          : {}),
         bodyPer100Pt: costOf(c, chosenSet) > 0
           ? ((finalMarginals.get(c.id) ?? 0) * bodyPerSec) / costOf(c, chosenSet) * 100
           : 0,

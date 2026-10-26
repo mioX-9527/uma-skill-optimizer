@@ -501,9 +501,10 @@ export default function App() {
                     {c.soloUnavailable === true ? (
                       // 单独买不发动(要先有别的技能发动过)→ 0.00 会被读成"没收益",显示「—」
                       <span className="dim">—</span>
-                    ) : c.evolvesTo !== null ? (
+                    ) : c.evolvesTo !== null || c.circleFrom !== undefined ? (
                       <>
                         {c.soloBodyBefore.toFixed(2)} → <b>{c.soloBody.toFixed(2)}</b>
+                        {c.circleFrom !== undefined && <div className="dim">单圈 → 双圈</div>}
                         {/* 用户要求的标注格式:进化后技能名(来源技能名+进化) */}
                         <div className="dim">{c.evolvesTo}（{c.name}进化）</div>
                         {c.evolveOptions !== undefined && c.evolveOptions.length > 1 && (
