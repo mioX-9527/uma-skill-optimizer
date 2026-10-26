@@ -469,7 +469,10 @@ export default function App() {
               {result.chosen.map((c, i) => (
                 <tr key={c.id}>
                   <td>{i + 1}</td>
-                  <td>{c.name}</td>
+                  <td>
+                    {c.name}
+                    {c.note !== undefined && <div className="dim">ⓘ {c.note}</div>}
+                  </td>
                   <td className="num">{c.pt}</td>
                   <td className="num">
                     {c.evolvesTo !== null ? (

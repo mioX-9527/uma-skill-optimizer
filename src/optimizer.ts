@@ -98,6 +98,11 @@ export interface ChosenSkill {
   readonly finalMarginalBody: number;
   /** 在最终组合内的边际时间收益(秒) */
   readonly finalMarginalSec: number;
+  /**
+   * 需要说明的一句话(如:发动前提是「中盘已发动≥3个技能」,单看自己不发动、
+   * 单独马身显示 0 但组合里生效)。没有要解释的就不给。
+   */
+  readonly note?: string;
 }
 
 export interface RejectedSkill {
@@ -176,6 +181,33 @@ const DEFAULT_MAX_SIMS = 30000;
 const DEFAULT_MIN_IMPROVEMENT_SEC = 0.0005;
 
 const TACTIC_LABEL: Record<Tactic, string> = { nige: '逃马', senko: '先行', sashi: '差行', oikomi: '追马' };
+
+/**
+ * 把「发动前提」翻成人话。意义:**它会让单独马身显示 0**,不说清楚用户会以为技能没用
+ * (实测:尾巴跃龙门 250pt 单独 0.00,但组合里因为中盘技能够 3 个而生效)。
+ */
+const COUNTER_LABEL: Record<string, string> = {
+  all: '整场', start: '序盘', middle: '中盘', laterHalf: '后半程', endAfter: '终盘及之后',
+  heal: '回复技能', green: '绿技能', heir: '继承技能',
+};
+
+function describePrereq(prereq: SkillConfig['prereq']): string {
+  if (prereq === undefined) return '';
+  const parts: string[] = [];
+  for (const [key, req] of Object.entries(prereq.counters ?? {})) {
+    const label = COUNTER_LABEL[key] ?? key;
+    const min = req.min ?? 0;
+    const max = req.max;
+    if (max !== undefined && max === min) parts.push(`${label}恰好发动 ${min} 个技能`);
+    else if (min > 0 && max !== undefined) parts.push(`${label}发动 ${min}~${max} 个技能`);
+    else if (min > 0) parts.push(`${label}已发动 ≥${min} 个技能`);
+  }
+  if (prereq.requiresFirstBlock === true) parts.push('本技能第一段已发动');
+  if ((prereq.usedSkillBaseIds ?? []).length > 0) parts.push('指定技能已发动过');
+  if ((prereq.ownedSkillBaseIds ?? []).length > 0) parts.push('牌组内有指定技能');
+  if (parts.length === 0) return '有发动前提';
+  return `发动前提:${parts.join('、')}`;
+}
 const DISTANCE_LABEL: Record<string, string> = { short: '短距离', mile: '英里', mid: '中距离', long: '长距离' };
 const SURFACE_LABEL: Record<string, string> = { turf: '草地', dirt: '泥地' };
 const GROUND_LABEL = ['良', '稍重', '重', '不良'];
@@ -598,13 +630,18 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       c.skill.effects.every(e => e.type === 'heal' || e.type === 'passive')
         ? '本组合体力未耗尽,回复类技能无额外收益'
         : '';
+    // 发动前提没满足时单独模拟恒为 0:必须解释,否则"单独马身 0"会被读成"这技能没用"
+    const prereqNote =
+      c.blockedDetail === null && c.soloSec <= eps && c.skill.prereq !== undefined
+        ? `${describePrereq(c.skill.prereq)},单独买不会发动(马身 0);组合里满足前提后才有收益`
+        : '';
     rejected.push({
       id: c.id,
       name: c.skill.name,
       pt: costOf(c, chosenSet),
       soloBody: c.soloSec * bodyPerSec,
       reason,
-      detail: c.blockedDetail ?? healIdle,
+      detail: c.blockedDetail ?? (prereqNote !== '' ? prereqNote : healIdle),
       ...(c.evolved !== undefined ? { evolvesTo: c.evolved.name } : {}),
       missingPt: Math.max(0, costOf(c, chosenSet) - remaining()),
       lastMarginalBody: c.lastMarginal * bodyPerSec,
@@ -643,6 +680,9 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         evolvesTo: c.evolved?.name ?? null,
         soloBodyBefore: c.soloSecBefore * bodyPerSec,
         ...(evolveOptionsOf(c) !== undefined ? { evolveOptions: evolveOptionsOf(c) } : {}),
+        ...(c.skill.prereq !== undefined && c.soloSec <= eps
+          ? { note: `${describePrereq(c.skill.prereq)};单独买不发动(马身 0),组合内已满足前提` }
+          : {}),
         finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
         finalMarginalSec: finalMarginals.get(c.id) ?? 0,
       };
