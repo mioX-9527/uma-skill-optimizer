@@ -745,8 +745,19 @@ export function optimize(input: OptimizerInput): OptimizerResult {
 
   const rejected: RejectedSkill[] = [];
   const chosenSet = new Set(chosen.map(c => c.id));
+  // 「已经买到手的技能」:已选技能本身 + 它自带的前置白 + 双圈所需的单圈。
+  // 买金技能 = 连下位白一起买了(价格里已经含了),所以那个白**不能再出现在「未购买」里**
+  // —— 用户 2026-10-26 直接指出这一点。
+  const ownedIds = new Set<string>();
+  for (const c of chosen) {
+    for (const sk of c.withSkills) ownedIds.add(sk.id);
+    for (const r of c.requires) ownedIds.add(r);
+  }
+  let impliedCount = 0;
   for (const c of cands) {
     if (c.state === 'chosen') continue;
+    if (ownedIds.has(c.id)) { impliedCount++; continue; }   // 已随别的技能一起买了
+
     const reason: RejectedSkill['reason'] =
       c.state === 'blocked' ? 'inapplicable'
       : c.pt > budget ? 'unaffordable'
@@ -794,6 +805,11 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
   if (simsUsed >= maxSims * 0.98) {
     notes.push(`已接近模拟次数上限(${simsUsed}/${maxSims}),搜索提前收敛;可用 --max-sims 提高上限获得更优解。`);
+  }
+  if (impliedCount > 0) {
+    notes.push(
+      `另有 ${impliedCount} 项技能**已随金技能/双圈一起买到**(价格里已含),所以不在「未购买」里单列。`,
+    );
   }
   {
     const kind = (r: string) => (r === 'normal' ? '白' : r.startsWith('unique') ? '继承' : '金');

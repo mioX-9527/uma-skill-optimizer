@@ -256,6 +256,35 @@ describe('区段随机取位技能按期望计价', () => {
  * 样本:中距离直线○(201102, 100pt, +0.15)/ ◎(201101, 110pt, +0.25),东京2400(中距离)实测
  * ○ solo 0.61、◎ solo 0.91、◎ 的组合内边际 0.30 = 0.91−0.61(◎ 是升级版,**不与 ○ 叠加**)。
  */
+/**
+ * 买金技能 = 连下位白一起买(价格里已含)。所以那个白**不能**再出现在「未购买」里
+ * —— 用户 2026-10-26 直接指出:「买了金技能不就相当于把下位白技能买了吗」。
+ */
+describe('金技能自带下位白', () => {
+  const course = COURSES.find(c => c.name.includes('中山') && c.distance === 2500)!;
+  const runner = {
+    stats: { speed: 1200, stamina: 800, power: 1100, guts: 700, wisdom: 900 },
+    greenBonus: {}, tactic: 'sashi' as const, distanceAptitude: 'A' as const,
+    surfaceAptitude: 'A' as const, motivation: 'normal' as const, groundCondition: 0 as const,
+    weather: 1 as const, season: 1 as const, courseFix: 'auto' as const, skills: [],
+  };
+  it('买了金,下位白不再单列在未购买,并标出「含前置」', () => {
+    const white = SKILLS.find(x => x.name === '游戏到此为止！')!;
+    const gold = SKILLS.find(x => x.name === '先走一步！')!;
+    const r = optimize({
+      course, runner, budget: 800,
+      candidates: [
+        { id: white.id, pt: 160 },
+        { id: gold.id, pt: 304, requires: white.id },
+      ],
+    });
+    const g = r.chosen.find(c => c.id === gold.id)!;
+    expect(g.includesPrereq).toContain('游戏到此为止！');
+    expect(r.rejected.some(x => x.id === white.id)).toBe(false);
+    expect(r.remainingPt).toBe(800 - 304);   // 金价已含白,不重复收
+  });
+});
+
 describe('单双圈候选自动补全', () => {
   const tokyo = COURSES.find(c => c.name.includes('东京') && c.distance === 2400)!; // 中距离
   const nakayama2500 = COURSES.find(c => c.name.includes('中山') && c.distance === 2500)!; // 长距离+顺时针

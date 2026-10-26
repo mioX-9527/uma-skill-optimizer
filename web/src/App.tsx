@@ -491,6 +491,9 @@ export default function App() {
                   <td>
                     {c.name}
                     {c.filler === true && <span className="dim"> (凑数·花完PT)</span>}
+                    {c.includesPrereq.length > 0 && (
+                      <div className="dim">含「{c.includesPrereq.join('」「')}」(价格已包含,不用再买)</div>
+                    )}
                     {c.note !== undefined && <div className="dim">ⓘ {c.note}</div>}
                   </td>
                   <td className="num">{c.ptInferred === true ? `≈${c.pt}` : c.pt}</td>
