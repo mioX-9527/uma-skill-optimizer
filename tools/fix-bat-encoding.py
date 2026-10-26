@@ -59,6 +59,19 @@ if errorlevel 1 (
   )
 )
 
+rem Prefer the windowless interpreter: the GUI needs no console, so the
+rem cmd window closes right after the desktop window is up.
+rem Fallback chain: pythonw next to PY -> pythonw on PATH -> visible console.
+set "PYW="
+for %%i in ("%PY%") do set "PYDIR=%%~dpi"
+if exist "%PYDIR%pythonw.exe" set "PYW=%PYDIR%pythonw.exe"
+if not defined PYW for /f "delims=" %%i in ('where pythonw 2^>nul') do set "PYW=%%i"
+
+if defined PYW (
+  start "" "%PYW%" -m app.main
+  exit /b 0
+)
+
 "%PY%" -m app.main
 if errorlevel 1 (
   echo.
