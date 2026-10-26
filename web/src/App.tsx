@@ -476,7 +476,10 @@ export default function App() {
                   </td>
                   <td className="num">{c.pt}</td>
                   <td className="num">
-                    {c.evolvesTo !== null ? (
+                    {c.soloUnavailable === true ? (
+                      // 单独买不发动(要先有别的技能发动过)→ 0.00 会被读成"没收益",显示「—」
+                      <span className="dim">—</span>
+                    ) : c.evolvesTo !== null ? (
                       <>
                         {c.soloBodyBefore.toFixed(2)} → <b>{c.soloBody.toFixed(2)}</b>
                         {/* 用户要求的标注格式:进化后技能名(来源技能名+进化) */}
@@ -514,7 +517,9 @@ export default function App() {
                         {r.evolvesTo != null && <span className="dim"> → {r.evolvesTo}</span>}
                       </td>
                       <td className="num">{r.pt}</td>
-                      <td className="num">{r.soloBody.toFixed(2)}</td>
+                      <td className="num">
+                        {r.soloUnavailable === true ? <span className="dim">—</span> : r.soloBody.toFixed(2)}
+                      </td>
                       <td>{REASON_LABEL[r.reason]}</td>
                       <td className="num">{r.reason === 'outbid' && r.missingPt > 0 ? r.missingPt : ''}</td>
                       {result.rejected.some(x => x.detail !== '') && <td className="dim">{r.detail}</td>}

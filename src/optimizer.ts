@@ -101,6 +101,11 @@ export interface ChosenSkill {
   /** 收尾凑数项:把剩余 PT 换掉的(边际约 0,不影响成绩,但 PT 不结转,留着也是浪费) */
   readonly filler?: boolean;
   /**
+   * 单独买不会发动(发动前提要先有别的技能发动过),所以**单独马身不成立**——
+   * 界面上别显示 0.00(会被读成"没收益"),显示「—」,真实价值看「集内边际」。
+   */
+  readonly soloUnavailable?: boolean;
+  /**
    * 需要说明的一句话(如:发动前提是「中盘已发动≥3个技能」,单看自己不发动、
    * 单独马身显示 0 但组合里生效)。没有要解释的就不给。
    */
@@ -122,6 +127,8 @@ export interface RejectedSkill {
   readonly detail: string;
   /** 进化后的技能名(有进化关系时才给,供名字列标注「→」) */
   readonly evolvesTo?: string | null;
+  /** 单独买不会发动 → 单独马身无意义 */
+  readonly soloUnavailable?: boolean;
   /** 还差多少 PT 能上车(仅 outbid 时,预算用尽后有意义的字段) */
   readonly missingPt: number;
   readonly lastMarginalBody: number;
@@ -667,7 +674,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     // 发动前提没满足时单独模拟恒为 0:必须解释,否则"单独马身 0"会被读成"这技能没用"
     const prereqNote =
       c.blockedDetail === null && c.soloSec <= eps && c.skill.prereq !== undefined
-        ? `${describePrereq(c.skill.prereq)},单独买不会发动(马身 0);组合里满足前提后才有收益`
+        ? `${describePrereq(c.skill.prereq)}。单独买不会发动,所以「单独马身」不适用;组合里满足前提后按「集内边际」计`
         : '';
     rejected.push({
       id: c.id,
@@ -677,6 +684,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       reason,
       detail: c.blockedDetail ?? (prereqNote !== '' ? prereqNote : healIdle),
       ...(c.evolved !== undefined ? { evolvesTo: c.evolved.name } : {}),
+      ...(c.skill.prereq !== undefined && c.soloSec <= eps ? { soloUnavailable: true } : {}),
       missingPt: Math.max(0, costOf(c, chosenSet) - remaining()),
       lastMarginalBody: c.lastMarginal * bodyPerSec,
     });
@@ -726,11 +734,12 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         soloBodyBefore: c.soloSecBefore * bodyPerSec,
         ...(evolveOptionsOf(c) !== undefined ? { evolveOptions: evolveOptionsOf(c) } : {}),
         ...(c.skill.prereq !== undefined && c.soloSec <= eps
-          ? { note: `${describePrereq(c.skill.prereq)};单独买不发动(马身 0),组合内已满足前提` }
+          ? { note: `${describePrereq(c.skill.prereq)}。单独买不会发动 → 单独马身记「—」,真实价值看「集内边际」` }
           : {}),
         finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
         finalMarginalSec: finalMarginals.get(c.id) ?? 0,
         ...(c.filler === true ? { filler: true } : {}),
+        ...(c.skill.prereq !== undefined && c.soloSec <= eps ? { soloUnavailable: true } : {}),
       };
     }),
     totalBody: (baseSim.finishTimeSec - finalSim.finishTimeSec) * bodyPerSec,
