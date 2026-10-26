@@ -267,8 +267,7 @@ describe('区段随机取位技能按期望计价', () => {
 describe('预算不超支', () => {
   it('多档预算 × 多档面板都花不超过 budget', () => {
     const course = COURSES.find(c => c.name.includes('中山') && c.distance === 2500)!;
-    const pool = SKILLS.filter(s => s.cnReleased !== false && s.rarity !== 'unsupported' && s.pt === undefined)
-      .slice(0, 40)
+    const pool = SKILLS.filter(s => s.cnReleased !== false).slice(0, 40)
       .map((s, i) => ({ id: s.id, pt: 60 + (i % 7) * 40 }));
     for (const budget of [600, 2000]) {
       for (const stamina of [900]) {

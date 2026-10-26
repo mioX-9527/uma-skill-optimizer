@@ -706,6 +706,52 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     spent = totalSpent(chosen);
     polishMoves++;
   }
+  // ── 多换一:**N 个便宜技能换掉一个贵的**(用户 2026-10-26:白打折高、金打折低时,
+  //    可能三个白 ≈ 一个金)。贪心按 马身/PT 排序,天然不会主动"拆金成三个白",
+  //    这里补一次:枚举「换出 1 项 × 换入 1~3 项」,用期望口径实跑比较。
+  let groupMoves = 0;
+  for (let round = 0; round < 2; round++) {
+    const cur = simExpected(skillsOf(chosen));
+    const weakest = chosen.slice().sort((a, b) => a.lastMarginal - b.lastMarginal).slice(0, 2);
+    const priciest = chosen.slice().sort((a, b) => costOf(b, chosenIds()) - costOf(a, chosenIds()))[0];
+    const outs = [...new Set([...weakest, ...(priciest !== undefined ? [priciest] : [])])];
+    const ins = pool().slice().sort((a, b) => b.lastMarginal - a.lastMarginal).slice(0, 5);
+    const subsets: Cand[][] = [];
+    for (let i = 0; i < ins.length; i++) {
+      subsets.push([ins[i]!]);
+      for (let j = i + 1; j < ins.length; j++) {
+        subsets.push([ins[i]!, ins[j]!]);
+        for (let k = j + 1; k < ins.length; k++) subsets.push([ins[i]!, ins[j]!, ins[k]!]);
+      }
+    }
+    let best: { out: Cand; group: Cand[]; delta: number } | null = null;
+    for (const a of outs) {
+      const rest = chosen.filter(x => x !== a);
+      for (const group of subsets) {
+        const set = [...rest, ...group];
+        if (totalSpent(set) > budget) continue;
+        const t = simExpected(combine(skillsOf(rest), ...group.map(g => g.withSkills))).finishTimeSec;
+        const delta = cur.finishTimeSec - t;
+        if (delta > eps && (best === null || delta > best.delta)) best = { out: a, group, delta };
+      }
+    }
+    if (best === null) break;
+    chosen.splice(chosen.indexOf(best.out), 1);
+    best.out.state = 'pool';
+    best.out.lastMarginal = 0;
+    for (const g of best.group) {
+      g.state = 'chosen';
+      g.filler = false;
+      chosen.push(g);
+    }
+    spent = totalSpent(chosen);
+    groupMoves++;
+  }
+  if (groupMoves > 0) {
+    notes.push(
+      `做了 ${groupMoves} 次「多换一」调整:用 1~3 个更便宜的技能替换掉更贵的一项(按期望口径实跑比较)。`,
+    );
+  }
   const fillerCount = chosen.filter(c => c.filler === true).length;
 
   // ── 汇报:最终组合的 leave-one-out 边际 + 未上车技能分类 ────────────
