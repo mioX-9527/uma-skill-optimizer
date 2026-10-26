@@ -493,7 +493,7 @@ export default function App() {
                     {c.filler === true && <span className="dim"> (凑数·花完PT)</span>}
                     {c.note !== undefined && <div className="dim">ⓘ {c.note}</div>}
                   </td>
-                  <td className="num">{c.pt}</td>
+                  <td className="num">{c.ptInferred === true ? `≈${c.pt}` : c.pt}</td>
                   <td className="num">
                     {c.soloUnavailable === true ? (
                       // 单独买不发动(要先有别的技能发动过)→ 0.00 会被读成"没收益",显示「—」
@@ -535,7 +535,7 @@ export default function App() {
                         {r.name}
                         {r.evolvesTo != null && <span className="dim"> → {r.evolvesTo}</span>}
                       </td>
-                      <td className="num">{r.pt}</td>
+                      <td className="num">{r.ptInferred === true ? `≈${r.pt}` : r.pt}</td>
                       <td className="num">
                         {r.soloUnavailable === true ? <span className="dim">—</span> : r.soloBody.toFixed(2)}
                       </td>

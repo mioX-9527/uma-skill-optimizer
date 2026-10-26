@@ -258,6 +258,7 @@ describe('区段随机取位技能按期望计价', () => {
  */
 describe('单双圈候选自动补全', () => {
   const tokyo = COURSES.find(c => c.name.includes('东京') && c.distance === 2400)!; // 中距离
+  const nakayama2500 = COURSES.find(c => c.name.includes('中山') && c.distance === 2500)!; // 长距离+顺时针
   const runner = {
     stats: { speed: 1600, stamina: 1200, power: 1200, guts: 1200, wisdom: 1200 },
     greenBonus: {},
@@ -294,5 +295,28 @@ describe('单双圈候选自动补全', () => {
     const d = r.chosen.find(c => c.id === '201101')!;
     expect(d.soloBody).toBeGreaterThan(0.7);
     expect(r.totalPt).toBe(110);   // ○ 是之前买的,这次只付 ◎
+  });
+
+  /**
+   * 折扣同格共享(用户 2026-10-26 指出):游戏里 ○ 和 ◎ 共用一个折扣,
+   * 所以 ◎ 的实价可以由「你号上 ○ 的实价 ÷ ○ 的基准价」反推:
+   *   ◎实价 = ◎基准价 × 那个折扣率
+   * 例:顺时针○ 基准 90 / 实价 81(9折),顺时针◎ 基准 110 → 99(不是 110)。
+   */
+  it('◎ 的价格按单圈的折扣率推算(同格共享折扣)', () => {
+    // 顺时针○ = 81(基准 90,9折)→ 顺时针◎ 应该是 110×0.9 = 99,合计 81+99 = 180
+    const r = optimize({ course: nakayama2500, runner, candidates: [{ id: '200012', pt: 81 }], budget: 900 });
+    const up = r.chosen.find(c => c.id === '200011') ?? r.rejected.find(c => c.id === '200011');
+    expect(up).toBeDefined();
+    expect(up!.pt).toBeGreaterThan(0);
+    // 没有折扣(基准价)时:81/90 不是 1,所以价格必须低于基准 110
+    expect(up!.pt).toBeLessThan(110);
+    expect(up!.pt).toBe(99);
+  });
+
+  it('单圈按基准价买(无折扣)时,双圈也用基准价', () => {
+    const r = optimize({ course: nakayama2500, runner, candidates: [{ id: '200012', pt: 90 }], budget: 900 });
+    const up = r.chosen.find(c => c.id === '200011') ?? r.rejected.find(c => c.id === '200011');
+    expect(up!.pt).toBe(110);
   });
 });

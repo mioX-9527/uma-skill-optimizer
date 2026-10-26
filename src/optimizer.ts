@@ -100,6 +100,8 @@ export interface ChosenSkill {
   readonly finalMarginalSec: number;
   /** 收尾凑数项:把剩余 PT 换掉的(边际约 0,不影响成绩,但 PT 不结转,留着也是浪费) */
   readonly filler?: boolean;
+  /** 价格是按单圈折扣推算的(双圈 ◎ 看板上没有价),界面上标 ≈ */
+  readonly ptInferred?: boolean;
   /**
    * 单独买不会发动(发动前提要先有别的技能发动过),所以**单独马身不成立**——
    * 界面上别显示 0.00(会被读成"没收益"),显示「—」,真实价值看「集内边际」。
@@ -129,6 +131,8 @@ export interface RejectedSkill {
   readonly evolvesTo?: string | null;
   /** 单独买不会发动 → 单独马身无意义 */
   readonly soloUnavailable?: boolean;
+  /** 价格是按单圈折扣推算的(双圈 ◎ 看板上没有价) */
+  readonly ptInferred?: boolean;
   /** 还差多少 PT 能上车(仅 outbid 时,预算用尽后有意义的字段) */
   readonly missingPt: number;
   readonly lastMarginalBody: number;
@@ -186,6 +190,8 @@ interface Cand {
   baseId?: string;
   /** 收尾"花完预算"时装入的(边际约 0,只为不浪费 PT) */
   filler?: boolean;
+  /** 价格是按单圈折扣推算的(双圈 ◎) */
+  ptInferred?: boolean;
 }
 
 const DEFAULT_MAX_SIMS = 30000;
@@ -415,7 +421,12 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // ── 单双圈:○ 和 ◎ 占同一格,买完 ○ 同一格变成 ◎(再买一次,价格另付)──
   // 列表里只会显示「当前可买的那一级」,所以 ○ 在候选里时要把 ◎ 补出来,
   // 否则单圈的收益永远只是半截(用户:单双圈的马身收益要分开写)。
-  // ◎ 的价格来自 BWIKI 的 SMW 技能消耗PT(data/skill-pt.json),抓不到的不提供,不猜价。
+  //
+  // ◎ 的价格:游戏里看不到,但**同格共用一个折扣**(用户 2026-10-26 指出)。
+  // 所以用你号上 ○ 的实际价格反推折扣率,再套到 ◎ 的 BWIKI 基准价上:
+  //   ◎实价 = round(◎基准价 × ○实价 / ○基准价)
+  // 例:顺时针○ 基准 90、你号 81(9折)→ 顺时针◎ 基准 110 → 99。
+  // 基准价或实价缺失、折扣率离谱(OCR 读错)时回落到基准价。
   {
     const seenIds = new Set(cands.map(c => c.id));
     for (const base of [...cands]) {
@@ -424,10 +435,13 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       const upSkill = SKILL_INDEX.get(up.upId);
       if (upSkill === undefined) continue;
       seenIds.add(up.upId);
+      const ratio = up.basePt > 0 ? base.pt / up.basePt : 1;
+      const sane = ratio >= 0.4 && ratio <= 1.05;          // 折扣只可能更低;超出必是 OCR 读错
+      const upPt = sane ? Math.max(1, Math.round(up.upPt * ratio)) : up.upPt;
       cands.push({
         id: up.upId,
         skill: upSkill,
-        pt: up.upPt,
+        pt: upPt,
         withSkills: [upSkill],          // ◎ 是 ○ 的升级版(同格替换),效果只算 ◎ 不叠加
         requires: [base.id],
         requiresPt: 0,                  // 价格不含单圈价,靠 circleChain 分开计费
@@ -442,6 +456,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         blockedDetail: null,
         circleChain: true,
         baseId: base.id,
+        ptInferred: sane && Math.abs(ratio - 1) > 1e-9,
       });
     }
   }
@@ -757,6 +772,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       detail: c.blockedDetail ?? (prereqNote !== '' ? prereqNote : (healIdle !== '' ? healIdle : (reason === 'outbid' ? swapHintOf(c) : ''))),
       ...(c.evolved !== undefined ? { evolvesTo: c.evolved.name } : {}),
       ...(c.skill.prereq !== undefined && c.soloSec <= eps ? { soloUnavailable: true } : {}),
+      ...(c.ptInferred === true ? { ptInferred: true } : {}),
       missingPt: Math.max(0, costOf(c, chosenSet) - remaining()),
       lastMarginalBody: c.lastMarginal * bodyPerSec,
     });
@@ -817,7 +833,9 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
         finalMarginalSec: finalMarginals.get(c.id) ?? 0,
         ...(c.filler === true ? { filler: true } : {}),
+        ...(c.ptInferred === true ? { ptInferred: true } : {}),
         ...(c.skill.prereq !== undefined && c.soloSec <= eps ? { soloUnavailable: true } : {}),
+      ...(c.ptInferred === true ? { ptInferred: true } : {}),
       };
     }),
     totalBody: (baseSim.finishTimeSec - finalSim.finishTimeSec) * bodyPerSec,
