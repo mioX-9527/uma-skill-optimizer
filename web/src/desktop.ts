@@ -51,7 +51,8 @@ export interface DesktopBridge {
   doctor(serial?: string): Promise<{ ok: boolean; serial?: string; size?: [number, number]; calibrated?: boolean; error?: string }>;
   /** 逐屏读取技能列表;serial 不传时后端按「前台是赛马娘」自动挑 */
   capture_skills(serial?: string): Promise<CaptureResponse>;
-  save_plan(path?: string): Promise<{ ok: boolean; path?: string; count?: number; error?: string }>;
+  /** 把计划 JSON 原文交给桌面壳弹保存对话框落盘(WebView2 里 a[download] 会被丢掉) */
+  save_plan(text: string): Promise<{ ok: boolean; path?: string; cancelled?: boolean; error?: string }>;
 }
 
 /** 一台 adb 设备(下拉框一项) */

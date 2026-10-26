@@ -158,23 +158,45 @@ class Bridge:
         finally:
             self._busy.release()
 
-    def save_plan(self, path: str | None = None) -> dict:
-        if not self._last_plan:
-            return {"ok": False, "error": "还没有读取结果,先点「从模拟器读取」"}
-        out = Path(path) if path else (ROOT / "app" / "_debug" / "plan.json")
-        out.parent.mkdir(parents=True, exist_ok=True)
-        plan = {
-            "course": "东京 草 2400m",
-            "budget": self._pt_balance or 1000,
-            "runner": {
-                "stats": {"speed": 1200, "stamina": 1000, "power": 1100, "guts": 700, "wisdom": 900},
-                "tactic": "senko", "distanceAptitude": "A", "surfaceAptitude": "A",
-                "motivation": "normal", "groundCondition": 0, "weather": 1, "season": 1,
-            },
-            "skills": [{"id": s["id"], "pt": s["pt"]} for s in self._last_plan],
-        }
-        out.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        return {"ok": True, "path": str(out), "count": len(self._last_plan)}
+    def save_plan(self, text: str | None = None) -> dict:
+        """把前端给的计划 JSON 存成文件(**弹系统保存对话框**,用户自己选位置)。
+
+        旧实现是自己拼一份 plan(固定东京2400 + 占位五维),和界面配置对不上,
+        而且前端从来没调用过它 —— 桌面版点「导出 JSON」其实什么都没落盘
+        (WebView2 里 a[download] 会被静默丢掉)。现在改成:前端把 JSON 原文传进来。
+        """
+        if not isinstance(text, str) or text.strip() == "":
+            return {"ok": False, "error": "没有可保存的内容(先在界面上算一次)"}
+        try:
+            import webview
+
+            win = webview.windows[0] if webview.windows else None
+            picked = None
+            dialog_ok = win is not None
+            if win is not None:
+                picked = win.create_file_dialog(
+                    webview.SAVE_DIALOG,
+                    save_filename="skill-plan.json",
+                    file_types=("JSON 文件 (*.json)", "所有文件 (*.*)"),
+                )
+        except Exception as exc:                        # noqa: BLE001
+            return {"ok": False, "error": f"打开保存对话框失败:{exc}"}
+        if isinstance(picked, (list, tuple)):
+            picked = picked[0] if picked else None
+        if not picked:
+            if dialog_ok:
+                return {"ok": False, "cancelled": True}
+            # 没有窗口/对话框不可用:兜底写到 app/_debug/,总能找到文件
+            picked = str(Path(__file__).resolve().parent / "_debug" / "skill-plan.json")
+        out = Path(picked)
+        if out.suffix == "":
+            out = out.with_suffix(".json")
+        try:
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.write_text(text, encoding="utf-8")
+        except OSError as exc:
+            return {"ok": False, "error": f"写入失败:{exc}"}
+        return {"ok": True, "path": str(out)}
 
 
 def main() -> int:

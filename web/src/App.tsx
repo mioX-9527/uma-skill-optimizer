@@ -78,6 +78,8 @@ export default function App() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
+  /** 导出/保存的结果提示(桌面版弹对话框后显示落盘路径) */
+  const [saveNote, setSaveNote] = useState<string | null>(null);
   const [readLog, setReadLog] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   // 只有被 pywebview 装进桌面窗时才有值;普通浏览器/单文件版恒为 null,按钮不出现。
@@ -237,12 +239,28 @@ export default function App() {
     }
   };
 
-  const download = () => {    const blob = new Blob([exportPlan(plan)], { type: 'application/json' });
+  const download = async () => {
+    const text = exportPlan(plan);
+    // 桌面版:交给 Python 弹系统保存对话框。WebView2 里 <a download> 会被静默丢掉,
+    // 以前点「导出 JSON」其实什么都没落盘(用户问"导出的文件放哪儿了"就是这个)。
+    if (bridge !== null) {
+      try {
+        const r = await bridge.save_plan(text);
+        if (r.ok) setSaveNote(`已保存:${r.path ?? ''}`);
+        else if (r.cancelled === true) setSaveNote('已取消保存');
+        else setSaveNote(`保存失败:${r.error ?? '未知原因'}`);
+      } catch (e) {
+        setSaveNote(`保存失败:${(e as Error).message}`);
+      }
+      return;
+    }
+    const blob = new Blob([text], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'skill-plan.json';
     a.click();
     URL.revokeObjectURL(a.href);
+    setSaveNote('已下载到浏览器的默认下载目录(skill-plan.json)');
   };
 
   const openFile = () => fileRef.current?.click();
@@ -435,7 +453,8 @@ export default function App() {
               </button>
             )}
             <button onClick={openFile}>导入 JSON</button>
-            <button onClick={download}>导出 JSON</button>
+            <button onClick={() => { void download(); }}>导出 JSON</button>
+            {saveNote !== null && <span className="dim">{saveNote}</span>}
             <button onClick={() => { setPlan(importPlan(JSON.stringify(EXAMPLE))); setResult(null); setReadLog([]); }}>载入示例</button>
             <input ref={fileRef} type="file" accept=".json" hidden onChange={onFile} />
           </div>
