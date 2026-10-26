@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import sys
 import threading
@@ -23,6 +24,13 @@ from .adb import Adb, AdbError, dedupe_devices, describe, list_devices, resolve_
 from .capture import capture_all
 from .layout import load_profile
 from .match import SkillIndex, evolutions_of, resolve_rows, to_plan_skills
+
+# pythonw(无控制台)下 sys.stdout/stderr 是 None,任何 print 都会直接崩。
+# 兜底进内存(不落盘);真启动失败时 main() 会把报错写到 app/_debug/startup-error.log 并弹窗。
+if sys.stdout is None:
+    sys.stdout = io.StringIO()
+if sys.stderr is None:
+    sys.stderr = io.StringIO()
 
 ROOT = Path(__file__).resolve().parent.parent
 STANDALONE_HTML = ROOT / "打开规划器.html"
@@ -201,4 +209,20 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        _rc = main()
+    except BaseException:
+        # pythonw 下没有控制台,报错要落到文件 + 弹窗,否则用户只会看到"点了没反应"
+        _err = traceback.format_exc()
+        sys.stderr.write(_err)
+        if sys.stderr.__class__ is io.StringIO:
+            _log = Path(__file__).resolve().parent / "_debug" / "startup-error.log"
+            _log.parent.mkdir(parents=True, exist_ok=True)
+            _log.write_text(_err, encoding="utf-8")
+            import ctypes
+
+            ctypes.windll.user32.MessageBoxW(
+                None, f"桌面版启动失败,日志已写到:\n{_log}", "赛马娘技能PT规划器", 0x10,
+            )
+        _rc = 1
+    raise SystemExit(_rc)
