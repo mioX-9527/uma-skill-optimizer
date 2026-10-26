@@ -654,6 +654,39 @@ export function optimize(input: OptimizerInput): OptimizerResult {
           .sort((a, b) => b.soloBody - a.soloBody)
       : undefined;
 
+  /**
+   * 「被挤出」到底值不值得换?用户最常问的就是这个:
+   * "为什么不买这个更便宜、单独马身更高的?"
+   * → 直接算一遍"换掉最弱的 N 项试试",把结论写成一句话。
+   * 只对 reason==='outbid' 的候选算,且只看最弱的几项(限制模拟次数)。
+   */
+  const swapHintOf = (c: Cand): string => {
+    // 顺序很关键:先看"换掉它腾出的 PT 够不够",不够的换了也白换。
+    // 差多少 PT 才装得下 → 只有价格 ≥ 这个数的已选项才可能换得进来。
+    const need = costOf(c, chosenSet) - remaining();
+    const byMarginal = chosen.slice().sort(
+      (a, b) => (finalMarginals.get(a.id) ?? 0) - (finalMarginals.get(b.id) ?? 0),
+    );
+    const outs = [
+      ...byMarginal.filter(a => costOf(a, new Set(chosen.filter(x => x !== a).map(x => x.id))) >= need),
+      ...byMarginal,
+    ].slice(0, 12);
+    let best: { out: Cand; delta: number } | null = null;
+    for (const a of outs) {
+      const next = chosen.filter(x => x !== a);
+      const nextIds = new Set(next.map(x => x.id));
+      if (costOf(c, nextIds) > budget - totalSpent(next)) continue;   // 换了也装不下
+      const t = simSearch(combine(skillsOf(next), c.withSkills)).finishTimeSec;
+      const delta = finalSim.finishTimeSec - t;                        // 正 = 换完更快
+      if (best === null || delta > best.delta) best = { out: a, delta };
+    }
+    if (best === null) return '换掉任何一项都装不下它(预算不够)';
+    const d = best.delta * bodyPerSec;
+    return d > 0
+      ? `换掉「${best.out.skill.name}」就能换入它,总收益还能多 ${d.toFixed(2)} 马身`
+      : `换掉「${best.out.skill.name}」换入它后总收益会少 ${Math.abs(d).toFixed(2)} 马身,所以不换`;
+  };
+
   const rejected: RejectedSkill[] = [];
   const chosenSet = new Set(chosen.map(c => c.id));
   for (const c of cands) {
@@ -682,7 +715,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       pt: costOf(c, chosenSet),
       soloBody: c.soloSec * bodyPerSec,
       reason,
-      detail: c.blockedDetail ?? (prereqNote !== '' ? prereqNote : healIdle),
+      detail: c.blockedDetail ?? (prereqNote !== '' ? prereqNote : (healIdle !== '' ? healIdle : (reason === 'outbid' ? swapHintOf(c) : ''))),
       ...(c.evolved !== undefined ? { evolvesTo: c.evolved.name } : {}),
       ...(c.skill.prereq !== undefined && c.soloSec <= eps ? { soloUnavailable: true } : {}),
       missingPt: Math.max(0, costOf(c, chosenSet) - remaining()),
