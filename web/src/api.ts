@@ -170,6 +170,14 @@ export function exportPlan(state: PlanState): string {
           : {}),
       })),
       ...(state.chains.length > 0 ? { chains: state.chains } : {}),
+      // 覆盖关系与现场读到的双圈价也要带走:它们是"这局游戏里真实价格/真实机制"的一部分,
+      // 导出再导入时丢掉,合计就会重新算错(2026-10-27 多算 81pt 就是这么来的)
+      ...(state.supersedes !== undefined && state.supersedes.length > 0
+        ? { supersedes: state.supersedes }
+        : {}),
+      ...(state.circleUp !== undefined && Object.keys(state.circleUp).length > 0
+        ? { circleUp: state.circleUp }
+        : {}),
     },
     null,
     2,
@@ -258,6 +266,15 @@ export function importPlan(text: string): PlanState {
           .map(c => ({ skillId: c.skillId as string, prereqId: c.prereqId as string }))
           .filter(c => skills.some(s => s.id === c.skillId) && skills.some(s => s.id === c.prereqId))
       : [],
+    ...(Array.isArray(p.supersedes)
+      ? {
+          supersedes: (p.supersedes as unknown[])
+            .map(c => c as Record<string, unknown>)
+            .filter(c => typeof c.gold === 'string' && typeof c.lower === 'string')
+            .map(c => ({ gold: c.gold as string, lower: c.lower as string }))
+            .filter(c => skills.some(s => s.id === c.gold) && skills.some(s => s.id === c.lower)),
+        }
+      : {}),
   };
 }
 
