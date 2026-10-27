@@ -54,3 +54,36 @@ export const CIRCLE_BASE: ReadonlyMap<string, string> = (() => {
   for (const [baseId, up] of CIRCLE_UPGRADES) out.set(up.upId, baseId);
   return out;
 })();
+
+// ── 金技能 → 下位白(前置)关系 ─────────────────────────────────
+// 来源 BWIKI「前置技能」查询(tools/fetch-skill-chains.mjs),249 条。
+// 用途:计划里没声明上下位关系时,提示用户"这条链漏了"——漏掉的代价实测 −0.601 马身
+// (不带上位白模拟,金的收益被低估;或白被当成独立候选重复计价)。见审计文档 P9。
+import chainsJson from '../data/skill-chains.json';
+
+export interface SkillChainEntry {
+  readonly skillId: string;
+  readonly skillName: string;
+  readonly prereqId: string;
+  readonly prereqName: string;
+  /** 金技能自己的价(不含前置) */
+  readonly cost: number;
+  /** 金 + 前置的总价 */
+  readonly totalCost: number;
+}
+
+export const SKILL_CHAINS: ReadonlyMap<string, SkillChainEntry> = (() => {
+  const raw = (chainsJson as { chains: readonly { skillId: string; skill: string; prereqId: string; prereq: string; cost: number; totalCost: number }[] }).chains;
+  const out = new Map<string, SkillChainEntry>();
+  for (const c of raw) {
+    out.set(String(c.skillId), {
+      skillId: String(c.skillId),
+      skillName: c.skill,
+      prereqId: String(c.prereqId),
+      prereqName: c.prereq,
+      cost: c.cost,
+      totalCost: c.totalCost,
+    });
+  }
+  return out;
+})();

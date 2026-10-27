@@ -221,6 +221,13 @@ interface Cand {
 const DEFAULT_MAX_SIMS = 30000;
 const DEFAULT_MIN_IMPROVEMENT_SEC = 0.0005;
 
+/**
+ * 必须在结果最前面提醒的 note 前缀。
+ * 用途:这类问题会让**推荐结果本身失真**(不是"顺便说明"),埋在末尾的 note 列表里没人看。
+ * CLI/UI 按这个前缀把它们提到表格前面(见 cli.ts)。
+ */
+export const MUST_CHECK = '【必须核对】';
+
 const TACTIC_LABEL: Record<Tactic, string> = { nige: '逃马', senko: '先行', sashi: '差行', oikomi: '追马' };
 
 /**
@@ -495,6 +502,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         // 审计 P8:此前只是静默回落基准价,OCR 读错时用户毫不知情——
         // 而 ○ 的价格读偏 ±40pt 就能让推荐组合变化(±0.245 马身),必须让人去核对。
         notes.push(
+          `${MUST_CHECK}` +
           `「${up.upName}」的价格是按单圈折扣推算的,但推算数据异常` +
           `(「${base.skill.name}」实付 ${base.pt}pt / 基准 ${up.basePt}pt = ${ratio.toFixed(2)},` +
           `合理区间 0.40~1.05),已改按基准价 ${up.upPt}pt 计 —— 请核对单圈的实际价格是否读对。`,
@@ -663,6 +671,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         for (const c of feasible) if (c.lastMarginal <= eps) c.state = 'no-gain';
         return;
       }
+      // 注:曾试过在这里给「前两名性价比相差 <5%」的模糊区加 A 口径复核(P6),
+      // 实测 9 个小实例 + 3 份真实 plan 上**收益一分没变**、模拟多 8~11%,已回退(见审计 §E.10)。
       best.cand.state = 'chosen';
       chosen.push(best.cand);
       spent = totalSpent(chosen);

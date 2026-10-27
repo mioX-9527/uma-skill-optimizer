@@ -11,8 +11,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Aptitude, Course, Motivation, RunnerConfig, Stats, Tactic } from './engine/index.js';
 import { COURSES, SKILLS, type SkillEntry } from './data.js';
+import { describeMissingChains, findMissingChains } from './chain-check.js';
 import { lookup } from './lookup.js';
-import { optimize } from './optimizer.js';
+import { MUST_CHECK, optimize } from './optimizer.js';
 import { fmtBody, tableRow } from './fmt.js';
 import basePt from './base-pt.json';
 
@@ -192,6 +193,9 @@ function main(): void {
   // 上下位关系:只有当**前置也在候选里**才生效(前置不在=已经买过,显示价里本来就不含它)
   const chainMap = new Map((plan.chains ?? []).map(c => [String(c.skillId), String(c.prereqId)] as const));
   const candIdSet = new Set(resolved.map(r => r.skill.id));
+  // P9:上下位关系漏声明 → 计价与收益都会失真(实测最大 0.6 马身)。只提示、不自动修:
+  // 猜错一条链比漏一条更糟,得由用户/OCR 去确认真实关系。
+  const missingChains = findMissingChains({ candidateIds: [...candIdSet], declared: chainMap });
   // 进化:条件已达成才按进化后算(结束养成时自动进化,不额外花 PT)。
   // **一个技能可能有多条进化路线**,各条单独算一遍单项收益,取最高的进主方案,其余在下面列出对比。
   // 注意 toId 是进化后的技能,它本身不在候选列表里(不用单独买),所以只校验 fromId。
@@ -245,6 +249,12 @@ function main(): void {
   if (estPt.length > 0) {
     console.log(`[注意] 以下技能未提供 pt,使用兜底估算价(游戏内有折扣时请以实际显示价为准):\n  ${estPt.join('、')}`);
   }
+  if (missingChains.length > 0) {
+    console.log(`[注意] ${describeMissingChains(missingChains)}`);
+    for (const m of missingChains) {
+      console.log(`        ${m.skillName} ${m.cost}pt + ${m.prereqName} ${m.totalCost - m.cost}pt = ${m.totalCost}pt(白会被重复计价)`);
+    }
+  }
 
   const result = optimize({
     course,
@@ -255,6 +265,16 @@ function main(): void {
   });
 
   console.log('');
+  // 会让推荐本身失真、必须先核对的问题(如 ◎ 价格来源不可信)—— 放到表格前面,
+  // 别混在末尾那堆说明里(混进去就没人读了)
+  const mustCheck = result.notes.filter(n => n.startsWith(MUST_CHECK));
+  const plainNotes = result.notes.filter(n => !n.startsWith(MUST_CHECK));
+  if (mustCheck.length > 0) {
+    console.log('=== 需要先核对 ===');
+    for (const n of mustCheck) console.log(`  ${n.slice(MUST_CHECK.length)}`);
+    console.log('  ↑ 上面这些问题会让推荐结果失真,照买之前请先确认');
+    console.log('');
+  }
   console.log(`无技能完赛 ${result.baselineSec.toFixed(3)}s → 有技能完赛 ${result.finalSec.toFixed(3)}s`);
   console.log(`推荐购买 ${result.chosen.length} 项,合计 ${result.totalPt}pt(剩余 ${result.remainingPt}pt),总收益 ${fmtBody(result.totalBody)} 马身`);
   console.log(`(单项收益之和 ${fmtBody(result.sumSoloBody)} 马身;差值 = 技能间交互,单项收益仅供对照)`);
@@ -311,9 +331,9 @@ function main(): void {
     }
   }
 
-  if (result.notes.length > 0) {
+  if (plainNotes.length > 0) {
     console.log('');
-    for (const n of result.notes) console.log(`[注意] ${n}`);
+    for (const n of plainNotes) console.log(`[注意] ${n}`);
   }
   console.log(`\n(模拟次数: ${result.simsUsed})`);
 
