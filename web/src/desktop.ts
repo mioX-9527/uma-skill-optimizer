@@ -117,12 +117,18 @@ export function deviceLabel(d: AdbDevice): string {
   return parts.join(' · ');
 }
 
-/** 从设备列表里挑默认选中项:存过的 > 后端推荐 > 第一台在线 */
+/** 从设备列表里挑默认选中项:★赛马娘 > 存过的 > 第一台在线 */
 export function pickDevice(devices: readonly AdbDevice[], remembered: string | null): string | null {
-  if (remembered && devices.some(d => d.serial === remembered && d.state === 'device')) return remembered;
   const online = devices.filter(d => d.state === 'device');
-  const rec = online.find(d => d.isUma) ?? online[0];
-  return rec?.serial ?? null;
+  const recalled = online.find(d => d.serial === remembered);
+  // 存过的那台**只有在它现在仍是赛马娘时才优先**。
+  // 反例(2026-10-27 真机):`127.0.0.1:5555` 昨天是雷电、今天被 MuMu 抢走了(端口冲突),
+  // 如果盲目沿用记住的序列号,就会一直去读另一台模拟器的画面 —— 表现是"读取失败",
+  // 而用户明明看到雷电里开着游戏。
+  if (recalled?.isUma === true) return recalled.serial;
+  const uma = online.find(d => d.isUma);
+  if (uma !== undefined) return uma.serial;
+  return recalled?.serial ?? online[0]?.serial ?? null;
 }
 
 /** 拿到桌面壳的 API;不在壳里就返回 null(单文件版/普通浏览器)。 */
