@@ -165,4 +165,30 @@ describe('买金就送下位:下位不进推荐', () => {
     expect(r.finalSec).toBeCloseTo(goldOnly, 6);
     expect(r.finalSec).not.toBeCloseTo(both, 6);
   });
+
+  /**
+   * 「买金送白」只该在**两个都买**时生效,不能把白永久压制掉。
+   * 用户 2026-10-28 追问:"会不会只考虑学金,不考虑只学白?" —— 这条锁住它。
+   */
+  it('预算买不起金时,白仍必须能单独买(白是独立技能,有自己的收益)', () => {
+    const cands = [{ id: '200154', pt: 284 }, { id: '200152', pt: 81 }];
+    const sup = [{ gold: '200154', lower: '200152' }];
+
+    for (const budget of [81, 150, 283]) {          // 都买不起金(284)
+      const r = optimize({ course, runner, candidates: cands, budget, supersedes: sup });
+      expect(r.chosen.map(c => c.id)).toEqual(['200152']);
+      expect(r.totalPt).toBe(81);
+      expect(r.totalBody).toBeGreaterThan(0);
+    }
+
+    // 够买金时切到金(收益更高),且不会把白也算上
+    const rich = optimize({ course, runner, candidates: cands, budget: 284, supersedes: sup });
+    expect(rich.chosen.map(c => c.id)).toEqual(['200154']);
+    expect(rich.totalPt).toBe(284);
+
+    // 候选池里只有白(金根本不在池里,比如已经拥有) → 白照常可买
+    const whiteOnly = optimize({ course, runner, candidates: [{ id: '200152', pt: 81 }], budget: 81, supersedes: sup });
+    expect(whiteOnly.chosen.map(c => c.id)).toEqual(['200152']);
+    expect(whiteOnly.totalPt).toBe(81);
+  });
 });
