@@ -45,8 +45,12 @@ class SelectOutcome:
 
 
 def _clean(name: str) -> str:
-    """去掉名字尾部的 ○/◎ —— OCR 读不出这两个符号,行名字里只有基名。"""
-    return name.rstrip("○◎").strip()
+    """去掉名字尾部的 ○/◎ —— OCR 读不出这两个符号,行名字里只有基名。
+
+    **顺序很关键**:必须先 strip 空白再剥符号。反过来的话 `" 中山赛场○ "` 的 rstrip("○◎")
+    什么都剥不掉(末尾是空格),结果带着 ○ 去跟行名字对位,永远匹配不上。
+    """
+    return name.strip().rstrip("○◎").strip()
 
 
 def _taps_of(name: str) -> int:
