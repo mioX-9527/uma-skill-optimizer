@@ -48,6 +48,23 @@ export const CIRCLE_UPGRADES: ReadonlyMap<string, CircleUpgrade> = (() => {
   return out;
 })();
 
+// ── 有 ◎、但价格没抓到的那些 ────────────────────────────────────
+// 工具的原则是"不猜价",所以这些升级方向会被跳过(不参与比较)。
+// 但"跳过"和"比过之后更差"在界面上长得一样 —— 用户会以为算法主动放弃了 ◎。
+// 记下来,让 optimize() 能明说"这个方向没算,因为缺价"(见审计 P8 同类问题)。
+export const CIRCLE_UPGRADES_MISSING: ReadonlyMap<string, { readonly upId: string; readonly upName: string }> = (() => {
+  const out = new Map<string, { upId: string; upName: string }>();
+  for (const up of SKILLS) {
+    if (up.cnReleased === false) continue;
+    if (!up.name.endsWith('◎')) continue;
+    const base = SKILLS.find(s => s.name === up.name.slice(0, -1) + '○' && s.cnReleased !== false);
+    if (base === undefined) continue;
+    if (CIRCLE_UPGRADES.has(base.id)) continue;      // 价格齐,已作为正常候选提供
+    out.set(base.id, { upId: up.id, upName: up.name });
+  }
+  return out;
+})();
+
 /** 双圈技能 id → 对应的单圈技能(用于「买了 ◎ 后 ○ 不再重复生效」的替换规则) */
 export const CIRCLE_BASE: ReadonlyMap<string, string> = (() => {
   const out = new Map<string, string>();

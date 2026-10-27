@@ -93,3 +93,26 @@ describe('P9:上下位关系漏声明（结果会让价格失真）', () => {
     expect(r.notes.some(n => n.startsWith(MUST_CHECK))).toBe(false);
   });
 });
+
+describe('缺价的单双圈方向要明说「没算」', () => {
+  // 良场地○(200152):它的 ◎(良场地◎)在 skill-pt 里没有基准价 → 这个方向被跳过。
+  // 用良场地而不是长距离弯道,是因为后者在本测试赛道上"不适配"会被过滤掉,测不到这条提示。
+  const NO_PRICE = '200152';
+
+  it('○ 有 ◎ 兄弟、但缺价格 → 提示"这次没有纳入比较"', () => {
+    const r = optimize({ course, runner, candidates: [{ id: NO_PRICE, pt: 60 }], budget: 900 });
+    const hit = r.notes.filter(n => n.includes('没有纳入比较'));
+    expect(hit).toHaveLength(1);
+    expect(hit[0]).toContain('良场地◎');
+  });
+
+  it('价格齐的方向(标准距离)不报这条', () => {
+    const r = optimize({ course, runner, candidates: [{ id: BASE, pt: 81 }], budget: 900 });
+    expect(r.notes.some(n => n.includes('没有纳入比较'))).toBe(false);
+  });
+
+  it('○ 不在候选里当然不报', () => {
+    const r = optimize({ course, runner, candidates: [{ id: '200561', pt: 120 }], budget: 900 });
+    expect(r.notes.some(n => n.includes('没有纳入比较'))).toBe(false);
+  });
+});

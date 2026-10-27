@@ -1,6 +1,6 @@
 import { BODY_LENGTH_METERS, sampleableSpans, simulate, skillApplicable } from './engine/index.js';
 import type { Course, Region, RestrictionClause, RunnerConfig, SimResult, SimOptions, SkillConfig, SkillRestriction, Tactic } from './engine/index.js';
-import { CIRCLE_BASE, CIRCLE_UPGRADES, SKILLS, type SkillEntry } from './data.js';
+import { CIRCLE_BASE, CIRCLE_UPGRADES, CIRCLE_UPGRADES_MISSING, SKILLS, type SkillEntry } from './data.js';
 import { describeMissingChains, findMissingChains } from './chain-check.js';
 
 const SKILL_INDEX = new Map(SKILLS.map(s => [s.id, s] as const));
@@ -566,6 +566,23 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     if (blocked !== null) {
       c.state = 'blocked';
       c.blockedDetail = blocked === '' ? '装配限制不满足' : blocked;
+    }
+  }
+
+  // ── 有些 ○ 能升到 ◎,但价格数据里没有 → 这个方向没参与比较。必须明说 ──
+  // "没算"和"算过但更差"在界面上长得一样;不明说的话用户会以为算法主动放弃了双圈。
+  {
+    const miss = cands
+      .filter(c => c.state !== 'blocked')
+      .map(c => CIRCLE_UPGRADES_MISSING.get(c.id))
+      .filter((x): x is { upId: string; upName: string } => x !== undefined);
+    if (miss.length > 0) {
+      const list = [...new Set(miss.map(m => `「${m.upName}」`))].join('、');
+      notes.push(
+        `这些技能还能再升一级,但数据库里没有它们的基准价(游戏里买完 ○ 之后才显示 ◎ 的价格),` +
+        `所以这次没有纳入比较:${list}。这不是"算过觉得不值",是压根没算 —— ` +
+        `想算的话,把游戏里 ◎ 的价格填进 data/skill-pt.json 即可。`,
+      );
     }
   }
 
