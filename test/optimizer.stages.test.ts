@@ -60,10 +60,24 @@ describe('optimize 对外行为回归', () => {
   it('stages 全关 = 纯贪心,模拟次数不多于全开', () => {
     const off = optimize({
       course, runner, candidates, budget: 900,
-      stages: { swap: false, spendDown: false, polish: false, groupSwap: false },
+      stages: { swap: false, twoOutSwap: false, spendDown: false, polish: false, groupSwap: false },
     });
     const on = optimize({ course, runner, candidates, budget: 900 });
     expect(off.simsUsed).toBeLessThanOrEqual(on.simsUsed);
+  });
+
+  it('twoOutSwap 关掉时不产生 2换1 说明,开启时预算仍不超支', () => {
+    const off = optimize({ course, runner, candidates, budget: 900, stages: { twoOutSwap: false } });
+    const on = optimize({ course, runner, candidates, budget: 900, stages: { twoOutSwap: true } });
+    expect(off.notes.some(n => n.includes('2换1'))).toBe(false);
+    // 开启后这条 note 只在真的做成了移动时才出现,内容要能让人看懂方向
+    if (on.notes.some(n => n.includes('2换1'))) {
+      expect(on.notes.some(n => n.includes('两个已选技能让位给一个更优的候选'))).toBe(true);
+    }
+    for (const r of [off, on]) {
+      expect(r.totalPt).toBeLessThanOrEqual(900);
+      expect(r.finalSec).toBeLessThanOrEqual(r.baselineSec + 1e-9);
+    }
   });
 
   it('PT 预算是硬约束:各种预算下都不能超支', () => {

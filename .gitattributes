@@ -10,3 +10,7 @@
 *.tsx text eol=lf
 *.json text eol=lf
 *.md text eol=lf
+
+# 黄金快照必须与 CLI 输出**逐字节**相同(CLI 写的是 LF),不许做任何换行转换。
+# 本机 core.autocrlf=true,不加这条会在检出时变成 CRLF,让「diff 应为空」的验收步骤假红。
+tools/bench/golden/** -text

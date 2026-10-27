@@ -284,7 +284,7 @@ function main(): void {
         // ② 复刻的纯贪心(必须能逐字复刻 optimize 的 L0 组合,否则实验不可信)
         const ctx0: Ctx = { ev: ev0, items, all, budget, eps };
         const g = greedyFill(ctx0, []);
-        const l0 = optimize({ course, runner, candidates: chosenPool, budget, stages: { swap: false, spendDown: false, polish: false, groupSwap: false } });
+        const l0 = optimize({ course, runner, candidates: chosenPool, budget, stages: { swap: false, twoOutSwap: false, spendDown: false, polish: false, groupSwap: false } });
         const parity = g.ids.join(',') === l0.chosen.map(c => c.id).join(',');
         console.log(`   复刻校验: 我的贪心 vs optimize L0 = ${parity ? '一致' : `不一致\n     我:${g.ids}\n     L0:${l0.chosen.map(c => c.id)}`}`);
         if (!parity) { console.log('   (复刻不一致 → 本实例的后续数字仅供参考)'); }

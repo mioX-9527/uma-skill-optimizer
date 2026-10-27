@@ -84,6 +84,8 @@ export interface OptimizerInput {
 export interface OptimizerStages {
   /** 1 换 1 交换局部搜索(SWAP_ROUNDS 轮) */
   readonly swap?: boolean;
+  /** 2 出 1 入邻域(两个已选换一个未选;1换1 与多换一都补不了这个方向) */
+  readonly twoOutSwap?: boolean;
   /** 把剩余 PT 花完的收尾补选 */
   readonly spendDown?: boolean;
   /** 期望口径复核(12 点期望下的加入/换出) */
@@ -337,15 +339,36 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // 阶段开关缺省全部开启 —— 不传 stages 时代码路径与历史版本完全一致
   const stages = input.stages ?? {};
   const doSwap = stages.swap ?? true;
+  const doTwoOut = stages.twoOutSwap ?? true;
   const doSpendDown = stages.spendDown ?? true;
   const doPolish = stages.polish ?? true;
   const doGroupSwap = stages.groupSwap ?? true;
 
   let simsUsed = 0;
+  // 搜索共用一个「模拟预算」。超限不再 throw(审计 P4 / 优先级5:此前 maxSims 给小一点就整次
+  // 求解失败,一个结果都拿不到),而是停掉剩余搜索阶段、用已找到的组合走完汇报。
+  // 汇报本身只需 1+已选数 个组合,量很小,超限后放行(searchOpen=false)。
+  let searchOpen = true;
+  const simsExhausted = { sentinel: true };
   const sim = (skills: readonly SkillConfig[], opts?: SimOptions): SimResult => {
-    if (simsUsed >= maxSims) throw new Error(`模拟次数超过上限 ${maxSims}`);
+    if (simsUsed >= maxSims && searchOpen) {
+      searchOpen = false;
+      notes.push(`模拟次数达到上限(${maxSims}),搜索提前收敛,以下结果来自已找到的组合;可用 --max-sims 提高上限获得更优解。`);
+      throw simsExhausted;
+    }
     simsUsed++;
     return opts === undefined ? simulate(course, { ...runner, skills }) : simulate(course, { ...runner, skills }, opts);
+  };
+
+  /** 包一层:某个搜索阶段把模拟预算用完时,剩余阶段整体跳过(汇报不受影响) */
+  const runStage = (fn: () => void): void => {
+    if (!searchOpen) return;
+    try {
+      fn();
+    } catch (e) {
+      if (e === simsExhausted) return;
+      throw e;
+    }
   };
 
   /**
@@ -471,6 +494,15 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       seenIds.add(up.upId);
       const ratio = up.basePt > 0 ? base.pt / up.basePt : 1;
       const sane = ratio >= 0.4 && ratio <= 1.05;          // 折扣只可能更低;超出必是 OCR 读错
+      if (!sane) {
+        // 审计 P8:此前只是静默回落基准价,OCR 读错时用户毫不知情——
+        // 而 ○ 的价格读偏 ±40pt 就能让推荐组合变化(±0.245 马身),必须让人去核对。
+        notes.push(
+          `「${up.upName}」的价格是按单圈折扣推算的,但推算数据异常` +
+          `(「${base.skill.name}」实付 ${base.pt}pt / 基准 ${up.basePt}pt = ${ratio.toFixed(2)},` +
+          `合理区间 0.40~1.05),已改按基准价 ${up.upPt}pt 计 —— 请核对单圈的实际价格是否读对。`,
+        );
+      }
       const upPt = sane ? Math.max(1, Math.round(up.upPt * ratio)) : up.upPt;
       cands.push({
         id: up.upId,
@@ -533,31 +565,33 @@ export function optimize(input: OptimizerInput): OptimizerResult {
 
   // ── 基准与单项收益(已标注 blocked 的候选不参与模拟:其收益按定义恒为 0) ──
   const baseSim = sim([]);
-  for (const c of cands) {
-    if (c.state === 'blocked') continue;
-    if (c.evoCands.length > 0) {
-      // 多条进化方向:**逐个方向都算一遍**,取收益最高的当主方案,其余在结果里列出对比。
-      // (进化是免费的,方向之间互斥 —— 只能变其中一种,所以这里取 max 而不是求和。)
-      let best = c.evoCands[0]!;
-      for (const dir of c.evoCands) {
-        const sec = baseSim.finishTimeSec - simExpected([dir]).finishTimeSec;
-        c.evoSecs.set(dir.id, sec);
-        if (sec > (c.evoSecs.get(best.id) ?? -Infinity)) best = dir;
+  runStage(() => {
+    for (const c of cands) {
+      if (c.state === 'blocked') continue;
+      if (c.evoCands.length > 0) {
+        // 多条进化方向:**逐个方向都算一遍**,取收益最高的当主方案,其余在结果里列出对比。
+        // (进化是免费的,方向之间互斥 —— 只能变其中一种,所以这里取 max 而不是求和。)
+        let best = c.evoCands[0]!;
+        for (const dir of c.evoCands) {
+          const sec = baseSim.finishTimeSec - simExpected([dir]).finishTimeSec;
+          c.evoSecs.set(dir.id, sec);
+          if (sec > (c.evoSecs.get(best.id) ?? -Infinity)) best = dir;
+        }
+        c.evolved = best;
+        c.withSkills = [best];
+        c.soloSec = c.evoSecs.get(best.id)!;
+      } else {
+        // 单独买金 = 连下位白一起买下,但白的效果被金替换掉 —— 收益只算金自己那一份。
+        // (价格仍然是"白价+金价"的总和,由 costOf/totalSpent 保证,与顺序无关。)
+        c.soloSec = baseSim.finishTimeSec - simExpected(c.withSkills).finishTimeSec;
       }
-      c.evolved = best;
-      c.withSkills = [best];
-      c.soloSec = c.evoSecs.get(best.id)!;
-    } else {
-      // 单独买金 = 连下位白一起买下,但白的效果被金替换掉 —— 收益只算金自己那一份。
-      // (价格仍然是"白价+金价"的总和,由 costOf/totalSpent 保证,与顺序无关。)
-      c.soloSec = baseSim.finishTimeSec - simExpected(c.withSkills).finishTimeSec;
+      // 进化前的对照值:只看这个技能本身,不含前置
+      c.soloSecBefore = c.evolved === undefined
+        ? c.soloSec
+        : baseSim.finishTimeSec - simExpected([c.skill]).finishTimeSec;
+      c.lastMarginal = c.soloSec;
     }
-    // 进化前的对照值:只看这个技能本身,不含前置
-    c.soloSecBefore = c.evolved === undefined
-      ? c.soloSec
-      : baseSim.finishTimeSec - simExpected([c.skill]).finishTimeSec;
-    c.lastMarginal = c.soloSec;
-  }
+  });
   // 双圈 ◎ 的"对照值"取单圈 ○ 的单项收益 —— 这样界面上能显示「单圈 0.29 → 双圈 0.43」,
   // 一眼看清双圈是**完整效果**还是**增量**。集内边际那列才是增量(◎−○)。
   for (const c of cands) {
@@ -638,41 +672,43 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     }
   };
 
-  greedyFill();
+  runStage(() => greedyFill());
 
   // ── 交换局部搜索:换出已选、换入未选,收益提升则交换并回填预算 ────────
   const SWAP_ROUNDS = 10;
   const SWAP_POOL = 50;
-  for (let round = 0; round < (doSwap ? SWAP_ROUNDS : 0); round++) {
-    if (chosen.length === 0 || pool().length === 0) break;
-    // 换入候选只看最近边际靠前的一批(池太大时剪枝)
-    const insertCands = pool()
-      .slice()
-      .sort((a, b) => b.lastMarginal - a.lastMarginal)
-      .slice(0, SWAP_POOL);
-    const cur = simSearch(skillsOf(chosen));
-    let best: { out: Cand; in: Cand; gain: number } | null = null;
-    for (const b of insertCands) {
-      for (const a of chosen) {
-        const next = chosen.filter(x => x !== a);
-        const nextIds = new Set(next.map(x => x.id));
-        const inCost = costOf(b, nextIds);
-        // 预算必须**按换完之后的真实总额**判:换出 a 不只腾出它的价,还可能让别的技能变贵
-        // (换掉前置白会让金技能涨回全额),用 `remaining() + a.pt` 会高估可用预算
-        // —— 实测出现 2533 预算花出 2595 的超支。
-        if (totalSpent(next) + inCost > budget) continue;
-        const gain = timeGain(cur, simSearch(combine(skillsOf(next), b.withSkills)));
-        if (gain > eps && (best === null || gain > best.gain)) best = { out: a, in: b, gain };
+  runStage(() => {
+    for (let round = 0; round < (doSwap ? SWAP_ROUNDS : 0); round++) {
+      if (chosen.length === 0 || pool().length === 0) break;
+      // 换入候选只看最近边际靠前的一批(池太大时剪枝)
+      const insertCands = pool()
+        .slice()
+        .sort((a, b) => b.lastMarginal - a.lastMarginal)
+        .slice(0, SWAP_POOL);
+      const cur = simSearch(skillsOf(chosen));
+      let best: { out: Cand; in: Cand; gain: number } | null = null;
+      for (const b of insertCands) {
+        for (const a of chosen) {
+          const next = chosen.filter(x => x !== a);
+          const nextIds = new Set(next.map(x => x.id));
+          const inCost = costOf(b, nextIds);
+          // 预算必须**按换完之后的真实总额**判:换出 a 不只腾出它的价,还可能让别的技能变贵
+          // (换掉前置白会让金技能涨回全额),用 `remaining() + a.pt` 会高估可用预算
+          // —— 实测出现 2533 预算花出 2595 的超支。
+          if (totalSpent(next) + inCost > budget) continue;
+          const gain = timeGain(cur, simSearch(combine(skillsOf(next), b.withSkills)));
+          if (gain > eps && (best === null || gain > best.gain)) best = { out: a, in: b, gain };
+        }
       }
+      if (best === null) break;
+      chosen.splice(chosen.indexOf(best.out), 1, best.in);
+      best.out.state = 'pool';
+      best.in.state = 'chosen';
+      best.out.lastMarginal = 0;
+      spent = totalSpent(chosen);
+      greedyFill();
     }
-    if (best === null) break;
-    chosen.splice(chosen.indexOf(best.out), 1, best.in);
-    best.out.state = 'pool';
-    best.in.state = 'chosen';
-    best.out.lastMarginal = 0;
-    spent = totalSpent(chosen);
-    greedyFill();
-  }
+  });
 
   // ── 花完剩余预算:PT **不结转**,留着就是纯浪费 ──────────────────
   // 主搜索只装"边际 > 阈值(约 0.003 马身)"的技能,收尾常剩几十上百 PT。
@@ -701,7 +737,132 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       }
     }
   };
-  if (doSpendDown) spendDown();
+  runStage(() => {
+    if (doSpendDown) spendDown();
+  });
+
+  // ── 2 出 1 入:两个已选换一个未选(审计 P1)───────────────────────
+  // 1换1 与「多换一」的方向都是"换出更少、换入更多",补不了反向:当两个凑数技能
+  // 各自的边际都不高、但占着预算时,只有"两个一起让位给一个更优的"能跳出。
+  // **必须在 spendDown 之后**:凑数项(○/小边际白)是 spendDown 才装进来的,
+  // 排在它前面时换出对根本还不在组合里(plan_v2 实测踩过)。
+  //
+  // 全枚举(每对换出 × 每个换入 × 1 次模拟)在真实规模(组合 ~13 项、池 ~30)要
+  // 上千次模拟,放不进管线;而且只用口径 S 还会漏掉「S 口径不显正、期望口径为正」
+  // 的移动(plan_v2 实测「良场地○+标准距离○ → 一线胜机」+0.042 马身,只有期望口径
+  // 看得见)。所以分两段:
+  //   ① 期望口径有界复核:换出对 = A 口径 leave-one-out **最弱 3 项**的两两组合
+  //     (plan_v2 的改进对恰好在其中;报告口径本来就要算这组边际),换入 = 可行池里
+  //     solo 前 8 —— 规模有界(≈3×8×12 次模拟,与池大小无关);
+  //   ② 口径 S 兜底扫一遍:① 限制的换出对之外也可能有改进,用
+  //     proxy = solo(换入) − marg(换出a) − marg(换出b) 剪枝后逐个 1 次模拟。
+  //     proxy 是"忽略交互的上界估计",剪掉的是"换入的单独收益还不够抵两个换出的
+  //     边际"这类几乎必然无改进的组合;协同项偶尔漏过就漏过(与改前一样看不见)。
+  // 轮数 = 1:第 2 轮起在 plan_v2 / plan_final / plan_evo2 上 0 兑现,却要多付 ~550 次模拟
+  // (实测 tools/bench/two-out-cost.ts:rounds=3 时 1799 次 / 8.4s,rounds=1 时 1244 次 / 5.7s,
+  //  三份 plan 的最终收益与组合**逐字相同**)。等出现"一次移动后又能再移一次"的实例再加。
+  const TWO_OUT_ROUNDS = 1;
+  const TWO_OUT_WEAK = 3;
+  const TWO_OUT_INS = 8;
+  const TWO_OUT_PROXY_SLACK = 0.02;   // 秒;容忍交互估算误差(口径 S↔A 单组合差最大 ~0.02s)
+  let twoOutMoves = 0;
+  runStage(() => {
+    // 换入池**绕过 greedyFill 的永久 no-gain 剔除**:那是相对"当时的组合"判的,
+    // 换掉两项之后组合变了,被剔的技能可能重新变优(plan_v2 实测:一线胜机在
+    // 贪心阶段被剔,而 2换1 的最优移动恰恰是把它换进来 —— 审计 R1 的活案例)。
+    // 预算可行性由每个移动自己判,不需要提前剔除。用函数而非快照:换出的两项
+    // 每轮回池后也要能被再次换入。
+    const widePool = () => cands.filter(c => c.state !== 'chosen' && c.state !== 'blocked');
+    for (let round = 0; round < (doTwoOut ? TWO_OUT_ROUNDS : 0); round++) {
+      if (chosen.length < 2 || widePool().length === 0) break;
+      type Move = { outs: [Cand, Cand]; in: Cand; gain: number };
+      const applyMove = (m: Move): void => {
+        for (const o of m.outs) {
+          chosen.splice(chosen.indexOf(o), 1);
+          o.state = 'pool';
+          o.lastMarginal = 0;
+        }
+        m.in.state = 'chosen';
+        m.in.filler = false;
+        chosen.push(m.in);
+        spent = totalSpent(chosen);
+        twoOutMoves++;
+        // 注意:**这里不能跑 greedyFill 回填**。本阶段的移动是期望口径(A)确认过的,
+        // 而 greedyFill 按搜索口径(S)装填,S 认为正收益的项在 A 口径下可能是负的
+        // —— 实测 plan_v2 上 A 确认的 +0.042 马身被 S 回填吃掉一半以上。
+        // 腾出的预算交给后面的 polish(A 口径)去补选/校正。
+      };
+
+      // ① 期望口径有界复核:最弱 3 项的两两组合 × solo 前 8 的可行换入
+      // (marg = t(去掉它) − t(现在),正值 = 贡献;升序取最弱)
+      const curA = simExpected(skillsOf(chosen));
+      const weakOuts = chosen
+        .map(c => ({ c, marg: simExpected(skillsOf(chosen.filter(x => x !== c))).finishTimeSec - curA.finishTimeSec }))
+        .sort((a, b) => a.marg - b.marg)
+        .slice(0, TWO_OUT_WEAK)
+        .map(w => w.c);
+      const insBySolo = widePool()
+        .slice()
+        .sort((a, b) => b.soloSec - a.soloSec)
+        .slice(0, TWO_OUT_INS);
+      let bestA: Move | null = null;
+      for (let x = 0; x < weakOuts.length; x++) {
+        for (let y = x + 1; y < weakOuts.length; y++) {
+          const a = weakOuts[x]!;
+          const b = weakOuts[y]!;
+          const next = chosen.filter(c => c !== a && c !== b);
+          const nextIds = new Set(next.map(c => c.id));
+          const restSpent = totalSpent(next);
+          for (const c of insBySolo) {
+            // 与 1换1 同法:按换完之后的真实总额判预算
+            if (restSpent + costOf(c, nextIds) > budget) continue;
+            const gain = timeGain(curA, simExpected(combine(skillsOf(next), c.withSkills)));
+            if (gain > eps && (bestA === null || gain > bestA.gain)) bestA = { outs: [a, b], in: c, gain };
+          }
+        }
+      }
+      if (bestA !== null) {
+        applyMove(bestA);
+        continue;
+      }
+
+      // ② 口径 S 兜底:全池枚举,proxy 剪枝(sMarg 同上,正值 = 贡献)
+      const curS = simSearch(skillsOf(chosen));
+      const sMarg = new Map<string, number>();
+      for (const a of chosen) {
+        sMarg.set(a.id, simSearch(skillsOf(chosen.filter(x => x !== a))).finishTimeSec - curS.finishTimeSec);
+      }
+      let bestS: Move | null = null;
+      for (let x = 0; x < chosen.length; x++) {
+        for (let y = x + 1; y < chosen.length; y++) {
+          const a = chosen[x]!;
+          const b = chosen[y]!;
+          const next = chosen.filter(c => c !== a && c !== b);
+          const nextIds = new Set(next.map(c => c.id));
+          const restSpent = totalSpent(next);
+          for (const c of widePool()) {
+            if (restSpent + costOf(c, nextIds) > budget) continue;
+            // proxy 剪枝:换入的 solo 收益连两个换出的边际都抵不上 → 几乎必然无改进
+            const proxy = c.soloSec - (sMarg.get(a.id) ?? 0) - (sMarg.get(b.id) ?? 0);
+            if (proxy <= -TWO_OUT_PROXY_SLACK) continue;
+            const gain = timeGain(curS, simSearch(combine(skillsOf(next), c.withSkills)));
+            if (gain > eps && (bestS === null || gain > bestS.gain)) bestS = { outs: [a, b], in: c, gain };
+          }
+        }
+      }
+      if (bestS === null) break;
+      // 期望口径确认后才落子:S 口径为正的移动在 A 口径下可能是负的
+      // (plan_v2 实测:S 段把 A 段刚拿到的 +0.042 马身吃掉了一半以上)
+      const restS = chosen.filter(x => x !== bestS.outs[0] && x !== bestS.outs[1]);
+      const curS2 = simExpected(skillsOf(chosen));
+      const tS2 = simExpected(combine(skillsOf(restS), bestS.in.withSkills)).finishTimeSec;
+      if (curS2.finishTimeSec - tS2 <= eps) break;
+      applyMove(bestS);
+    }
+  });
+  if (twoOutMoves > 0) {
+    notes.push(`做了 ${twoOutMoves} 次「2换1」调整:两个已选技能让位给一个更优的候选(1换1/多换一 都补不了这个方向)。`);
+  }
 
   // ── 期望口径复核(把"猜"清掉)────────────────────────────────────
   // 搜索阶段为了速度,对随机取位技能用**区段中点单点**估计(simSearch,1 次模拟);
@@ -709,7 +870,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // 这里用**期望口径**对最终组合再核一遍:加入 / 换出,真变快才动。
   // 用户明确要求:马身必须是模拟出来的,不能是估算。
   let polishMoves = 0;
-  for (let round = 0; round < (doPolish ? 2 : 0); round++) {
+  runStage(() => {
+    for (let round = 0; round < (doPolish ? 2 : 0); round++) {
     const cur = simExpected(skillsOf(chosen));
     const outs = chosen.slice().sort((a, b) => a.lastMarginal - b.lastMarginal).slice(0, 2);
     const ins = pool().slice().sort((a, b) => b.lastMarginal - a.lastMarginal).slice(0, 6);
@@ -740,51 +902,61 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     chosen.push(best.into);
     spent = totalSpent(chosen);
     polishMoves++;
-  }
+    }
+  });
   // ── 多换一:**N 个便宜技能换掉一个贵的**(用户 2026-10-26:白打折高、金打折低时,
   //    可能三个白 ≈ 一个金)。贪心按 马身/PT 排序,天然不会主动"拆金成三个白",
-  //    这里补一次:枚举「换出 1 项 × 换入 1~3 项」,用期望口径实跑比较。
+  //    这里补一次:枚举「换出 1 项 × 换入 1~3 项」。
+  //    审计 P2:全走期望口径时每个组合 12 次模拟,真实规模吃了 ~240 次(约 1/5)却
+  //    13 个实例 0 兑现。改为**口径 S 预筛**(1 次/组合)、只对筛出的最优者用
+  //    期望口径确认 —— 真变快才动,成本降一个量级,能力保留。
   let groupMoves = 0;
-  for (let round = 0; round < (doGroupSwap ? 2 : 0); round++) {
-    const cur = simExpected(skillsOf(chosen));
-    const weakest = chosen.slice().sort((a, b) => a.lastMarginal - b.lastMarginal).slice(0, 2);
-    const priciest = chosen.slice().sort((a, b) => costOf(b, chosenIds()) - costOf(a, chosenIds()))[0];
-    const outs = [...new Set([...weakest, ...(priciest !== undefined ? [priciest] : [])])];
-    const ins = pool().slice().sort((a, b) => b.lastMarginal - a.lastMarginal).slice(0, 5);
-    const subsets: Cand[][] = [];
-    for (let i = 0; i < ins.length; i++) {
-      subsets.push([ins[i]!]);
-      for (let j = i + 1; j < ins.length; j++) {
-        subsets.push([ins[i]!, ins[j]!]);
-        for (let k = j + 1; k < ins.length; k++) subsets.push([ins[i]!, ins[j]!, ins[k]!]);
+  runStage(() => {
+    for (let round = 0; round < (doGroupSwap ? 2 : 0); round++) {
+      const curS = simSearch(skillsOf(chosen));
+      const weakest = chosen.slice().sort((a, b) => a.lastMarginal - b.lastMarginal).slice(0, 2);
+      const priciest = chosen.slice().sort((a, b) => costOf(b, chosenIds()) - costOf(a, chosenIds()))[0];
+      const outs = [...new Set([...weakest, ...(priciest !== undefined ? [priciest] : [])])];
+      const ins = pool().slice().sort((a, b) => b.lastMarginal - a.lastMarginal).slice(0, 5);
+      const subsets: Cand[][] = [];
+      for (let i = 0; i < ins.length; i++) {
+        subsets.push([ins[i]!]);
+        for (let j = i + 1; j < ins.length; j++) {
+          subsets.push([ins[i]!, ins[j]!]);
+          for (let k = j + 1; k < ins.length; k++) subsets.push([ins[i]!, ins[j]!, ins[k]!]);
+        }
       }
-    }
-    let best: { out: Cand; group: Cand[]; delta: number } | null = null;
-    for (const a of outs) {
-      const rest = chosen.filter(x => x !== a);
-      for (const group of subsets) {
-        const set = [...rest, ...group];
-        if (totalSpent(set) > budget) continue;
-        const t = simExpected(combine(skillsOf(rest), ...group.map(g => g.withSkills))).finishTimeSec;
-        const delta = cur.finishTimeSec - t;
-        if (delta > eps && (best === null || delta > best.delta)) best = { out: a, group, delta };
+      let best: { out: Cand; group: Cand[]; sGain: number } | null = null;
+      for (const a of outs) {
+        const rest = chosen.filter(x => x !== a);
+        for (const group of subsets) {
+          const set = [...rest, ...group];
+          if (totalSpent(set) > budget) continue;
+          const sGain = timeGain(curS, simSearch(combine(skillsOf(rest), ...group.map(g => g.withSkills))));
+          if (sGain > eps && (best === null || sGain > best.sGain)) best = { out: a, group, sGain };
+        }
       }
+      if (best === null) break;
+      // 期望口径确认:筛出来的最优移动要真变快才落子(搜索口径可能有 ~7% 偏差)
+      const rest = chosen.filter(x => x !== best.out);
+      const curA = simExpected(skillsOf(chosen));
+      const tA = simExpected(combine(skillsOf(rest), ...best.group.map(g => g.withSkills))).finishTimeSec;
+      if (curA.finishTimeSec - tA <= eps) break;
+      chosen.splice(chosen.indexOf(best.out), 1);
+      best.out.state = 'pool';
+      best.out.lastMarginal = 0;
+      for (const g of best.group) {
+        g.state = 'chosen';
+        g.filler = false;
+        chosen.push(g);
+      }
+      spent = totalSpent(chosen);
+      groupMoves++;
     }
-    if (best === null) break;
-    chosen.splice(chosen.indexOf(best.out), 1);
-    best.out.state = 'pool';
-    best.out.lastMarginal = 0;
-    for (const g of best.group) {
-      g.state = 'chosen';
-      g.filler = false;
-      chosen.push(g);
-    }
-    spent = totalSpent(chosen);
-    groupMoves++;
-  }
+  });
   if (groupMoves > 0) {
     notes.push(
-      `做了 ${groupMoves} 次「多换一」调整:用 1~3 个更便宜的技能替换掉更贵的一项(按期望口径实跑比较)。`,
+      `做了 ${groupMoves} 次「多换一」调整:用 1~3 个更便宜的技能替换掉更贵的一项(搜索口径预筛、期望口径确认后落子)。`,
     );
   }
   const fillerCount = chosen.filter(c => c.filler === true).length;
@@ -822,14 +994,18 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       ...byMarginal.filter(a => costOf(a, new Set(chosen.filter(x => x !== a).map(x => x.id))) >= need),
       ...byMarginal,
     ].slice(0, 12);
-    let best: { out: Cand; delta: number; with?: Cand } | null = null;
+    // 审计 P2 / 优先级3:此前 1换1 用搜索口径、2换1 用期望口径,都和 finalSim(期望口径)直接
+    // 相减 —— 两口径单组合差平均 0.04、最大 0.196 马身,用户看到的建议可能失真。
+    // 统一为:**口径 S 筛出最优移动(1 次/组合,顺带把 2换1 的开销从 36×12 降下来),
+    // 再用期望口径确认这一个移动**,显示的数字与 finalSim 同口径。
+    const curS = simSearch(skillsOf(chosen));
+    let bestS: { out: Cand; with?: Cand; sGain: number } | null = null;
     for (const a of outs) {
       const next = chosen.filter(x => x !== a);
       const nextIds = new Set(next.map(x => x.id));
       if (costOf(c, nextIds) > budget - totalSpent(next)) continue;   // 换了也装不下
-      const t = simSearch(combine(skillsOf(next), c.withSkills)).finishTimeSec;
-      const delta = finalSim.finishTimeSec - t;                        // 正 = 换完更快
-      if (best === null || delta > best.delta) best = { out: a, delta };
+      const sGain = curS.finishTimeSec - simSearch(combine(skillsOf(next), c.withSkills)).finishTimeSec;
+      if (bestS === null || sGain > bestS.sGain) bestS = { out: a, sGain };
     }
     // 2 换 1:用户常问「追击+十万火急 换掉内侧体验行不行」——单独看每一项都被挤掉,
     // 但两项合起来可能更划算。这里顺带试一次(搭档只取池里边际最高的 3 个)。
@@ -840,16 +1016,24 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         const nextIds = new Set(next.map(x => x.id));
         const cost = costOf(c, nextIds) + costOf(d, new Set([...nextIds, c.id]));
         if (totalSpent(next) + cost > budget) continue;
-        const t = simExpected(combine(skillsOf(next), c.withSkills, d.withSkills)).finishTimeSec;
-        const delta = finalSim.finishTimeSec - t;
-        if (delta > eps && (best === null || delta > best.delta)) best = { out: a, delta, with: d };
+        const sGain = curS.finishTimeSec
+          - simSearch(combine(skillsOf(next), c.withSkills, d.withSkills)).finishTimeSec;
+        if (bestS === null || sGain > bestS.sGain) bestS = { out: a, with: d, sGain };
       }
     }
-    if (best === null) return '换掉任何一项都装不下它(预算不够)';
-    const d = best.delta * bodyPerSec;
-    const outName = best.with !== undefined
-      ? `「${best.out.skill.name}」换成「${c.skill.name}+${best.with.skill.name}」`
-      : `「${best.out.skill.name}」换成它`;
+    if (bestS === null) return '换掉任何一项都装不下它(预算不够)';
+    // 期望口径确认:显示给用户的差值必须与 finalSim 同口径
+    const next = chosen.filter(x => x !== bestS.out);
+    const t = simExpected(
+      bestS.with === undefined
+        ? combine(skillsOf(next), c.withSkills)
+        : combine(skillsOf(next), c.withSkills, bestS.with.withSkills),
+    ).finishTimeSec;
+    const delta = finalSim.finishTimeSec - t;                          // 正 = 换完更快
+    const d = delta * bodyPerSec;
+    const outName = bestS.with !== undefined
+      ? `「${bestS.out.skill.name}」换成「${c.skill.name}+${bestS.with.skill.name}」`
+      : `「${bestS.out.skill.name}」换成它`;
     return d > 0
       ? `${outName},总收益还能多 ${d.toFixed(2)} 马身`
       : `${outName},总收益会少 ${Math.abs(d).toFixed(2)} 马身,所以不换`;
@@ -926,7 +1110,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       `面板越高同类加成越挤,所以第二个同类绿技能的边际通常明显低于第一个。`,
     );
   }
-  if (simsUsed >= maxSims * 0.98) {
+  // 真撞上限时 sim() 的哨兵已经写过一条更明确的 note,这里只报"差点撞到"的情形
+  if (searchOpen && simsUsed >= maxSims * 0.98) {
     notes.push(`已接近模拟次数上限(${simsUsed}/${maxSims}),搜索提前收敛;可用 --max-sims 提高上限获得更优解。`);
   }
   if (impliedCount > 0) {
