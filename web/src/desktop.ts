@@ -56,6 +56,8 @@ export interface CaptureResponse {
   readonly evolutions?: readonly EvolutionRow[];
   /** 现场从游戏里读到的双圈实付价:{单圈技能 id: 双圈还需点数} */
   readonly circle_up?: Record<string, number>;
+  /** 读取时购物车里有未提交的选择 → 行内价格是「还需多少」,整份数据偏低 */
+  readonly cart_dirty?: boolean;
   readonly pt_balance?: number | null;
   readonly pages?: number;
   readonly frames?: number;
@@ -236,6 +238,12 @@ export function captureSummary(resp: CaptureResponse): string[] {
   if (!resp.ok) return [resp.error ?? "读取失败"];
   const out: string[] = [];
   out.push(`读到 ${resp.skills?.length ?? 0} 个技能(${resp.pages ?? 0} 屏 / ${resp.frames ?? 0} 帧)`);
+  if (resp.cart_dirty === true) {
+    // 加购之后游戏里那一行显示的是「还需多少」,不是技能原价 —— 整份数据会系统性偏低,
+    // 而且不会报错。必须在最醒目的位置说明,否则用户会拿错误的价去算。
+    out.push('⚠ 读取时购物车里还有没提交的选择:这时的价格是「还需多少」而不是技能原价,'
+      + '合计会偏小。请点游戏里的「重置」清空购物车,再读一次。');
+  }
   if (resp.pt_balance) out.push(`PT 余额 ${resp.pt_balance}`);
   if (resp.stop_reason) out.push(`停止原因:${resp.stop_reason}`);
   for (const n of resp.needs_confirm ?? []) out.push(`需确认:${n.row}`);

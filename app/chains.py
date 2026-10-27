@@ -60,44 +60,52 @@ def pairs_within(ids: set[str], chains: dict[str, dict] | None = None) -> list[t
 
 
 def supersede_pairs(ids: set[str], chains: dict[str, dict] | None = None) -> list[tuple[str, str]]:
-    """挑出「金技能在、它的某个下位也在」的覆盖关系:`(金, 下位)`。
+    """挑出「上位在、它的某个下位也在」的覆盖关系:`(上位, 下位)`,**每一级都给一对**。
 
-    **为什么需要它(2026-10-27 实测)**:链可能是三级的
-    `良场地○ → 良场地◎ → 良场地恶煞`,而列表里**只显示当前可买的下一级** ——
-    这局 `良场地○` 和 `良场地恶煞` 在列表里,中间的 `良场地◎` 不在。
-    `pairs_within` 按直接前置配,恶煞永远配不上,于是推荐里同时留下
-    「恶煞 284」和它的下位「良场地○ 81」:游戏里勾了恶煞之后,良场地○ 那一行
-    变成「已获得」、加号点不动,合计因此多算 81pt(桌面显示剩 1pt,游戏实际剩 81pt)。
+    两条来由,都是真机踩出来的:
 
-    沿 `prereqId` 一路往上走,取**第一个在候选池里的祖先**。这个判断是安全的:
-    祖先在列表里说明它没买过 → 按购买顺序它下面那些中间层也一定没买过 →
-    买金技能的显示价必然含全部前置,下位不必单独买。
+    1. 金技能覆盖下位(2026-10-27):链可能是三级的
+       `良场地○ → 良场地◎ → 良场地恶煞`,而列表里**只显示当前可买的下一级** ——
+       这局 `良场地○` 和 `良场地恶煞` 在列表里,中间的 `良场地◎` 不在。
+       `pairs_within` 按直接前置配,恶煞永远配不上,于是推荐里同时留下
+       「恶煞 284」和它的下位「良场地○ 81」:游戏里勾了恶煞之后,良场地○ 那一行
+       变成「已获得」、加号点不动,合计因此多算 81pt。
+
+    2. **只给"第一个"祖先不够**(2026-10-28 用户指出):`○ → ◎ → 金` 本质是
+       同一格"加钱一步步升上来"的三级,金在最顶端,覆盖下面**每一级**。
+       上一版只覆盖第一个在池里的祖先,于是池里同时有 ○ 和 ◎ 时(现场读到双圈价
+       就是这种情况)只覆盖了 ◎、○ 漏掉 —— 金 + ○ 又一起生效,
+       实测 56.5092s vs 只装金 56.5253s,收益虚高 0.16 马身。
+       所以这里返回**全部**在池祖先。
+
+    这个判断本身是安全的:祖先在列表里说明它没买过 → 按购买顺序它下面那些中间层
+    也一定没买过 → 上位技能的显示价必然含全部前置,下位不必单独买。
     """
     cmap = chains if chains is not None else load_chains()
     out: list[tuple[str, str]] = []
     for gid in ids:
-        pid = _uppermost_prereq_in(gid, cmap, ids)
-        if pid is not None:
+        for pid in _prereqs_in(gid, cmap, ids):
             out.append((gid, pid))
     return out
 
 
-def _uppermost_prereq_in(gid: str, cmap: dict[str, dict], ids: set[str],
-                         limit: int = 8) -> str | None:
-    """沿前置链往上找第一个在候选池里的祖先;找不到返回 None。
+def _prereqs_in(gid: str, cmap: dict[str, dict], ids: set[str],
+                limit: int = 8) -> list[str]:
+    """沿前置链一路往上,返回**所有**在候选池里的祖先(由近及远)。
 
     `limit` 是防呆:数据若有环(不该有)也不会转死循环。
     """
+    out: list[str] = []
     cur = cmap.get(gid)
     seen: set[str] = {gid}
     for _ in range(limit):
         if cur is None:
-            return None
+            break
         pid = str(cur.get("prereqId") or "")
         if not pid or pid in seen:
-            return None
+            break
         if pid in ids:
-            return pid
+            out.append(pid)
         seen.add(pid)
         cur = cmap.get(pid)
-    return None
+    return out

@@ -23,8 +23,8 @@ NEEDLES = ("btn-pick", "在游戏里勾选这")
 PY_NEEDLES: dict[str, tuple[str, ...]] = {
     "app.select": ("circle_family", "_targets_of", "_tap_n_times", "select_in_shop", "_MAX_STEP"),
     "app.adb": ("local_ips", "android_id", "_is_private_ipv4", "dedupe_devices"),
-    "app.capture": ("cart_state", "cart_state_from_lum"),
-    "app.chains": ("supersede_pairs", "_uppermost_prereq_in"),
+    "app.capture": ("cart_state", "cart_state_from_lum", "cart_dirty"),
+    "app.chains": ("supersede_pairs", "_prereqs_in"),
 }
 
 

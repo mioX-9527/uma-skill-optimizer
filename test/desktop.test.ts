@@ -54,6 +54,17 @@ describe('captureSummary', () => {
     expect(text).toContain('到底了');
     expect(text).toContain('需确认');
   });
+
+  it('购物车不干净时立刻警告:读到的价是「还需」不是原价', () => {
+    const lines = captureSummary({
+      ok: true, skills: [{ id: 'a', name: 'A', pt: 90 }], pt_balance: 2761, cart_dirty: true,
+    });
+    const text = lines.join('\n');
+    expect(text).toContain('还需');
+    expect(text).toContain('重置');
+    // 干净的读取不该冒出这条(否则用户会以为坏了)
+    expect(captureSummary({ ok: true, skills: [], cart_dirty: false }).join('\n')).not.toContain('重置');
+  });
 });
 
 /**

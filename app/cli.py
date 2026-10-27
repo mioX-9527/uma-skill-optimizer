@@ -203,6 +203,9 @@ def cmd_capture(args: argparse.Namespace) -> int:
     matches = resolve_rows(result.rows, index)
     skills = to_plan_skills(matches)
     _say(f"\n共 {result.pages} 屏 / {result.frames} 帧,停因:{result.stop_reason}")
+    if result.cart_dirty:
+        _say("[!] 读取时购物车里还有没提交的选择:这时的价格是「还需多少」而不是技能原价,"
+             "合计会偏小。请点游戏里的「重置」清空购物车后再读一次。")
     if result.pt_balance is not None:
         _say(f"PT 余额(OCR):{result.pt_balance}")
     _say(f"技能 {len(matches)} 行,可进候选 {len(skills)} 条,"

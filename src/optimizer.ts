@@ -1,6 +1,6 @@
 import { BODY_LENGTH_METERS, sampleableSpans, simulate, skillApplicable } from './engine/index.js';
 import type { Course, Region, RestrictionClause, RunnerConfig, SimResult, SimOptions, SkillConfig, SkillRestriction, Tactic } from './engine/index.js';
-import { CIRCLE_BASE, CIRCLE_UPGRADES, CIRCLE_UPGRADES_MISSING, SKILLS, type SkillEntry } from './data.js';
+import { CIRCLE_BASE, CIRCLE_UPGRADES, CIRCLE_UPGRADES_MISSING, SKILL_CHAINS, SKILLS, type SkillEntry } from './data.js';
 import { describeMissingChains, findMissingChains } from './chain-check.js';
 
 const SKILL_INDEX = new Map(SKILLS.map(s => [s.id, s] as const));
@@ -678,17 +678,76 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // 0.161 马身),收益直接虚高。2026-10-27 用户就问到了这点,而当时 chosen 里确实
   // 同时留着这两项、finalSec 也是按叠加算的 —— 因为删白那段只认 `requires`,
   // 而三级链(良场地○→良场地◎→良场地恶煞)的直接前置不在候选里,requires 是空的。
-  const supersedePairs: [string, string][] = [];
-  for (const c of cands) {
-    if (c.circleChain === true) continue;
-    for (const r of c.requires) supersedePairs.push([c.id, r]);
-  }
-  for (const s of input.supersedes ?? []) supersedePairs.push([s.gold, s.lower]);
+  //
+  // ⚠ 覆盖关系必须展开到**整条链**:`○ → ◎ → 金` 本质是同一格"加钱一步步升上来"的
+  //   三级(用户 2026-10-28 点明的),金在最顶端、覆盖下面每一级。
+  //   只覆盖"第一个在池里的祖先"会漏:池里同时有 ○ 和 ◎ 时(现场读到双圈价就是这样)
+  //   只删了 ◎,○ 留了下来 —— 金 + ○ 又一起生效,实测 56.5092s vs 只装金 56.5253s,
+  //   收益虚高 0.16 马身、合计多算 81pt。所以这里做传递闭包。
+  const deeperOf = (id: string): string[] => {
+    const out: string[] = [];
+    const cb = CIRCLE_BASE.get(id);
+    if (cb !== undefined) out.push(cb);                 // ◎ → ○
+    // 数据里的双圈价不全(CIRCLE_BASE 只收有价的),所以还要走一遍技能链:
+    // 良场地○→良场地◎ 这条在 CIRCLE_BASE 里就没有,不查链的话 ◎ 的下位会漏。
+    const ch = SKILL_CHAINS.get(id)?.prereqId;
+    if (ch !== undefined && ch !== '') out.push(ch);
+    const c = cands.find(x => x.id === id);
+    if (c !== undefined) for (const r of c.requires) if (r !== id) out.push(r);
+    return out;
+  };
+  const supersedePairs: [string, string][] = (() => {
+    const out: [string, string][] = [];
+    const seen = new Set<string>();
+    const push = (g: string, l: string) => {
+      if (g === l) return;
+      const k = `${g}>${l}`;
+      if (seen.has(k)) return;
+      seen.add(k);
+      out.push([g, l]);
+    };
+    // ○/◎ 之间**不是**"买上位送下位":游戏里是同一格点两下、两笔钱。
+    // 所以凡是 `gold` 本身是双圈候选的配对一律不收 —— 它只做"效果不叠加"(下面 combine 里另处理),
+    // 不能进汇报层的"不用单独买"名单,否则合计会少算单圈那一份。
+    const circleIds = new Set(cands.filter(c => c.circleChain === true).map(c => c.id));
+    const poolIds = new Set(cands.map(c => c.id));
+    for (const c of cands) {
+      if (c.circleChain === true) continue;
+      for (const r of c.requires) push(c.id, r);
+      // 候选的 `requires` 只有"直接前置在池里"才有值,三级链(中间级不在池里)是空的。
+      // 所以再沿技能链一路往上找**所有在池的祖先** —— 这样即便调用方没传
+      // supersedes(旧 plan 文件 / 网页里手填的候选),也不会把下位又买一遍。
+      let up = SKILL_CHAINS.get(c.id)?.prereqId;
+      const visited = new Set<string>([c.id]);
+      for (let i = 0; up !== undefined && up !== '' && !visited.has(up) && i < 8; i++) {
+        if (poolIds.has(up)) push(c.id, up);
+        visited.add(up);
+        up = SKILL_CHAINS.get(up)?.prereqId;
+      }
+    }
+    for (const s of input.supersedes ?? []) {
+      if (circleIds.has(s.gold)) continue;
+      push(s.gold, s.lower);
+    }
+    for (let i = 0; i < out.length; i++) {
+      const [g, l] = out[i]!;
+      for (const d of deeperOf(l)) push(g, d);          // 被覆盖的那一级还有更下位 → 一起覆盖
+    }
+    return out;
+  })();
 
   const combine = (...groups: readonly (readonly SkillConfig[])[]): SkillConfig[] => {
     const m = new Map<string, SkillConfig>();
     for (const g of groups) for (const s of g) m.set(s.id, s);
-    // 单双圈:◎ 顶掉 ○
+    // 单双圈:◎ 顶掉 ○(同格替换,不叠加)。
+    // 不能只靠 CIRCLE_BASE 那张静态表:它是"有基准价的双圈"才有,而现场读价生成的
+    // 双圈(CIRCLE_UPGRADES_MISSING + circleUpOverride)不在表里 —— 漏掉就是 ○/◎ 叠加,
+    // 实测 良场地○+良场地◎ 同装算出 0.413 马身(实际 ◎ 只有 0.254)。
+    for (const c of cands) {
+      if (c.circleChain === true && c.baseId !== undefined && m.has(c.id) && m.has(c.baseId)) {
+        m.delete(c.baseId);
+      }
+    }
     for (const [upId, baseId] of CIRCLE_BASE) {
       if (m.has(upId) && m.has(baseId)) m.delete(baseId);
     }
@@ -1180,23 +1239,27 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   // 它是买金就送的东西,不是"还要单独买的前置"。留着有两个后果:
   //   ① 用户以为要买 N 项,照着列表去点,点到最后几行点不动;
   //   ② 合计多算一份下位价(实测这局多算 81pt:桌面显示「剩 1pt」,游戏实际剩 81pt)。
-  // ○/◎ 不在此列:那是同一格点两下、两笔钱,确实要买两次。
+  // ○/◎ 不在此列:那是同一格点两下、两笔钱,确实要买两次 —— 所以 supersedePairs
+  // 里不会有 (◎, ○) 这种对(构造时跳过了 circleChain 的 requires)。
   const supersededBy = new Map<string, string>();   // 下位 id → 覆盖它的上位技能名
-  for (const g of chosen) {
-    if (g.circleChain === true) continue;
-    for (const r of g.requires) {
-      if (chosenSet.has(r) && !supersededBy.has(r)) supersededBy.set(r, g.skill.name);
-    }
-  }
-  // 三级链(中间层不在可买列表里)靠 `supersedes` 补上,见 PlanInput.supersedes
-  for (const s of input.supersedes ?? []) {
-    if (chosenSet.has(s.gold) && chosenSet.has(s.lower) && !supersededBy.has(s.lower)) {
-      supersededBy.set(s.lower, SKILL_INDEX.get(s.gold)?.name ?? s.gold);
-    }
+  for (const [goldId, lowerId] of supersedePairs) {
+    if (!chosenSet.has(goldId) || !chosenSet.has(lowerId) || supersededBy.has(lowerId)) continue;
+    const goldName = cands.find(c => c.id === goldId)?.skill.name
+      ?? SKILL_INDEX.get(goldId)?.name ?? goldId;
+    supersededBy.set(lowerId, goldName);
   }
   const payable = chosen.filter(c => !supersededBy.has(c.id));
+  const payableSet = new Set(payable.map(c => c.id));
   /** 这一项实际从游戏里扣多少:前置**真被单独买了**才抵差额,被上位覆盖掉的抵不了 */
   const paidOf = (c: Cand): number => {
+    if (c.circleChain === true) {
+      // ◎ 的列表价是"从单圈升级还要多少";单圈没进 payable(没选它 / 已被金覆盖)时,
+      // 游戏里仍要先点单圈才能付这笔差额 → 合计必须把单圈的价算进来。
+      // 漏了这一步,只选 ◎ 时会显示"合计 30",而实际要付 111。
+      const base = c.baseId !== undefined ? cands.find(x => x.id === c.baseId) : undefined;
+      const baseBilled = base !== undefined && payableSet.has(base.id);
+      return c.pt + (base !== undefined && !baseBilled ? paidOf(base) : 0);
+    }
     const prereqPaid = c.requires.length > 0
       && c.requires.every(r => chosenSet.has(r) && !supersededBy.has(r));
     return prereqPaid ? Math.max(0, c.pt - c.requiresPt) : c.pt;

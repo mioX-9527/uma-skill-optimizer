@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from app.chains import _uppermost_prereq_in, pairs_within, supersede_pairs  # noqa: E402
+from app.chains import _prereqs_in, pairs_within, supersede_pairs  # noqa: E402
 
 FAILS: list[str] = []
 
@@ -64,12 +64,23 @@ def main() -> int:
     got4 = dict(supersede_pairs({"200154"}, CHAINS))
     check("只有金、没有下位时不产生覆盖", got4 == {}, str(got4))
 
-    print("_uppermost_prereq_in(边界)")
-    check("找不到返回 None", _uppermost_prereq_in("999999", CHAINS, {"999999"}) is None)
-    check("金自己不在链表里返回 None", _uppermost_prereq_in("888888", CHAINS, {"200152"}) is None)
+    # 2026-10-28 用户指出:○ → ◎ → 金 是同一格"加钱一步步升级",金要覆盖**每一级**。
+    # 只覆盖"第一个祖先"时,池里同时有 ○ 和 ◎ 就只删 ◎、漏掉 ○ → 金 + ○ 又叠加
+    # (实测 56.5092s vs 只装金 56.5253s,收益虚高 0.16 马身、合计多算 81pt)。
+    print("supersede_pairs(整条链,不只最近一级)")
+    full = set(supersede_pairs({"200154", "200151", "200152"}, CHAINS))
+    check("三级全在池里时,金覆盖 ◎ 和 ○,◎ 也覆盖 ○",
+          full == {("200154", "200151"), ("200154", "200152"), ("200151", "200152")}, str(full))
+    check("◎ 也覆盖 ○(同格升级)", set(supersede_pairs({"200151", "200152"}, CHAINS))
+          == {("200151", "200152")})
+
+    print("_prereqs_in(边界)")
+    check("找不到返回空", _prereqs_in("999999", CHAINS, {"999999"}) == [])
+    check("不在链表里返回空", _prereqs_in("888888", CHAINS, {"200152"}) == [])
+    check("由近及远", _prereqs_in("200154", CHAINS, {"200152", "200151"}) == ["200151", "200152"])
     # 数据若出现环,不能死循环(limit 兜底)
     cyc = {"A": {"prereqId": "B"}, "B": {"prereqId": "A"}}
-    check("环不会转死", _uppermost_prereq_in("A", cyc, {"A"}) is None)
+    check("环不会转死", _prereqs_in("A", cyc, {"A", "B"}) == ["B"])
 
     print()
     if FAILS:

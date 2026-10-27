@@ -36,6 +36,10 @@ class CaptureResult:
     unread: list[str] = field(default_factory=list)
     # 现场读到的双圈价:{单圈基名(不含 ○): 双圈还需点数}。见 circle.py
     circle_pt: dict[str, int] = field(default_factory=dict)
+    # 读取时购物车里有未提交的选择(2026-10-28 实测踩到)
+    # 游戏里加购之后,行内价格显示的是「还需多少」而不是技能原价 —— 整份结果会系统性偏低,
+    # 而且**不会报错**,用户看到的就是"合计怎么对不上游戏"。见 cart_state 的亮度判据。
+    cart_dirty: bool = False
 
 
 # 一次读取最多现场补几个双圈价(每个约 2.5 秒,多了用户会等烦)
@@ -239,9 +243,18 @@ def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
     if progress:
         progress("已确认停在技能列表(竖屏)")
     result = CaptureResult()
+    # 先看一眼购物车干不干净:加购后行内价格变成「还需」,读出来的整份数据都会偏小。
+    # 不拦(用户可能是故意先勾几项再读),但一定要如实告诉调用方。
+    cart_clean, cart_lum = cart_state(adb.screencap(), profile)
+    result.cart_dirty = cart_clean is False
     steps = scroll_to_top(adb, meta, profile, ocr, progress)
     if progress:
         progress(f"已到列表顶部(fling {steps} 次)")
+        if result.cart_dirty:
+            progress(
+                f"⚠ 购物车里还有没提交的选择(底部「确定」亮着,亮度 {cart_lum:.0f}):"
+                f"现在读到的价格是「还需多少」,不是技能原价 —— 先点游戏里的「重置」再读一次。"
+            )
 
     cfg = profile.scroll["to_bottom"]
     limit = max_pages if max_pages is not None else int(cfg["max_steps"])

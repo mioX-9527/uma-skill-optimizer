@@ -167,6 +167,7 @@ class Bridge:
                 "supersedes": [{"gold": g, "lower": l} for g, l in supersedes],
                 "evolutions": evolutions,
                 "circle_up": circle_up,
+                "cart_dirty": result.cart_dirty,
                 "pt_balance": result.pt_balance,
                 "pages": result.pages,
                 "frames": result.frames,
