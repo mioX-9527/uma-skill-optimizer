@@ -177,7 +177,13 @@ function main(): void {
   }
   const budget = typeof args.budget === 'string' ? Number(args.budget) : plan.budget;
   if (!Number.isFinite(budget) || budget < 0) fail('预算(--budget 或 budget)必须是非负数字');
-  const maxSims = typeof args.maxSims === 'string' ? Number(args.maxSims) : undefined;
+  // parseArgs 不做命名转换,键是原样的 'max-sims';此处历史上读过 args.maxSims,
+  // 与实际键名不符 —— 这个开关因此从未生效过(2026-10-27 顺 优先级5 / 审计 P4 修复)
+  const maxSimsRaw = args['max-sims'] ?? args.maxSims;
+  const maxSims = typeof maxSimsRaw === 'string' ? Number(maxSimsRaw) : undefined;
+  if (maxSims !== undefined && (!Number.isFinite(maxSims) || maxSims < 1)) {
+    fail(`--max-sims 必须是 ≥1 的数字(收到 ${String(maxSimsRaw)})`);
+  }
 
   const course = resolveCourse(plan.course);
   const runner = validateRunner(plan.runner);
