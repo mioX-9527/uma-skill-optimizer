@@ -50,6 +50,8 @@ export interface CaptureResponse {
   readonly skills?: readonly CapturedSkill[];
   /** 下位技能关系(金技能的列表价已含前置价),两端都在 skills 里才有效 */
   readonly chains?: readonly { skillId: string; prereqId: string }[];
+  /** 「买金就送下位」的覆盖关系(沿链传递闭包):下位不该进推荐、也不该计价 */
+  readonly supersedes?: readonly { gold: string; lower: string }[];
   /** 进化关系;conditionMet=true 的会参与择优 */
   readonly evolutions?: readonly EvolutionRow[];
   /** 现场从游戏里读到的双圈实付价:{单圈技能 id: 双圈还需点数} */
@@ -183,13 +185,17 @@ export function applyCapture<T>(
   current: { skills: readonly T[]; budget: number },
   resp: CaptureResponse,
   toSkill: (c: CapturedSkill) => T | null,
-): { skills: T[]; budget: number; dropped: number; circleUp?: Record<string, number> } {
+): { skills: T[]; budget: number; dropped: number; circleUp?: Record<string, number>;
+     supersedes?: readonly { gold: string; lower: string }[] } {
   const converted = (resp.skills ?? []).map(toSkill);
   const skills = converted.filter((s): s is T => s !== null);
   return {
     skills,
     ...(resp.circle_up !== undefined && Object.keys(resp.circle_up).length > 0
       ? { circleUp: resp.circle_up }
+      : {}),
+    ...(resp.supersedes !== undefined && resp.supersedes.length > 0
+      ? { supersedes: resp.supersedes }
       : {}),
     // pt_balance 可能是 0(没识别到),此时保留用户手填的预算
     budget: resp.pt_balance && resp.pt_balance > 0 ? resp.pt_balance : current.budget,

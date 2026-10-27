@@ -93,36 +93,51 @@ describe('金技能替换下位白(不叠加)', () => {
 });
 
 /**
- * 下位白被顶掉后边际为 0,清单上必须给出解释。
- * 用户 2026-10-27 照着推荐列表问:「为什么浑然忘我的下位白也在购买列表里」
- * —— 钱没算错(162 + 144 = 306 = 金技能标价),缺的是那句说明。
+ * 买金就送下位 —— 所以下位**不该出现在推荐列表里**。
+ *
+ * 用户 2026-10-27 实测:「良场地恶煞 284」勾上之后,「良场地○」那一行立刻变成
+ * 「已获得」、加号点不动。旧版把两者都列进推荐(合计 284+81),桌面显示「剩 1pt」,
+ * 游戏实际剩 81pt。清单上也因此出现过「浑然忘我的下位白为什么也要买」的疑问。
  */
-describe('下位白的 note 说明', () => {
+describe('买金就送下位:下位不进推荐', () => {
   // 白价压低(60)才会出现「贪心先买白、再补买金」这条路:白价正常时金的比例更高,会直接买金
   const cands = [{ id: '201662', pt: 300, requires: '201661' }, { id: '201661', pt: 60 }];
 
-  it('白先上车、金后补时:白带解释 note,金显示扣掉白之后的差额', () => {
+  it('金在组合里时,下位被剔除;合计只算金的全价', () => {
     const r = optimize({ course, runner, candidates: cands, budget: 300 });
-    const white = r.chosen.find(c => c.id === '201661');
-    const gold = r.chosen.find(c => c.id === '201662');
-    expect(white).toBeDefined();
-    expect(gold).toBeDefined();
-    // 白被金顶掉 → 边际为 0,这是 note 的触发条件
-    expect(white!.finalMarginalBody).toBeCloseTo(0, 6);
-    expect(white!.note).toBeDefined();
-    expect(white!.note).toContain(GOLD.name);
-    expect(white!.note).toContain('前置');
-    // 金的显示价 = 标价 − 白价,总和不变
-    expect(gold!.listPt).toBe(300);
-    expect(gold!.pt).toBe(240);
+    const ids = new Set(r.chosen.map(c => c.id));
+    expect(ids.has('201662')).toBe(true);
+    // 买金就送白 → 白不该出现(否则用户会去点一个点不动的行)
+    expect(ids.has('201661')).toBe(false);
+    const gold = r.chosen.find(c => c.id === '201662')!;
+    expect(gold.listPt).toBe(300);
+    expect(gold.pt).toBe(300);        // 白的价已经含在金里,不再单独抵扣
     expect(r.totalPt).toBe(300);
+    expect(r.notes.join('\n')).toContain('不用单独买');
   });
 
-  it('没点金、白自己单独上车时,不能挂这条 note', () => {
+  it('没点金、白自己单独上车时,白照常留在推荐里', () => {
     const r = optimize({ course, runner, candidates: [{ id: '201661', pt: 60 }], budget: 60 });
     const white = r.chosen.find(c => c.id === '201661');
     expect(white).toBeDefined();
+    expect(white!.pt).toBe(60);
     expect(white!.finalMarginalBody).toBeGreaterThan(0);
     expect(white!.note).toBeUndefined();
+  });
+
+  it('三级链:中间那级不在候选里,靠 supersedes 也能认出覆盖关系', () => {
+    // 200154 良场地恶煞(金) → 200151 良场地◎(中间级,不在候选) → 200152 良场地○
+    const r = optimize({
+      course, runner,
+      candidates: [{ id: '200154', pt: 284 }, { id: '200152', pt: 81 }],
+      budget: 400,
+      supersedes: [{ gold: '200154', lower: '200152' }],
+    });
+    const ids = new Set(r.chosen.map(c => c.id));
+    expect(ids.has('200154')).toBe(true);
+    expect(ids.has('200152')).toBe(false);
+    expect(r.totalPt).toBe(284);
+    expect(r.remainingPt).toBe(400 - 284);   // 提示语里的"还剩"必须同口径
+    expect(r.notes.join('\n')).toContain('不用单独买');
   });
 });

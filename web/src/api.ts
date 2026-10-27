@@ -28,6 +28,18 @@ export interface PlanChain {
   readonly prereqId: string;
 }
 
+/**
+ * 「买金就送下位」的覆盖关系。
+ *
+ * 与 `PlanChain` 的区别:链是**直接**前置(参与价格抵扣),这条是沿链传递闭包后的
+ * 覆盖关系(只用于把下位从推荐里去掉)。三级链 `良场地○ → 良场地◎ → 良场地恶煞`
+ * 中间那级不在可买列表里,所以链配不上,必须靠这个才能认出恶煞覆盖了良场地○。
+ */
+export interface PlanSupersede {
+  readonly gold: string;
+  readonly lower: string;
+}
+
 export interface PlanState {
   readonly courseId: string;
   readonly budget: number;
@@ -48,6 +60,11 @@ export interface PlanState {
    * 金技能的列表价 = 前置价 + 金自己的折后价,不声明这个会把「金+前置」重复计费。
    */
   readonly chains: readonly PlanChain[];
+  /**
+   * 「买金就送下位」的覆盖关系(从模拟器读技能时自动带上,沿链传递闭包)。
+   * 买了金技能后下位那一行会变成「已获得」、加号点不动,所以推荐里要去掉它、合计也不算那份钱。
+   */
+  readonly supersedes?: readonly PlanSupersede[];
   /**
    * 读取时现场从游戏里读到的双圈实付价:{单圈技能 id: 双圈还需点数}。
    * 有值的 ◎ 不再用「◎基准 × 单圈折扣」推算(那些缺基准价的 ◎ 也能进候选了)。
@@ -283,6 +300,11 @@ export interface RunInput {
   readonly season: Season;
   /** 现场读到的双圈实付价:{单圈 id: 点数};由 App 从 plan.circleUp 传下来 */
   readonly circleUp?: Record<string, number>;
+  /**
+   * 买金就送下位的覆盖关系;由 App 从 plan.supersedes 传下来。
+   * **只影响汇报**(下位不进推荐列表、不计入合计),不影响搜索。
+   */
+  readonly supersedes?: readonly PlanSupersede[];
   /** requires = 下位技能 id(列表价已含它);由 App 从 plan.chains 展开后传入 */
   readonly skills: readonly {
     id: string; pt: number; requires?: string;
@@ -310,6 +332,7 @@ function runOnMain(input: RunInput): Promise<OptimizerResult> {
     return Promise.resolve(optimizeSync({
       course, runner, candidates: input.skills, budget: input.budget,
       ...(input.circleUp !== undefined ? { circleUpOverride: input.circleUp } : {}),
+      ...(input.supersedes !== undefined ? { supersedes: input.supersedes } : {}),
     }));
   } catch (e) {
     return Promise.reject(e as Error);

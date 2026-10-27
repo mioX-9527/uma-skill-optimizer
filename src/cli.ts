@@ -60,6 +60,8 @@ interface PlanInput {
    * 列表里金技能显示的价格已包含前置价,不声明这个关系会把「金 + 前置」重复计费。
    */
   readonly chains?: readonly { readonly skillId: string; readonly prereqId: string }[];
+  /** 买金就送下位的覆盖关系(沿链传递闭包);只影响汇报,不影响搜索 */
+  readonly supersedes?: readonly { readonly gold: string; readonly lower: string }[];
   /**
    * 可进化关系(可选),由游戏「技能进化」弹窗读到。
    * conditionMet=true 表示当前马娘已满足条件,结束养成时会免费进化,此时按进化后的数值算收益。
@@ -258,6 +260,9 @@ function main(): void {
     budget,
     ...(maxSims !== undefined ? { maxSims } : {}),
     ...(plan.circleUp !== undefined ? { circleUpOverride: plan.circleUp } : {}),
+    ...(plan.supersedes !== undefined && plan.supersedes.length > 0
+      ? { supersedes: plan.supersedes }
+      : {}),
   });
 
   console.log('');

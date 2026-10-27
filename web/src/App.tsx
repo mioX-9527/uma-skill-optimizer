@@ -231,6 +231,7 @@ export default function App() {
         skills: evo.skills, budget: merged.budget, chains: resp.chains ?? [],
         // 现场读到的双圈价随读取一起落地;读不到就清空,避免上一份的价串到这一份
         circleUp: merged.circleUp ?? {},
+        supersedes: merged.supersedes ?? [],
       });
       setResult(null);
       if (merged.dropped > 0) setReadLog(prev => [...prev, `有 ${merged.dropped} 条未能对应到技能库,已丢弃`]);
@@ -283,6 +284,10 @@ export default function App() {
         }),
         // 读取时现场从游戏里读到的双圈价(点加号读「◎ 还需多少」再撤回),有值就用真价
         ...(plan.circleUp !== undefined ? { circleUp: plan.circleUp } : {}),
+        // 买金就送下位的覆盖关系:下位不进推荐、不计价(不然合计虚高、还会让用户去点一个点不动的技能)
+        ...(plan.supersedes !== undefined && plan.supersedes.length > 0
+          ? { supersedes: plan.supersedes }
+          : {}),
       });
       setResult(r);
     } catch (e) {

@@ -137,9 +137,14 @@ class Bridge:
                     circle_up[str(s["id"])] = result.circle_pt[nm[:-1]]
 
             # 上下位关系:金技能的列表价已含前置价,前端要据此避免重复计费
-            from .chains import load_chains, pairs_within
+            from .chains import load_chains, pairs_within, supersede_pairs
 
-            pairs = pairs_within({s["id"] for s in skills}, load_chains())
+            skill_ids = {s["id"] for s in skills}
+            all_chains = load_chains()
+            pairs = pairs_within(skill_ids, all_chains)
+            # 「买金就送下位」的覆盖关系(沿链传递闭包):推荐里要把下位去掉,
+            # 否则用户会看到一项根本点不动的技能,合计也多算一份钱(见 chains.supersede_pairs)
+            supersedes = supersede_pairs(skill_ids, all_chains)
 
             # 进化关系:进化后的技能不在候选里(金技能免费变来的),得单独告诉前端
             warning_lines: list[str] = []
@@ -159,6 +164,7 @@ class Bridge:
                 "ok": True,
                 "skills": skills,
                 "chains": [{"skillId": g, "prereqId": p} for g, p in pairs],
+                "supersedes": [{"gold": g, "lower": l} for g, l in supersedes],
                 "evolutions": evolutions,
                 "circle_up": circle_up,
                 "pt_balance": result.pt_balance,

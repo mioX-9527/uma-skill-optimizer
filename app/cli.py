@@ -211,11 +211,13 @@ def cmd_capture(args: argparse.Namespace) -> int:
         _say("  " + str(m))
 
     # 上下位关系:金技能的显示价已包含前置价,必须把配对告诉优化器,否则会重复计费
-    from .chains import load_chains, pairs_within
+    from .chains import load_chains, pairs_within, supersede_pairs
 
     cand_ids = {s["id"] for s in skills}
     chain_map = load_chains()
     pairs = pairs_within(cand_ids, chain_map)
+    # 买金就送下位的覆盖关系(沿链传递闭包):下位不进推荐、不计价
+    supersedes = supersede_pairs(cand_ids, chain_map)
 
     # 可进化关系:点开「进化 ⓘ」读到的。进化后的技能不在候选里(金技能免费变来的),
     # 必须回全量技能库把名字解析成 id —— 和桌面壳共用 evolutions_of。
@@ -239,6 +241,7 @@ def cmd_capture(args: argparse.Namespace) -> int:
         },
         "skills": [{"id": s["id"], "pt": s["pt"]} for s in skills],
         "chains": [{"skillId": g, "prereqId": p} for g, p in pairs],
+        "supersedes": [{"gold": g, "lower": l} for g, l in supersedes],
         "evolutions": evolutions,
         **({"circleUp": circle_up} if circle_up else {}),
     }

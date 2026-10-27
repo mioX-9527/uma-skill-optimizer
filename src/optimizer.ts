@@ -76,6 +76,17 @@ export interface OptimizerInput {
    * 有值的 ◎ 不再用「◎基准 × 单圈折扣」推算 —— 缺基准价的那 16 个也因此能进候选。
    */
   readonly circleUpOverride?: Readonly<Record<string, number>>;
+  /**
+   * 「买金就送下位」的覆盖关系:`{ gold: 金技能 id, lower: 下位技能 id }`。
+   *
+   * 数据来自 `app/chains.py::supersede_pairs`(沿前置链做传递闭包,所以三级链
+   * `良场地○ → 良场地◎ → 良场地恶煞` 也能认出来)。
+   *
+   * **只改汇报口径,不参与价格计算**:搜索阶段照旧,避免动到已经调好的贪心路径
+   * (2026-10-27 试过让 costIn 也算"金加入后白免费",结果这局收益从 12.76 掉到 12.57,
+   * 贪心被带偏了)。这里只做一件事:下位从推荐列表里去掉、合计里去掉它那份钱。
+   */
+  readonly supersedes?: readonly { readonly gold: string; readonly lower: string }[];
   /** 视为有效收益的最小时间差(秒),默认 0.0005s ≈ 0.003 马身 */
   readonly minImprovementSec?: number;
   readonly onProgress?: (line: string) => void;
@@ -1148,30 +1159,59 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       `PT 不结转,留着等于白扔,所以标了 ⓘ 的那些照买即可。`,
     );
   }
-  if (remaining() > 0) {
+
+  // 金技能的下位白:2026-10-27 实测「买金就送下位」,所以下位已从推荐里剔除(见下),
+  // 原来那条「这 X pt 不是白花,是点金技能绕不开的前置」的 note 也就没用了 —— 留着会误导。
+
+  // 买了金技能就**自动拥有**它的下位(2026-10-27 实测:勾选「良场地恶煞 284」之后,
+  // 「良场地○」那一行立刻变成「已获得」,加号点不动)。所以下位不该留在推荐里 ——
+  // 它是买金就送的东西,不是"还要单独买的前置"。留着有两个后果:
+  //   ① 用户以为要买 N 项,照着列表去点,点到最后几行点不动;
+  //   ② 合计多算一份下位价(实测这局多算 81pt:桌面显示「剩 1pt」,游戏实际剩 81pt)。
+  // ○/◎ 不在此列:那是同一格点两下、两笔钱,确实要买两次。
+  const supersededBy = new Map<string, string>();   // 下位 id → 覆盖它的上位技能名
+  for (const g of chosen) {
+    if (g.circleChain === true) continue;
+    for (const r of g.requires) {
+      if (chosenSet.has(r) && !supersededBy.has(r)) supersededBy.set(r, g.skill.name);
+    }
+  }
+  // 三级链(中间层不在可买列表里)靠 `supersedes` 补上,见 PlanInput.supersedes
+  for (const s of input.supersedes ?? []) {
+    if (chosenSet.has(s.gold) && chosenSet.has(s.lower) && !supersededBy.has(s.lower)) {
+      supersededBy.set(s.lower, SKILL_INDEX.get(s.gold)?.name ?? s.gold);
+    }
+  }
+  const payable = chosen.filter(c => !supersededBy.has(c.id));
+  /** 这一项实际从游戏里扣多少:前置**真被单独买了**才抵差额,被上位覆盖掉的抵不了 */
+  const paidOf = (c: Cand): number => {
+    const prereqPaid = c.requires.length > 0
+      && c.requires.every(r => chosenSet.has(r) && !supersededBy.has(r));
+    return prereqPaid ? Math.max(0, c.pt - c.requiresPt) : c.pt;
+  };
+  const totalPtFinal = payable.reduce((sum, c) => sum + paidOf(c), 0);
+  if (supersededBy.size > 0) {
     notes.push(
-      `还剩 ${remaining()} PT:未选技能最便宜的一档也买不起了(或买了会变慢,如自带速度惩罚的回复技能)。`,
+      `有 ${supersededBy.size} 项已经随金技能一起获得,**不用单独买**(买完金技能后它们那一行会变成「已获得」、` +
+      `加号点不动):${[...supersededBy].map(([d, up]) => `「${SKILL_INDEX.get(d)?.name ?? d}」随「${up}」`).join('、')}。` +
+      `上面的合计已按"不买它们"计算。`,
+    );
+  }
+  // 这条必须用**汇报口径**的余额:搜索阶段按账面花到剩 1pt,但下位那部分其实不用付,
+  // 真实余量是 82pt —— 用 remaining() 会写出「合计 2859(剩 82)…还剩 1 PT」这种自相矛盾的话。
+  const finalRemaining = budget - totalPtFinal;
+  if (finalRemaining > 0) {
+    notes.push(
+      `还剩 ${finalRemaining} PT:未选技能最便宜的一档也买不起了(或买了会变慢,如自带速度惩罚的回复技能)。`,
     );
   }
 
-  // 金技能的下位白同样会被「顶掉」(和 ○/◎ 同构):它自己在终局里边际为 0,
-  // 但买它的钱不是白花 —— 那是点金技能的前置。不说清楚会被读成"怎么买了个没用的技能"
-  // (用户 2026-10-27 就照着列表问了「下位白为什么也在推荐购买里」)。
-  // 注意只认「金已在组合里」的情况;白单独被选(没点金)时它能自己贡献收益,不需要这段话。
-  const goldReplacer = new Map<string, string>();   // 下位白 id → 顶掉它的金技能名
-  for (const g of chosen) {
-    if (g.circleChain === true || g.skill.rarity !== 'rareEvolved') continue;
-    for (const r of g.requires) if (!goldReplacer.has(r)) goldReplacer.set(r, g.skill.name);
-  }
-
   return {
-    chosen: chosen.map(c => {
-      // 前置也被选了 → 那部分只收一次,所以这里显示差额
-      const prereqPaid = c.requires.length > 0 && c.requires.every(r => chosenSet.has(r));
+    chosen: payable.map(c => {
       return {
         id: c.id,
         name: c.skill.name,
-        pt: prereqPaid ? Math.max(0, c.pt - c.requiresPt) : c.pt,
+        pt: paidOf(c),
         listPt: c.pt,
         includesPrereq: c.requires
           .map(r => SKILL_INDEX.get(r)?.name)
@@ -1190,17 +1230,6 @@ export function optimize(input: OptimizerInput): OptimizerResult {
           if ((finalMarginals.get(c.id) ?? 0) * bodyPerSec > eps) return {};
           return { note: `买它是为了点「${up.upName}」——双圈顶掉单圈后,它自己的边际为 0 是正常的` };
         })(),
-        // 金技能顶掉下位白:同一套解释,只是换成了"升级替换"关系
-        ...(() => {
-          const upName = goldReplacer.get(c.id);
-          if (upName === undefined || finalMarginals.get(c.id) === undefined) return {};
-          if ((finalMarginals.get(c.id) ?? 0) * bodyPerSec > eps) return {};
-          return {
-            note: `买它是为了点「${upName}」——金技能顶掉下位白,它自己的边际为 0 是正常的;` +
-              `这 ${Math.max(0, c.pt - c.requiresPt)}pt 不是白花,是点金技能绕不开的前置` +
-              `(「${upName}」那一行显示的就是扣掉它之后的差额)`,
-          };
-        })(),
         finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
         finalMarginalSec: finalMarginals.get(c.id) ?? 0,
         ...(c.filler === true ? { filler: true } : {}),
@@ -1216,8 +1245,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       };
     }),
     totalBody: (baseSim.finishTimeSec - finalSim.finishTimeSec) * bodyPerSec,
-    totalPt: spent,
-    remainingPt: remaining(),
+    totalPt: totalPtFinal,
+    remainingPt: budget - totalPtFinal,
     baselineSec: baseSim.finishTimeSec,
     finalSec: finalSim.finishTimeSec,
     sumSoloBody: cands.reduce((acc, c) => acc + c.soloSec * bodyPerSec, 0),
