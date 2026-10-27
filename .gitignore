@@ -23,3 +23,7 @@ packaging/dist-v011/
 tools/bench/_traced/
 tools/bench/_backup/
 tools/bench/__pycache__/
+
+# 打包中间产物与备份目录(都可重建;发布包 *.zip 单独在上面兜着)
+packaging/dist*/
+packaging/build*/
