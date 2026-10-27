@@ -91,3 +91,38 @@ describe('金技能替换下位白(不叠加)', () => {
     else if (ids.has('201661')) expect(r.totalPt).toBe(160);
   });
 });
+
+/**
+ * 下位白被顶掉后边际为 0,清单上必须给出解释。
+ * 用户 2026-10-27 照着推荐列表问:「为什么浑然忘我的下位白也在购买列表里」
+ * —— 钱没算错(162 + 144 = 306 = 金技能标价),缺的是那句说明。
+ */
+describe('下位白的 note 说明', () => {
+  // 白价压低(60)才会出现「贪心先买白、再补买金」这条路:白价正常时金的比例更高,会直接买金
+  const cands = [{ id: '201662', pt: 300, requires: '201661' }, { id: '201661', pt: 60 }];
+
+  it('白先上车、金后补时:白带解释 note,金显示扣掉白之后的差额', () => {
+    const r = optimize({ course, runner, candidates: cands, budget: 300 });
+    const white = r.chosen.find(c => c.id === '201661');
+    const gold = r.chosen.find(c => c.id === '201662');
+    expect(white).toBeDefined();
+    expect(gold).toBeDefined();
+    // 白被金顶掉 → 边际为 0,这是 note 的触发条件
+    expect(white!.finalMarginalBody).toBeCloseTo(0, 6);
+    expect(white!.note).toBeDefined();
+    expect(white!.note).toContain(GOLD.name);
+    expect(white!.note).toContain('前置');
+    // 金的显示价 = 标价 − 白价,总和不变
+    expect(gold!.listPt).toBe(300);
+    expect(gold!.pt).toBe(240);
+    expect(r.totalPt).toBe(300);
+  });
+
+  it('没点金、白自己单独上车时,不能挂这条 note', () => {
+    const r = optimize({ course, runner, candidates: [{ id: '201661', pt: 60 }], budget: 60 });
+    const white = r.chosen.find(c => c.id === '201661');
+    expect(white).toBeDefined();
+    expect(white!.finalMarginalBody).toBeGreaterThan(0);
+    expect(white!.note).toBeUndefined();
+  });
+});

@@ -966,6 +966,16 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     );
   }
 
+  // 金技能的下位白同样会被「顶掉」(和 ○/◎ 同构):它自己在终局里边际为 0,
+  // 但买它的钱不是白花 —— 那是点金技能的前置。不说清楚会被读成"怎么买了个没用的技能"
+  // (用户 2026-10-27 就照着列表问了「下位白为什么也在推荐购买里」)。
+  // 注意只认「金已在组合里」的情况;白单独被选(没点金)时它能自己贡献收益,不需要这段话。
+  const goldReplacer = new Map<string, string>();   // 下位白 id → 顶掉它的金技能名
+  for (const g of chosen) {
+    if (g.circleChain === true || g.skill.rarity !== 'rareEvolved') continue;
+    for (const r of g.requires) if (!goldReplacer.has(r)) goldReplacer.set(r, g.skill.name);
+  }
+
   return {
     chosen: chosen.map(c => {
       // 前置也被选了 → 那部分只收一次,所以这里显示差额
@@ -991,6 +1001,17 @@ export function optimize(input: OptimizerInput): OptimizerResult {
           if (up === undefined || !chosenSet.has(up.upId) || finalMarginals.get(c.id) === undefined) return {};
           if ((finalMarginals.get(c.id) ?? 0) * bodyPerSec > eps) return {};
           return { note: `买它是为了点「${up.upName}」——双圈顶掉单圈后,它自己的边际为 0 是正常的` };
+        })(),
+        // 金技能顶掉下位白:同一套解释,只是换成了"升级替换"关系
+        ...(() => {
+          const upName = goldReplacer.get(c.id);
+          if (upName === undefined || finalMarginals.get(c.id) === undefined) return {};
+          if ((finalMarginals.get(c.id) ?? 0) * bodyPerSec > eps) return {};
+          return {
+            note: `买它是为了点「${upName}」——金技能顶掉下位白,它自己的边际为 0 是正常的;` +
+              `这 ${Math.max(0, c.pt - c.requiresPt)}pt 不是白花,是点金技能绕不开的前置` +
+              `(「${upName}」那一行显示的就是扣掉它之后的差额)`,
+          };
         })(),
         finalMarginalBody: (finalMarginals.get(c.id) ?? 0) * bodyPerSec,
         finalMarginalSec: finalMarginals.get(c.id) ?? 0,
