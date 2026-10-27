@@ -7,7 +7,7 @@ import {
   type OptimizerResult, type PlanSkill, type PlanState,
 } from './api.js';
 import {
-  applyCapture, applyEvolutions, captureSummary, deviceLabel, pickDevice, waitForDesktopBridge,
+  applyCapture, applyEvolutions, captureSummary, desktopBridge, deviceLabel, pickDevice, waitForDesktopBridge,
   type AdbDevice, type CapturedSkill, type DesktopBridge,
 } from './desktop.js';
 
@@ -92,6 +92,49 @@ export default function App() {
   const [devices, setDevices] = useState<readonly AdbDevice[]>([]);
   const [serial, setSerial] = useState<string | null>(null);
   const [loadingDevices, setLoadingDevices] = useState(false);
+  /** 正在游戏里勾选(点加号),期间禁用按钮 */
+  const [selecting, setSelecting] = useState(false);
+
+  /**
+   * 推荐组合按**游戏购买界面的顺序**(从上到下)展示。
+   * plan.skills 就是逐屏 OCR 的读取顺序;◎ 用它的单圈名去对位(OCR 读不出 ○/◎)。
+   */
+  const chosenInShopOrder = useMemo(() => {
+    if (result === null) return [];
+    const order = new Map<string, number>();
+    plan.skills.forEach((s, i) => order.set(s.name.replace(/[○◎]$/, ''), i));
+    const at = (name: string) => order.get(name.replace(/[○◎]$/, '')) ?? Number.MAX_SAFE_INTEGER;
+    return [...result.chosen].sort((a, b) => at(a.name) - at(b.name));
+  }, [result, plan.skills]);
+
+  /** 在游戏里把推荐组合逐个点加号(不点确定)。 */
+  const autoSelect = async () => {
+    const b = bridge;
+    if (b === null || result === null) return;
+    setSelecting(true);
+    try {
+      const r = await b.select_skills(result.chosen.map(c => c.name));
+      if (!r.ok) {
+        setReadLog(prev => [...prev, `[勾选失败] ${r.error ?? '未知原因'}`]);
+        return;
+      }
+      const done = r.done ?? [];
+      const failed = r.failed ?? [];
+      setReadLog(prev => [...prev,
+        `已在游戏里勾选 ${done.length} 项${done.length > 0 ? `:${done.join('、')}` : ''}`,
+        ...(failed.length > 0
+          ? failed.map(f => `没有勾上「${f.name}」:${f.reason}`)
+          : []),
+        r.pt_after != null
+          ? `游戏里现在显示可用 ${r.pt_after} 点(读取时 ${r.pt_before ?? '?'})—— 确认无误后**自己**点游戏里的「确定」才会真正购买,本工具不会替你提交。`
+          : '已勾选,请在游戏里核对后自己点「确定」。',
+      ]);
+    } catch (e) {
+      setReadLog(prev => [...prev, `[勾选失败] ${(e as Error).message}`]);
+    } finally {
+      setSelecting(false);
+    }
+  };
 
   const course = courseOf(plan.courseId);
 
@@ -485,13 +528,25 @@ export default function App() {
           <p className="dim">
             单项收益之和 {result.sumSoloBody.toFixed(2)} 马身;与总收益的差 = 技能间交互(重叠/联动),单项列仅供对照
           </p>
+          <p className="dim">下表按游戏购买界面的顺序(从上到下)排列,方便照着买。</p>
+          {bridge !== null && (
+            <div className="row-actions">
+              <button onClick={() => void autoSelect()} disabled={selecting || running}>
+                {selecting ? '正在游戏里勾选…' : `在游戏里勾选这 ${result.chosen.length} 项(不提交)`}
+              </button>
+              <span className="dim">
+                只在游戏里点「加号」把技能放进购物车,**不会点「确定」**;买不买你自己决定。
+                勾完想全部取消,点游戏里的「重置」。
+              </span>
+            </div>
+          )}
 
           <table>
             <thead>
               <tr><th>#</th><th>技能</th><th className="num">PT</th><th className="num">单独马身</th><th className="num">集内边际</th><th className="num" title="集内边际马身 ÷ 实付PT × 100:每 100pt 换多少马身,用来横比「一个金」和「几个白」">马身/100pt</th><th className="num">边际(秒)</th></tr>
             </thead>
             <tbody>
-              {result.chosen.map((c, i) => (
+              {chosenInShopOrder.map((c, i) => (
                 <tr key={c.id}>
                   <td>{i + 1}</td>
                   <td>

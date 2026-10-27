@@ -166,6 +166,37 @@ class Bridge:
         finally:
             self._busy.release()
 
+    def select_skills(self, names: list[str] | None = None) -> dict:
+        """把推荐组合在技能购买界面里**勾上**(点加号加入购物车),**不点「确定」**。
+
+        名字用界面上显示的那个(带 ○/◎):`◎` 会自动点两下(先单圈、再双圈)。
+        前置检查:购物车必须是干净的(当前点数 == 读取时点数),否则直接拒绝。
+        """
+        if not self._busy.acquire(blocking=False):
+            return {"ok": False, "error": "正在读取/计算中,请稍候"}
+        try:
+            from .ocr import Ocr
+            from .select import SelectError, select_in_shop
+
+            adb = Adb(self._resolve(None))
+            meta = adb.connect()
+            profile = load_profile(meta.width, meta.height)
+            try:
+                out = select_in_shop(adb, meta, profile, Ocr(), list(names or []), self._pt_balance)
+            except SelectError as exc:
+                return {"ok": False, "error": str(exc)}
+            return {
+                "ok": True,
+                "done": out.done,
+                "failed": [{"name": n, "reason": r} for n, r in out.failed],
+                "pt_before": out.pt_before,
+                "pt_after": out.pt_after,
+            }
+        except Exception as exc:  # noqa: BLE001 冒到前端就是一句中文报错
+            return self._err(exc)
+        finally:
+            self._busy.release()
+
     def save_plan(self, text: str | None = None) -> dict:
         """把前端给的计划 JSON 存成文件(**弹系统保存对话框**,用户自己选位置)。
 

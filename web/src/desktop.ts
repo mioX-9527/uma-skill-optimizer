@@ -28,6 +28,15 @@ export interface EvolutionRow {
   readonly conditionMet: boolean;
 }
 
+export interface SelectResponse {
+  readonly ok: boolean;
+  readonly error?: string;
+  readonly done?: readonly string[];
+  readonly failed?: readonly { name: string; reason: string }[];
+  readonly pt_before?: number | null;
+  readonly pt_after?: number | null;
+}
+
 export interface CaptureResponse {
   readonly ok: boolean;
   readonly error?: string;
@@ -55,6 +64,11 @@ export interface DesktopBridge {
   capture_skills(serial?: string): Promise<CaptureResponse>;
   /** 把计划 JSON 原文交给桌面壳弹保存对话框落盘(WebView2 里 a[download] 会被丢掉) */
   save_plan(text: string): Promise<{ ok: boolean; path?: string; cancelled?: boolean; error?: string }>;
+  /**
+   * 在游戏的技能购买界面里把推荐组合**勾上**(点加号加入购物车),**不点确定**。
+   * 名字用界面上显示的那个(带 ○/◎):◎ 会自动点两下(先单圈后双圈)。
+   */
+  select_skills(names: string[]): Promise<SelectResponse>;
 }
 
 /** 一台 adb 设备(下拉框一项) */
