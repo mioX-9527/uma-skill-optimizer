@@ -39,7 +39,9 @@ import re
 from dataclasses import dataclass, field
 
 from .adb import Adb, ScreenMeta
-from .capture import check_on_skill_page, check_orientation, read_page, read_pt_balance, scroll_to_top
+from .capture import (
+    cart_state, check_on_skill_page, check_orientation, read_page, read_pt_balance, scroll_to_top,
+)
 from .layout import Profile
 from .match import Row, normalize
 from .ocr import Ocr
@@ -47,6 +49,10 @@ from .ocr import Ocr
 # 技能库为区分条目加的尾缀:「(继承)」是继承版,「(1)/(2)」是同名分支。全角半角都有,一起吃。
 _SUFFIX_RE = re.compile(r"[（(]\s*(?:继承|\d+)\s*[）)]")
 _SYMBOLS = "○◎"
+
+# 一次点加号最多能掉多少点。单个技能最贵 ~350pt(实测势不可挡 324),
+# 超过这个数就是 OCR 读错了,不能当成"点成功"。
+_MAX_STEP = 400
 
 # 点加号的三态结果:完全勾上 / 只勾上一部分(双圈只加了单圈) / 一下都没点上。
 TAP_OK = "ok"
@@ -80,6 +86,9 @@ class _Target:
 
     display: str
     base: str
+    # 只剥掉 ○/◎ 之后的归一化名。**同一个 family** 才说明它们占游戏里同一格(单圈/双圈),
+    # 这时"两条都要"只是"要点两下";不同 family(如库里的 (1)/(2) 分支)才是真的同名歧义。
+    family: str
     taps: int
     pt: int | None = None      # 计划里的标价,只在"游戏里两行同名"时用来消歧
 
@@ -94,6 +103,16 @@ def base_name(name: str) -> str:
     s = (name or "").strip().rstrip(_SYMBOLS).strip()
     s = _SUFFIX_RE.sub("", s).strip()
     return s.rstrip(_SYMBOLS).strip()
+
+
+def circle_family(name: str) -> str:
+    """只剥 ○/◎ 的归一化名 —— 用来判断两条是不是"同一格的两级"。
+
+    `跟前弯道○` 和 `跟前弯道◎` 的 family 相同(游戏里是同一行,点两下);
+    而 `决不让出领头的景色……！(继承)(1)` 与 `(2)` 的 family 不同(库里的两个同名分支)。
+    把这两种情况分开,才不会像 2026-10-27 那样把"要点两下"误判成"同名只能勾一条"。
+    """
+    return normalize((name or "").strip().rstrip(_SYMBOLS).strip())
 
 
 def _clean(name: str) -> str:
@@ -112,9 +131,14 @@ def _taps_of(name: str) -> int:
 
 
 def _targets_of(items: "list[str] | list[dict]") -> list[_Target]:
-    """前端既能传 `['良场地◎']`,也能传 `[{name, pt}]`(带标价,同名行才分得清)。"""
-    out: list[_Target] = []
-    seen: set[tuple[str, int, int | None]] = set()
+    """前端既能传 `['良场地◎']`,也能传 `[{name, pt}]`(带标价,同名行才分得清)。
+
+    **同一格的 ○ 和 ◎ 会被合并成一条**(取 ◎ 的名字、点两下)。
+    优化器把"买 ○ 再升 ◎"当成两笔选进推荐里,这是对的(游戏里确实是点两次、付两笔),
+    但勾选时那是**同一行点两下**;不合并就会被当成"同名两条只能勾一条",
+    结果只勾上单圈 —— 就是「双圈技能没勾上」这个报障。
+    """
+    merged: dict[tuple[str, str], _Target] = {}
     for it in items:
         if isinstance(it, dict):
             nm = str(it.get("name") or "")
@@ -126,26 +150,51 @@ def _targets_of(items: "list[str] | list[dict]") -> list[_Target]:
         base = row_key(nm)
         if not base:
             continue
-        key = (base, _taps_of(nm), pt)
-        if key in seen:          # 同一个技能被传了两遍:再点就把 ◎ 也点上了
-            continue
-        seen.add(key)
-        out.append(_Target(display=nm, base=base, taps=_taps_of(nm), pt=pt))
-    return out
+        family = circle_family(nm)
+        taps = _taps_of(nm)
+        key = (base, family)
+        prev = merged.get(key)
+        if prev is None:
+            merged[key] = _Target(display=nm, base=base, family=family, taps=taps, pt=pt)
+        elif taps > prev.taps:
+            # 同一格的两级都在推荐里:买到最后一级,名字也用 ◎ 那个(日志里更好认)
+            merged[key] = _Target(display=nm, base=base, family=family, taps=taps, pt=pt)
+    return list(merged.values())
 
 
 def select_in_shop(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
                    names: "list[str] | list[dict]", pt_before: int | None,
-                   progress=None, max_pages: int | None = None) -> SelectOutcome:
+                   progress=None, max_pages: int | None = None,
+                   last_after_pt: int | None = None) -> SelectOutcome:
     """按**界面从上到下**的顺序,把 names 里每个技能点加号勾上(不提交)。
 
     `pt_before` = 读取时记下的「当前技能点数」,用来确认购物车是干净的。
+    `last_after_pt` = 上一次勾选之后剩下的点数。当前点数正好等于它,说明**上次勾的结果
+    还在购物车里没清**,这时绝不能往上叠(同一格会被再点一次,单圈点成双圈、多花钱)。
+    只看 `pt_before` 是不够的:如果用户是在购物车已经有东西的时候重新「从模拟器读取」,
+    那次的余额本身就带着残留,比对永远相等。
     """
     check_orientation(adb, meta)
     check_on_skill_page(adb, profile, ocr)
 
     img = adb.screencap()
     now_pt = read_pt_balance(ocr, img, profile)
+    # 最硬的判据:底部「确定」按钮亮不亮(空车 77 / 有东西 122,见版式文件注释)。
+    # 它不依赖任何"上次读到多少点"的记忆,所以即使用户在车里有东西时重新读过一次也拦得住。
+    empty, lum = cart_state(img, profile)
+    if empty is False:
+        raise SelectError(
+            f"购物车里有东西:底部「确定」按钮是亮着的(亮度 {lum:.0f},空车约 103)。"
+            f"请先点游戏里的「重置」把购物车清空,再让我勾 —— 否则会叠在旧选择上,"
+            f"单双圈那种同一格会被多点一次,白花点数。"
+        )
+    if (last_after_pt is not None and now_pt is not None and now_pt == last_after_pt
+            and now_pt != pt_before):
+        raise SelectError(
+            f"上次勾选的结果还留在购物车里(当前 {now_pt} 点,勾之前是 {pt_before} 点)。"
+            f"请先点游戏里的「重置」把购物车清空再勾 —— 否则会叠在旧选择上,"
+            f"单双圈那种同一格会被多点一次,白花点数。"
+        )
     if pt_before is not None and now_pt is not None and now_pt != pt_before:
         raise SelectError(
             f"购物车里已经有东西了(当前 {now_pt} 点 / 读取时 {pt_before} 点)。"
@@ -162,13 +211,23 @@ def select_in_shop(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
     limit = max_pages if max_pages is not None else int(cfg["max_steps"])
 
     seen_pages: set[tuple[str, ...]] = set()
+    stalled = 0
     for page in range(limit):
         img = adb.screencap()
         rows = read_page(img, profile, ocr, page)
         sig = tuple(r.name_text for r in rows)
         if sig in seen_pages:
-            break
-        seen_pages.add(sig)
+            # 列表没动。**不能一次就退出**:点完加号后的那几秒里,swipe 常常被游戏忽略
+            # (实测出现过"已勾选 1 项,剩下两项翻到底也没找到" —— 其实是被原地打转了)。
+            # 连续三次都没动才算到底/卡死。
+            stalled += 1
+            if stalled >= 3:
+                if progress:
+                    progress(f"列表连续 {stalled} 屏没动,判定到底")
+                break
+        else:
+            stalled = 0
+            seen_pages.add(sig)
 
         for row in rows:
             key = row_key(row.name_text)
@@ -194,19 +253,24 @@ def select_in_shop(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
                 out.failed.append((target.display, reason))
                 if progress:
                     progress(f"「{target.display}」没勾上:{reason}")
-            # 同名多条(库里「(1)/(2)」这种分支剥完尾缀会撞名):游戏里只有一行,
-            # 只能勾一条。剩下的必须明说"没勾",不然又是一次静默漏勾。
+            # 真正同名(不同 family,如库里的 (1)/(2) 分支):游戏里那两行一模一样,
+            # 只按名字没法区分,所以只勾其中一条,另一条必须明说"没勾"。
+            # 注意 ○/◎ 不会走到这里 —— 它们在 _targets_of 已经合并成"点两下"了。
             for sib in [t for t in pending if t.base == key and t is not target]:
                 out.failed.append(
-                    (sib.display, f"与「{target.display}」同名,游戏里只有一行,已勾那个;这一条请自己看价格核对")
+                    (sib.display, f"与「{target.display}」同名,按名字只认得出其中一行,"
+                                  f"已勾「{target.display}」;这一条请自己核对")
                 )
             pending = [t for t in pending if t.base != key]
 
         if not pending:
             break
-        # 下一页
-        adb.swipe(360, cfg["y0"], 360, cfg["y1"], int(cfg["duration_ms"]))
-        adb.settle(float(cfg["settle_s"]))
+        # 下一页。上一步没走动时把这一下**做大做慢**(短促轻扫在刚点完加号的那几秒会被吃掉)。
+        if stalled > 0:
+            adb.swipe(360, int(cfg["y0"]), 360, int(cfg["y0"]) - 260, 650)
+        else:
+            adb.swipe(360, int(cfg["y0"]), 360, int(cfg["y1"]), int(cfg["duration_ms"]))
+        adb.settle(float(cfg["settle_s"]) + (0.4 if stalled else 0.0))
 
     for t in pending:
         out.failed.append((t.display, "翻到底也没找到这一行"))
@@ -251,12 +315,16 @@ def _locate(adb: Adb, profile: Profile, ocr: Ocr, key: str) -> tuple[Row | None,
     return None, "none"
 
 
-def _read_pt_after(ocr: Ocr, adb: Adb, profile: Profile) -> int | None:
-    """点完之后读点数,**取连续几帧里的最小值**。
+def _read_pt_after(ocr: Ocr, adb: Adb, profile: Profile, pt0: int | None = None) -> int | None:
+    """点完之后读点数,**取连续几帧里的最小值**,再做一次"降幅合理"校验。
 
     点数只会减少,所以"读到的最小值"比"读一次"可靠:一次读数可能正好落在过渡动画上,
     读回点之前的旧值 —— 旧逻辑据此判定"没点上",然后**又点了一下**,于是单圈被点成了双圈
     (多花一份钱)。宁可多截两帧,也不要重复点。
+
+    但只看最小值会被 OCR 抖动带偏:读出一个偏低的数字(实测见过 2941 被读成 2401),
+    看起来"点成功了"其实没点,最后表现为"已勾选但一点没花"。单个技能最多 300 多点,
+    所以降幅超过 `_MAX_STEP` 一律当读数错误,退回点之前的那个值。
     """
     best: int | None = None
     for _ in range(3):
@@ -264,6 +332,8 @@ def _read_pt_after(ocr: Ocr, adb: Adb, profile: Profile) -> int | None:
         if v is not None and (best is None or v < best):
             best = v
         adb.settle(0.35)
+    if best is not None and pt0 is not None and pt0 - best > _MAX_STEP:
+        return pt0
     return best
 
 
@@ -295,7 +365,7 @@ def _tap_n_times(adb: Adb, profile: Profile, ocr: Ocr, key: str, taps: int) -> t
             return (TAP_PARTIAL if done > 0 else TAP_FAIL), "读不到当前技能点数,不敢点(怕点重复)"
         adb.tap(plus_x, row.y)
         adb.settle(1.0)
-        pt1 = _read_pt_after(ocr, adb, profile)
+        pt1 = _read_pt_after(ocr, adb, profile, pt0)
         if pt1 is not None and pt1 < pt0:
             done += 1
             continue
@@ -313,7 +383,7 @@ def _tap_n_times(adb: Adb, profile: Profile, ocr: Ocr, key: str, taps: int) -> t
             return (TAP_PARTIAL if done > 0 else TAP_FAIL), "读不到当前技能点数,不敢再点(怕点重复)"
         adb.tap(plus_x, row.y)
         adb.settle(1.0)
-        pt1 = _read_pt_after(ocr, adb, profile)
+        pt1 = _read_pt_after(ocr, adb, profile, pt0)
         if pt1 is None:
             return (TAP_PARTIAL if done > 0 else TAP_FAIL), "点了但读不到点数,无法确认是否生效"
         if pt1 >= pt0:

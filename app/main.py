@@ -46,6 +46,9 @@ class Bridge:
         self._index: SkillIndex | None = None
         self._last_plan: list[dict] = []
         self._pt_balance: int | None = None
+        # 上一次「在游戏里勾选」之后剩下的点数。下次勾选时如果余额还停在这个值,
+        # 说明购物车没清(用户直接又点了一次),必须拦住 —— 见 select_in_shop。
+        self._cart_residue_pt: int | None = None
         self._busy = threading.Lock()
 
     # ── 工具 ────────────────────────────────────────────────
@@ -191,9 +194,14 @@ class Bridge:
             meta = adb.connect()
             profile = load_profile(meta.width, meta.height)
             try:
-                out = select_in_shop(adb, meta, profile, Ocr(), list(items or []), self._pt_balance)
+                out = select_in_shop(adb, meta, profile, Ocr(), list(items or []), self._pt_balance,
+                                     last_after_pt=self._cart_residue_pt)
             except SelectError as exc:
                 return {"ok": False, "error": str(exc)}
+            # 记下"勾完之后剩多少":下次余额还停在这儿 = 购物车没清
+            self._cart_residue_pt = (
+                out.pt_after if out.pt_after is not None and out.pt_after != out.pt_before else None
+            )
             return {
                 "ok": True,
                 "done": out.done,

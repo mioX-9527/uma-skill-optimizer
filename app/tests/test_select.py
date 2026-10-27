@@ -16,7 +16,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from app.select import _clean, _pick, _taps_of, _targets_of, base_name, row_key  # noqa: E402
+from app.capture import cart_state_from_lum  # noqa: E402
+from app.select import (  # noqa: E402
+    _clean, _pick, _taps_of, _targets_of, base_name, circle_family, row_key,
+)
 
 
 def test_clean_strips_circle_symbols() -> None:
@@ -71,6 +74,39 @@ def test_targets_of_accepts_names_and_dicts() -> None:
     assert _targets_of([""]) == []
 
 
+def test_circle_pair_merges_into_two_taps() -> None:
+    """○ 和 ◎ 同时出现在推荐里 = 同一格点两下,不是"同名歧义"。
+
+    2026-10-27 真机回放:优化器把"买 ○ 再升 ◎"当两笔选进推荐(chosen 里
+    `跟前弯道○` 与 `跟前弯道◎` 都在,各有自己的价),旧代码按同名歧义处理 →
+    只点了 1 下,双圈永远勾不上。这一条就是那个 bug 的回归测试。
+    """
+    ts = _targets_of([
+        {"name": "跟前弯道○", "pt": 71},
+        {"name": "跟前弯道◎", "pt": 76},
+    ])
+    assert len(ts) == 1, ts
+    assert ts[0].taps == 2
+    assert ts[0].display == "跟前弯道◎"      # 日志里报双圈那个名字
+    # 反过来的顺序也要合并
+    ts = _targets_of([{"name": "跟前弯道◎", "pt": 76}, {"name": "跟前弯道○", "pt": 71}])
+    assert len(ts) == 1 and ts[0].taps == 2
+
+
+def test_same_name_different_branch_stays_ambiguous() -> None:
+    """库里的 (1)/(2) 是真·同名两行,不能合并成"点两下"。"""
+    ts = _targets_of([
+        {"name": "奇点(1)", "pt": 216},
+        {"name": "奇点(2)", "pt": 180},
+    ])
+    assert len(ts) == 2
+    assert ts[0].base == ts[1].base
+    assert ts[0].family != ts[1].family
+    assert all(t.taps == 1 for t in ts)
+    # 单圈/双圈的 family 相同
+    assert circle_family("跟前弯道○") == circle_family("跟前弯道◎") != circle_family("奇点(1)")
+
+
 def test_pick_disambiguates_by_price() -> None:
     # 库里「(1)/(2)」两条剥完尾缀同名,游戏里只有一行 → 按标价认
     ts = _targets_of([
@@ -87,11 +123,22 @@ def test_pick_disambiguates_by_price() -> None:
     assert _pick(ts[:1], None) is ts[0]
 
 
+def test_cart_state_threshold() -> None:
+    """「确定」按钮亮度 → 购物车空不空(实测 L 亮度:空车 103 / 有东西 165)。"""
+    assert cart_state_from_lum(103.0, 135) is True
+    assert cart_state_from_lum(165.0, 135) is False
+    assert cart_state_from_lum(135.0, 135) is False     # 卡在边界上按"有东西"处理,宁可拦住
+    assert cart_state_from_lum(None, 135) is None       # 读不到就不能乱判
+
+
 if __name__ == "__main__":
     test_clean_strips_circle_symbols()
     test_base_name_strips_library_suffixes()
     test_row_key_is_normalized()
     test_taps_of()
     test_targets_of_accepts_names_and_dicts()
+    test_circle_pair_merges_into_two_taps()
+    test_same_name_different_branch_stays_ambiguous()
     test_pick_disambiguates_by_price()
-    print("OK: select.py 纯函数测试通过(6 项)")
+    test_cart_state_threshold()
+    print("OK: select.py 纯函数测试通过(9 项)")

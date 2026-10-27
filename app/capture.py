@@ -60,6 +60,34 @@ def read_pt_balance(ocr: Ocr, image: Image.Image, profile: Profile) -> int | Non
     return int(m.group()) if m else None
 
 
+def cart_state_from_lum(lum: float | None, dim_below: float) -> bool | None:
+    """「确定」按钮的亮度 → 购物车是不是空的。True=空 / False=有东西 / None=读不到。"""
+    if lum is None:
+        return None
+    return lum < dim_below
+
+
+def cart_state(image: Image.Image, profile: Profile) -> tuple[bool | None, float | None]:
+    """判断购物车是否为空,返回 (状态, 亮度)。
+
+    **为什么值得单独测**:勾选前必须确认车是空的,否则会叠在旧选择上 ——
+    单双圈占同一格,多叠一次就把单圈点成双圈,白花点数(2026-10-27 真踩过)。
+    只比"当前点数 vs 上次读取的点数"不够:用户可能在车里有东西的时候重新读一次,
+    那次的余额本身就带着残留,两个数永远相等。
+
+    底部「确定」按钮的亮度就是干净与否的状态指示:空车 L≈103、有东西 L≈165(实测,见版式文件注释)。
+    """
+    cfg = profile.raw.get("confirm")
+    if not cfg:
+        return None, None
+    try:
+        crop = image.crop((int(cfg["x0"]), int(cfg["y0"]), int(cfg["x1"]), int(cfg["y1"])))
+    except (KeyError, ValueError):
+        return None, None
+    lum = float(np.asarray(crop.convert("L"), dtype=np.float32).mean())
+    return cart_state_from_lum(lum, float(cfg.get("dim_below", 135))), lum
+
+
 def read_page(image: Image.Image, profile: Profile, ocr: Ocr, page: int) -> list[Row]:
     """从一屏里读出所有可购买行(尚未去重)。名字读不出来的也返回(空名字),由上层统计。"""
     rows: list[Row] = []
