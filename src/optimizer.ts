@@ -672,6 +672,19 @@ export function optimize(input: OptimizerInput): OptimizerResult {
 
   // 去重合并:前置技能可能已经被别的候选带进来了,同一技能在模拟里只能出现一次;
   // 另外单双圈占同一格,**买了 ◎ 之后 ○ 不再重复生效**(◎ 是升级版,同格替换不叠加)
+  //
+  // 「买金就送下位」的覆盖关系也必须在这里生效 —— 不只是为了显示,是**模拟正确性**:
+  // 白装了、金也装了,引擎会各算一遍效果(实测良场地○ + 良场地恶煞 同装比只装金快
+  // 0.161 马身),收益直接虚高。2026-10-27 用户就问到了这点,而当时 chosen 里确实
+  // 同时留着这两项、finalSec 也是按叠加算的 —— 因为删白那段只认 `requires`,
+  // 而三级链(良场地○→良场地◎→良场地恶煞)的直接前置不在候选里,requires 是空的。
+  const supersedePairs: [string, string][] = [];
+  for (const c of cands) {
+    if (c.circleChain === true) continue;
+    for (const r of c.requires) supersedePairs.push([c.id, r]);
+  }
+  for (const s of input.supersedes ?? []) supersedePairs.push([s.gold, s.lower]);
+
   const combine = (...groups: readonly (readonly SkillConfig[])[]): SkillConfig[] => {
     const m = new Map<string, SkillConfig>();
     for (const g of groups) for (const s of g) m.set(s.id, s);
@@ -681,9 +694,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     }
     // 金技能顶掉它的下位白:与 ○/◎ 同构的"升级替换"关系。
     // 少了这一步,组合里同时选了金和白时,白那 0.15×3 会被当成额外收益算进去。
-    for (const c of cands) {
-      const baseId = c.requires.length === 1 ? c.requires[0]! : undefined;
-      if (baseId !== undefined && m.has(c.id) && m.has(baseId)) m.delete(baseId);
+    for (const [goldId, lowerId] of supersedePairs) {
+      if (m.has(goldId) && m.has(lowerId)) m.delete(lowerId);
     }
     return [...m.values()];
   };

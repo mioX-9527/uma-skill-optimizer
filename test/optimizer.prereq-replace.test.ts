@@ -31,6 +31,9 @@ const runner: RunnerConfig = {
 
 const GOLD = SKILLS.find(s => s.id === '201662')! as SkillConfig;   // 先走一步！
 const WHITE = SKILLS.find(s => s.id === '201661')! as SkillConfig;  // 游戏到此为止！
+// 三级链那组:良场地○ → 良场地◎(中间级) → 良场地恶煞
+const GOLD_2 = SKILLS.find(s => s.id === '200154')! as SkillConfig;   // 良场地恶煞
+const WHITE_2 = SKILLS.find(s => s.id === '200152')! as SkillConfig;  // 良场地○
 
 const baseSec = simulate(course, runner).finishTimeSec;
 const bps = simulate(course, runner).spurtTargetSpeed / BODY_LENGTH_METERS;
@@ -139,5 +142,27 @@ describe('买金就送下位:下位不进推荐', () => {
     expect(r.totalPt).toBe(284);
     expect(r.remainingPt).toBe(400 - 284);   // 提示语里的"还剩"必须同口径
     expect(r.notes.join('\n')).toContain('不用单独买');
+  });
+
+  /**
+   * 模拟层也必须认这条覆盖关系 —— 否则白装了、金也装了,引擎会把两份效果各算一遍。
+   * 实测(2026-10-27 用户问"会不会又算成金+白"):良场地○ + 良场地恶煞 同装比只装金
+   * 快 0.161 马身,收益直接虚高。
+   */
+  it('supersedes 覆盖的下位白绝不能进模拟(否则效果叠加、收益虚高)', () => {
+    const goldOnly = simulate(course, { ...runner, skills: [GOLD_2] }).finishTimeSec;
+    const both = simulate(course, { ...runner, skills: [WHITE_2, GOLD_2] }).finishTimeSec;
+    // 前提:这个技能对确实会叠加,否则本测试测不出东西
+    expect(both).toBeLessThan(goldOnly);
+
+    const r = optimize({
+      course, runner,
+      candidates: [{ id: '200154', pt: 284 }, { id: '200152', pt: 81 }],
+      budget: 400,
+      supersedes: [{ gold: '200154', lower: '200152' }],
+    });
+    // 最终成绩必须是"只装金",不能是"白+金"
+    expect(r.finalSec).toBeCloseTo(goldOnly, 6);
+    expect(r.finalSec).not.toBeCloseTo(both, 6);
   });
 });
