@@ -113,7 +113,10 @@ export default function App() {
     if (b === null || result === null) return;
     setSelecting(true);
     try {
-      const r = await b.select_skills(result.chosen.map(c => c.name));
+      const r = await b.select_skills(
+        result.chosen.map(c => ({ name: c.name, pt: c.listPt })),
+        serial ?? undefined,
+      );
       if (!r.ok) {
         setReadLog(prev => [...prev, `[勾选失败] ${r.error ?? '未知原因'}`]);
         return;
@@ -122,8 +125,10 @@ export default function App() {
       const failed = r.failed ?? [];
       setReadLog(prev => [...prev,
         `已在游戏里勾选 ${done.length} 项${done.length > 0 ? `:${done.join('、')}` : ''}`,
+        // 名字可能同时出现在 done 和 failed 里(双圈只勾上了单圈 = 部分成功),所以这里
+        // 用中性的「勾选问题」开头,不要写成"没有勾上" —— 那和上一行自相矛盾。
         ...(failed.length > 0
-          ? failed.map(f => `没有勾上「${f.name}」:${f.reason}`)
+          ? failed.map(f => `勾选问题:「${f.name}」${f.reason}`)
           : []),
         r.pt_after != null
           ? `游戏里现在显示可用 ${r.pt_after} 点(读取时 ${r.pt_before ?? '?'})—— 确认无误后**自己**点游戏里的「确定」才会真正购买,本工具不会替你提交。`
@@ -531,8 +536,12 @@ export default function App() {
           <p className="dim">下表按游戏购买界面的顺序(从上到下)排列,方便照着买。</p>
           {bridge !== null && (
             <div className="row-actions">
-              <button onClick={() => void autoSelect()} disabled={selecting || running}>
-                {selecting ? '正在游戏里勾选…' : `在游戏里勾选这 ${result.chosen.length} 项(不提交)`}
+              <button
+                className="btn-pick"
+                onClick={() => void autoSelect()}
+                disabled={selecting || running}
+              >
+                {selecting ? '正在游戏里勾选…' : `▶ 在游戏里勾选这 ${result.chosen.length} 项(不提交)`}
               </button>
               <span className="dim">
                 只在游戏里点「加号」把技能放进购物车,**不会点「确定」**;买不买你自己决定。

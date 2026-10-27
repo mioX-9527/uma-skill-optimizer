@@ -2,11 +2,15 @@
 
 用户要的是"省掉逐行找技能、逐个点加号"的操作,买入这一步仍然由人自己按「确定」。
 
-**实测依据**(2026-10-27,雷电 720x1280):
+**实测依据**(2026-10-27,雷电 720x1280,技能获取界面):
 
-- 点行右侧绿色「+」= 加入购物车:该行变成「◎」(单圈)或「已获得」,顶部「当前技能点数」
+- 点行右侧绿色「+」= 加入购物车:该行变成「◎」(单圈)或不可再买,顶部「当前技能点数」
   同步减少,底部「确定」变亮。**不点确定不算购买**;点「−」可撤回,点数原样恢复。
-- 所以本模块的每一步都可以回退,但**必须保证不碰「确定」** —— 那是唯一不可逆的按钮。
+  所以本模块的每一步都可以回退,但**必须保证不碰「确定」** —— 那是唯一不可逆的按钮
+  (它在 (358,1083),「重置」在 (619,1082),两个按钮挨着,写坐标时别看串)。
+- **买满的那一行会留在列表里,但名字被污染**:实测「长距离弯道」买到 ◎ 之后,那一行
+  OCR 读出来是「长距离弯道启」(`symbol=None`、`price=None`)——「已获得」角标挤进了名字框。
+  所以按名字精确比对在这一步会断,必须先做归一化、再允许"前缀 + 不可购买"的兜底。
 
 **两个必须处理的细节**:
 
@@ -14,18 +18,40 @@
    「良场地◎」,再点一次 + 才算勾上。所以按名字尾缀决定点几下。
 2. **点完行会重排**。第二次点之前必须重新截图、按名字重新定位 y(与 circle.py 同一个坑)。
 
+**名字对位**(「继承固有没勾」的真正原因,2026-10-27 实测):
+
+- 优化器/技能库里的名字带**库内区分用的尾缀**:`璀璨流星(继承)`、`决不让出领头的景色……！(继承)(1)`。
+  而游戏列表里**只有基名**:`璀璨流星`、`决不让出领头的景色……！`。
+- 拿库名直接跟行名比,继承版一条都对不上(实测界面上那一行就叫「璀璨流星」)。
+  所以一律先 `base_name()` 剥尾缀,再用 `match.normalize` 归一(省略号/全半角/OCR 易混字)。
+
+**「双圈没勾」的真正原因**:名字本来就对得上(◎ 早就剥了),问题在**点半途而废被当成成功** ——
+双圈第二下没点上(列表还在动)时,旧代码返回"成功"并把原因丢掉,用户只看到「已勾选」,
+实际购物车里只有单圈。现在分成三态(见 TAP_OK / TAP_PARTIAL / TAP_FAIL),部分成功会明说。
+
 **开工前的前置检查**:如果购物车已经有东西(当前点数 ≠ 读取时的点数),直接拒绝 ——
 在不知情的残留上再叠一串,用户根本算不清自己花了多少。
 """
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from .adb import Adb, ScreenMeta
 from .capture import check_on_skill_page, check_orientation, read_page, read_pt_balance, scroll_to_top
 from .layout import Profile
+from .match import Row, normalize
 from .ocr import Ocr
+
+# 技能库为区分条目加的尾缀:「(继承)」是继承版,「(1)/(2)」是同名分支。全角半角都有,一起吃。
+_SUFFIX_RE = re.compile(r"[（(]\s*(?:继承|\d+)\s*[）)]")
+_SYMBOLS = "○◎"
+
+# 点加号的三态结果:完全勾上 / 只勾上一部分(双圈只加了单圈) / 一下都没点上。
+TAP_OK = "ok"
+TAP_PARTIAL = "partial"
+TAP_FAIL = "fail"
 
 
 class SelectError(RuntimeError):
@@ -44,13 +70,40 @@ class SelectOutcome:
         return len(self.done) + len(self.failed)
 
 
-def _clean(name: str) -> str:
-    """去掉名字尾部的 ○/◎ —— OCR 读不出这两个符号,行名字里只有基名。
+@dataclass(frozen=True)
+class _Target:
+    """一个要勾的技能。
 
-    **顺序很关键**:必须先 strip 空白再剥符号。反过来的话 `" 中山赛场○ "` 的 rstrip("○◎")
-    什么都剥不掉(末尾是空格),结果带着 ○ 去跟行名字对位,永远匹配不上。
+    `display` 是给用户看的名字(带 ○/◎、带「(继承)」),`base` 是归一化后的**行名**,
+    两者不是一回事 —— 报错要用 display(用户认的是那个),找行只能用 base。
     """
-    return name.strip().rstrip("○◎").strip()
+
+    display: str
+    base: str
+    taps: int
+    pt: int | None = None      # 计划里的标价,只在"游戏里两行同名"时用来消歧
+
+
+def base_name(name: str) -> str:
+    """技能库名 → 游戏列表里那一行的名字。
+
+    剥掉三类尾缀:`○/◎`(等级,OCR 也读不出)、`(继承)`、`(1)/(2)`。
+    **顺序有讲究**:先剥空白和符号(「 中山赛场○ 」这种带空格的),再剥括号尾缀,
+    最后再剥一次符号(「XX(继承)◎」剥完括号会露出 ◎)。搞错顺序就永远匹配不上。
+    """
+    s = (name or "").strip().rstrip(_SYMBOLS).strip()
+    s = _SUFFIX_RE.sub("", s).strip()
+    return s.rstrip(_SYMBOLS).strip()
+
+
+def _clean(name: str) -> str:
+    """兼容旧名:等价于 `base_name`。"""
+    return base_name(name)
+
+
+def row_key(text: str) -> str:
+    """行名/库名 → 比对键。走 match.normalize:全半角、易混字、省略号写法都归一。"""
+    return normalize(base_name(text))
 
 
 def _taps_of(name: str) -> int:
@@ -58,8 +111,31 @@ def _taps_of(name: str) -> int:
     return 2 if name.rstrip().endswith("◎") else 1
 
 
+def _targets_of(items: "list[str] | list[dict]") -> list[_Target]:
+    """前端既能传 `['良场地◎']`,也能传 `[{name, pt}]`(带标价,同名行才分得清)。"""
+    out: list[_Target] = []
+    seen: set[tuple[str, int, int | None]] = set()
+    for it in items:
+        if isinstance(it, dict):
+            nm = str(it.get("name") or "")
+            raw_pt = it.get("pt")
+            pt = int(raw_pt) if isinstance(raw_pt, (int, float)) else None
+        else:
+            nm = str(it)
+            pt = None
+        base = row_key(nm)
+        if not base:
+            continue
+        key = (base, _taps_of(nm), pt)
+        if key in seen:          # 同一个技能被传了两遍:再点就把 ◎ 也点上了
+            continue
+        seen.add(key)
+        out.append(_Target(display=nm, base=base, taps=_taps_of(nm), pt=pt))
+    return out
+
+
 def select_in_shop(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
-                   names: list[str], pt_before: int | None,
+                   names: "list[str] | list[dict]", pt_before: int | None,
                    progress=None, max_pages: int | None = None) -> SelectOutcome:
     """按**界面从上到下**的顺序,把 names 里每个技能点加号勾上(不提交)。
 
@@ -76,15 +152,7 @@ def select_in_shop(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
             f"请先点游戏里的「重置」或把已选项取消,再让我勾。"
         )
 
-    # 目标:基名 → 还要点几下(双圈两下)
-    pending: dict[str, int] = {}
-    display: dict[str, str] = {}
-    for n in names:
-        base = _clean(n)
-        if base and base not in pending:
-            pending[base] = _taps_of(n)
-            display[base] = n
-
+    pending = _targets_of(names)
     out = SelectOutcome(pt_before=pt_before)
     steps = scroll_to_top(adb, meta, profile, ocr, progress)
     if progress:
@@ -103,21 +171,36 @@ def select_in_shop(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
         seen_pages.add(sig)
 
         for row in rows:
-            base = row.name_text.strip()
-            taps = pending.get(base)
-            if taps is None:
+            key = row_key(row.name_text)
+            if not key:
                 continue
-            ok, reason = _tap_n_times(adb, profile, ocr, base, taps)
-            if ok:
-                out.done.append(display[base])
-                del pending[base]
+            cands = [t for t in pending if t.base == key]
+            if not cands:
+                continue
+            target = _pick(cands, row.price)
+            status, reason = _tap_n_times(adb, profile, ocr, key, target.taps)
+            if status == TAP_OK:
+                out.done.append(target.display)
                 if progress:
-                    progress(f"已勾选「{display[base]}」")
+                    progress(f"已勾选「{target.display}」")
+            elif status == TAP_PARTIAL:
+                # **关键**:点了几下半途而废(双圈只加了单圈)不能算成功 ——
+                # 原来这里 ok=True 就把 reason 扔了,用户看到"已勾选",实际只买了一半。
+                out.done.append(target.display)
+                out.failed.append((target.display, reason))
+                if progress:
+                    progress(f"「{target.display}」只勾了一部分:{reason}")
             else:
-                out.failed.append((display[base], reason))
-                del pending[base]
+                out.failed.append((target.display, reason))
                 if progress:
-                    progress(f"「{display[base]}」没勾上:{reason}")
+                    progress(f"「{target.display}」没勾上:{reason}")
+            # 同名多条(库里「(1)/(2)」这种分支剥完尾缀会撞名):游戏里只有一行,
+            # 只能勾一条。剩下的必须明说"没勾",不然又是一次静默漏勾。
+            for sib in [t for t in pending if t.base == key and t is not target]:
+                out.failed.append(
+                    (sib.display, f"与「{target.display}」同名,游戏里只有一行,已勾那个;这一条请自己看价格核对")
+                )
+            pending = [t for t in pending if t.base != key]
 
         if not pending:
             break
@@ -125,8 +208,8 @@ def select_in_shop(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
         adb.swipe(360, cfg["y0"], 360, cfg["y1"], int(cfg["duration_ms"]))
         adb.settle(float(cfg["settle_s"]))
 
-    for base in list(pending):
-        out.failed.append((display[base], "翻到底也没找到这一行"))
+    for t in pending:
+        out.failed.append((t.display, "翻到底也没找到这一行"))
 
     try:
         out.pt_after = read_pt_balance(ocr, adb.screencap(), profile)
@@ -135,34 +218,109 @@ def select_in_shop(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
     return out
 
 
-def _tap_n_times(adb: Adb, profile: Profile, ocr: Ocr, base: str, taps: int) -> tuple[bool, str]:
-    """点 taps 次加号。每次都重新定位(行会重排),用点数变化确认点中了。"""
+def _pick(cands: list[_Target], price: int | None) -> _Target:
+    """同名多条时挑一条:标价能对上就按标价挑,否则取第一条。
+
+    **为什么会同名**:技能库里有 `决不让出领头的景色……！(继承)(1)/(2)` 这种同名的分支条目,
+    剥掉尾缀后它们指向游戏里同一行名字。不按标价消歧就只能瞎猜,猜错就是买错技能。
+    """
+    if len(cands) == 1:
+        return cands[0]
+    if price is not None:
+        hit = [t for t in cands if t.pt is not None and t.pt == price]
+        if len(hit) == 1:
+            return hit[0]
+    return cands[0]
+
+
+def _locate(adb: Adb, profile: Profile, ocr: Ocr, key: str) -> tuple[Row | None, str]:
+    """当前屏里按归一化基名找行。返回 (行, 状态);状态 = exact / done / none。
+
+    `done` 是"这一行已经不可购买了":买到「已获得」之后名字框会被角标污染
+    (实测「长距离弯道」→「长距离弯道启」),精确比对断了,只能靠"前缀 + 没符号 + 没价格"认出来。
+    """
+    rows = read_page(adb.screencap(), profile, ocr, 0)
+    exact = [r for r in rows if row_key(r.name_text) == key]
+    if exact:
+        return exact[0], "exact"
+    for r in rows:
+        k = row_key(r.name_text)
+        if (k != key and k.startswith(key) and len(k) - len(key) <= 2
+                and r.symbol is None and r.price is None):
+            return r, "done"
+    return None, "none"
+
+
+def _read_pt_after(ocr: Ocr, adb: Adb, profile: Profile) -> int | None:
+    """点完之后读点数,**取连续几帧里的最小值**。
+
+    点数只会减少,所以"读到的最小值"比"读一次"可靠:一次读数可能正好落在过渡动画上,
+    读回点之前的旧值 —— 旧逻辑据此判定"没点上",然后**又点了一下**,于是单圈被点成了双圈
+    (多花一份钱)。宁可多截两帧,也不要重复点。
+    """
+    best: int | None = None
+    for _ in range(3):
+        v = read_pt_balance(ocr, adb.screencap(), profile)
+        if v is not None and (best is None or v < best):
+            best = v
+        adb.settle(0.35)
+    return best
+
+
+def _tap_n_times(adb: Adb, profile: Profile, ocr: Ocr, key: str, taps: int) -> tuple[str, str]:
+    """点 taps 次加号,返回 (状态, 原因)。状态见 TAP_OK / TAP_PARTIAL / TAP_FAIL。
+
+    **为什么要区分"部分成功"**:双圈要点两下,第二下失败时技能其实已经部分勾上
+    (单圈在购物车里)。原来这里返回 True 且把原因丢掉,用户只看到"已勾选",
+    实际上双圈没到位 —— 也就是"双圈技能没勾上"这个报障的由来。
+    """
     cfg = profile.raw.get("circle") or {}
     plus_x = int(cfg.get("plus_x", 650))
+    done = 0
 
-    for i in range(taps):
-        adb.settle(0.5)
-        img = adb.screencap()
-        row = next((r for r in read_page(img, profile, ocr, 0) if r.name_text.strip() == base), None)
+    for _ in range(taps):
+        adb.settle(0.5)          # 列表还在惯性滚动时 tap 会被吃掉,先等它停
+        row, state = _locate(adb, profile, ocr, key)
         if row is None:
-            return False, f"第 {i + 1} 次点之前没找到这一行(列表在动?)"
-        pt0 = read_pt_balance(ocr, img, profile)
+            # 已经点成功了行却不见了 = 加满了被移出可购买列表,算成功
+            if done > 0:
+                return TAP_OK, ""
+            return TAP_FAIL, f"找不到「{base_name(key)}」这一行(列表在动?)"
+        if state == "done":
+            return (TAP_OK, "") if done > 0 else (TAP_FAIL, "这一行已经买过了(不可再买)")
+
+        pt0 = read_pt_balance(ocr, adb.screencap(), profile)
+        if pt0 is None:
+            # 读不到点数就**不敢点**:点了也无法判断有没有生效,重复点会把单圈点成双圈(多花钱)
+            return (TAP_PARTIAL if done > 0 else TAP_FAIL), "读不到当前技能点数,不敢点(怕点重复)"
         adb.tap(plus_x, row.y)
-        adb.settle(1.2)
-        pt1 = read_pt_balance(ocr, adb.screencap(), profile)
-        if pt0 is None or pt1 is None:
-            return False, "读不到点数,无法确认是否点上"
+        adb.settle(1.0)
+        pt1 = _read_pt_after(ocr, adb, profile)
+        if pt1 is not None and pt1 < pt0:
+            done += 1
+            continue
+        if pt1 is None:
+            # 同一道理:读数丢了就当"可能已生效",宁可让用户补一下,也不重复点
+            return (TAP_PARTIAL if done > 0 else TAP_FAIL), "点了但读不到点数,无法确认是否生效"
+
+        # 点数确实没动(点空:列表仍在动 / 行刚挪了位置):重定位再试一次
+        adb.settle(1.0)
+        row, state = _locate(adb, profile, ocr, key)
+        if row is None or state == "done":
+            return (TAP_OK, "") if done > 0 else (TAP_FAIL, "这一行已经买过了(不可再买)")
+        pt0 = read_pt_balance(ocr, adb.screencap(), profile)
+        if pt0 is None:
+            return (TAP_PARTIAL if done > 0 else TAP_FAIL), "读不到当前技能点数,不敢再点(怕点重复)"
+        adb.tap(plus_x, row.y)
+        adb.settle(1.0)
+        pt1 = _read_pt_after(ocr, adb, profile)
+        if pt1 is None:
+            return (TAP_PARTIAL if done > 0 else TAP_FAIL), "点了但读不到点数,无法确认是否生效"
         if pt1 >= pt0:
-            # 可能是惯性滚动吃掉了点击,重定位再试一次
-            adb.settle(0.8)
-            img = adb.screencap()
-            row = next((r for r in read_page(img, profile, ocr, 0) if r.name_text.strip() == base), None)
-            if row is None:
-                return False, "重试时找不到这一行"
-            pt0 = read_pt_balance(ocr, img, profile)
-            adb.tap(plus_x, row.y)
-            adb.settle(1.2)
-            pt1 = read_pt_balance(ocr, adb.screencap(), profile)
-            if pt0 is None or pt1 is None or pt1 >= pt0:
-                return False, "点加号没生效(该行可能已买过或不可买)"
-    return True, ""
+            if done > 0:
+                return TAP_PARTIAL, (f"点了 {done}/{taps} 下,剩下的没点上(列表在动?)"
+                                     f" —— 这一项只勾了一部分,请在游戏里核对")
+            return TAP_FAIL, "点加号没生效(该行可能已买过或不可买)"
+        done += 1
+
+    return TAP_OK, ""

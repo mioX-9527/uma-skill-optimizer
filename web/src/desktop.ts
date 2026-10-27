@@ -28,6 +28,12 @@ export interface EvolutionRow {
   readonly conditionMet: boolean;
 }
 
+/** 交给后端「在游戏里勾选」的一项:界面上的名字 + 列表上显示的价格(同名行消歧用) */
+export interface PickItem {
+  readonly name: string;
+  readonly pt: number;
+}
+
 export interface SelectResponse {
   readonly ok: boolean;
   readonly error?: string;
@@ -66,9 +72,12 @@ export interface DesktopBridge {
   save_plan(text: string): Promise<{ ok: boolean; path?: string; cancelled?: boolean; error?: string }>;
   /**
    * 在游戏的技能购买界面里把推荐组合**勾上**(点加号加入购物车),**不点确定**。
+   *
+   * `items` 里带 `pt`(列表上显示的那个价)是为了同名行消歧:技能库里的
+   * `决不让出领头的景色……！(继承)(1)/(2)` 剥掉尾缀后指向游戏里同一行名字。
    * 名字用界面上显示的那个(带 ○/◎):◎ 会自动点两下(先单圈后双圈)。
    */
-  select_skills(names: string[]): Promise<SelectResponse>;
+  select_skills(items: readonly PickItem[], serial?: string): Promise<SelectResponse>;
 }
 
 /** 一台 adb 设备(下拉框一项) */

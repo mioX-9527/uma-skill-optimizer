@@ -113,6 +113,10 @@ class Bridge:
         try:
             adb = Adb(self._resolve(serial))
             meta = adb.connect()
+            # 记住这次读的是哪台:后面「在游戏里勾选」要接着用同一台 —— 模拟器重连后
+            # 同一台机器会同时挂在 5555/7555/16384/emulator-5554 几个序列号下,
+            # 不带序列号重新 resolve 会因为"挑不出哪台是赛马娘"直接报错。
+            self._serial = adb.serial
             profile = load_profile(meta.width, meta.height)
             from .ocr import Ocr
 
@@ -166,10 +170,15 @@ class Bridge:
         finally:
             self._busy.release()
 
-    def select_skills(self, names: list[str] | None = None) -> dict:
+    def select_skills(self, items: list | None = None, serial: str | None = None) -> dict:
         """把推荐组合在技能购买界面里**勾上**(点加号加入购物车),**不点「确定」**。
 
+        `items` 可以是 `['良场地◎']`,也可以是 `[{'name': '良场地◎', 'pt': 99}]` ——
+        带标价时,游戏里两行同名(库里的 `(1)/(2)` 分支剥完尾缀会撞名)才能按价格分清。
         名字用界面上显示的那个(带 ○/◎):`◎` 会自动点两下(先单圈、再双圈)。
+        名字里的 `(继承)`、`(1)` 这些**库内尾缀会被自动剥掉** —— 游戏列表里只有基名
+        (实测漏勾就是这条:库名「璀璨流星(继承)」,界面上叫「璀璨流星」)。
+
         前置检查:购物车必须是干净的(当前点数 == 读取时点数),否则直接拒绝。
         """
         if not self._busy.acquire(blocking=False):
@@ -178,11 +187,11 @@ class Bridge:
             from .ocr import Ocr
             from .select import SelectError, select_in_shop
 
-            adb = Adb(self._resolve(None))
+            adb = Adb(self._resolve(serial))
             meta = adb.connect()
             profile = load_profile(meta.width, meta.height)
             try:
-                out = select_in_shop(adb, meta, profile, Ocr(), list(names or []), self._pt_balance)
+                out = select_in_shop(adb, meta, profile, Ocr(), list(items or []), self._pt_balance)
             except SelectError as exc:
                 return {"ok": False, "error": str(exc)}
             return {

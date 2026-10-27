@@ -113,6 +113,18 @@ button:hover { border-color: var(--accent); }
   margin: 6px 0 12px;
 }
 
+/* 「在游戏里勾选」:这是个**会去动游戏**的动作,和普通的白底按钮、橙色的「开始计算」
+   都不是一类东西 —— 给绿色实心,一眼能认出"这一下会动模拟器"。 */
+.btn-pick {
+  background: var(--good);
+  border-color: var(--good);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 6px 14px;
+}
+.btn-pick:hover:not(:disabled) { background: #15662c; border-color: #15662c; }
+.btn-pick:disabled { opacity: 0.55; cursor: default; }
+
 .error { color: #c93c2e; }
 .warn-text { color: var(--warn); font-size: 12px; }
 
