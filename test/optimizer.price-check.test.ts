@@ -66,3 +66,30 @@ describe('双圈 ◎ 的价格异常提示', () => {
     expect(r.notes.some(n => n.startsWith(MUST_CHECK))).toBe(false);
   });
 });
+
+describe('P9:上下位关系漏声明（结果会让价格失真）', () => {
+  // 巅峰之梦(320pt, 含下位白 背负信念 180pt)—— plan_v2 里声明过这层关系
+  const GOLD = '210291';
+  const WHITE = '210292';
+
+  it('金和白都在候选里、但没传 requires → 必须报【必须核对】', () => {
+    const r = optimize({ course, runner, candidates: [{ id: GOLD, pt: 320 }, { id: WHITE, pt: 180 }], budget: 900 });
+    const hit = r.notes.filter(n => n.startsWith(MUST_CHECK));
+    expect(hit).toHaveLength(1);
+    expect(hit[0]).toContain('上下位关系');
+  });
+
+  it('传了 requires(关系已声明)→ 不报', () => {
+    const r = optimize({
+      course, runner,
+      candidates: [{ id: GOLD, pt: 320, requires: WHITE }, { id: WHITE, pt: 180 }],
+      budget: 900,
+    });
+    expect(r.notes.some(n => n.startsWith(MUST_CHECK))).toBe(false);
+  });
+
+  it('只有金、白不在候选里(已买过)→ 不报', () => {
+    const r = optimize({ course, runner, candidates: [{ id: GOLD, pt: 320 }], budget: 900 });
+    expect(r.notes.some(n => n.startsWith(MUST_CHECK))).toBe(false);
+  });
+});

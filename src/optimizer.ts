@@ -1,6 +1,7 @@
 import { BODY_LENGTH_METERS, sampleableSpans, simulate, skillApplicable } from './engine/index.js';
 import type { Course, Region, RestrictionClause, RunnerConfig, SimResult, SimOptions, SkillConfig, SkillRestriction, Tactic } from './engine/index.js';
 import { CIRCLE_BASE, CIRCLE_UPGRADES, SKILLS, type SkillEntry } from './data.js';
+import { describeMissingChains, findMissingChains } from './chain-check.js';
 
 const SKILL_INDEX = new Map(SKILLS.map(s => [s.id, s] as const));
 
@@ -566,6 +567,18 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       c.state = 'blocked';
       c.blockedDetail = blocked === '' ? '装配限制不满足' : blocked;
     }
+  }
+
+  // ── P9:金技能的下位白也在候选里、却没有任何 requires → 上下位关系漏声明 ──
+  // 后果:金按全额计价、白又被当成独立候选再付一次(重复计价,实测最大 0.601 马身)。
+  // 放在这里(而不是各前端自己做)是为了 CLI / 网页 / 桌面版**都能看到**同一条提示 ——
+  // 桌面版跑的是网页里的 JS,根本不经过 CLI。
+  {
+    const missing = findMissingChains({
+      candidateIds: cands.filter(c => c.state !== 'blocked').map(c => c.id),
+      declared: new Map(cands.filter(c => c.requires.length === 1).map(c => [c.id, c.requires[0]!] as const)),
+    });
+    if (missing.length > 0) notes.push(`${MUST_CHECK}${describeMissingChains(missing)}`);
   }
 
   // ── 基准与单项收益(已标注 blocked 的候选不参与模拟:其收益按定义恒为 0) ──

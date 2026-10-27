@@ -11,7 +11,6 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Aptitude, Course, Motivation, RunnerConfig, Stats, Tactic } from './engine/index.js';
 import { COURSES, SKILLS, type SkillEntry } from './data.js';
-import { describeMissingChains, findMissingChains } from './chain-check.js';
 import { lookup } from './lookup.js';
 import { MUST_CHECK, optimize } from './optimizer.js';
 import { fmtBody, tableRow } from './fmt.js';
@@ -193,9 +192,6 @@ function main(): void {
   // 上下位关系:只有当**前置也在候选里**才生效(前置不在=已经买过,显示价里本来就不含它)
   const chainMap = new Map((plan.chains ?? []).map(c => [String(c.skillId), String(c.prereqId)] as const));
   const candIdSet = new Set(resolved.map(r => r.skill.id));
-  // P9:上下位关系漏声明 → 计价与收益都会失真(实测最大 0.6 马身)。只提示、不自动修:
-  // 猜错一条链比漏一条更糟,得由用户/OCR 去确认真实关系。
-  const missingChains = findMissingChains({ candidateIds: [...candIdSet], declared: chainMap });
   // 进化:条件已达成才按进化后算(结束养成时自动进化,不额外花 PT)。
   // **一个技能可能有多条进化路线**,各条单独算一遍单项收益,取最高的进主方案,其余在下面列出对比。
   // 注意 toId 是进化后的技能,它本身不在候选列表里(不用单独买),所以只校验 fromId。
@@ -248,12 +244,6 @@ function main(): void {
   console.log(`环境: 场地 ${GROUND_LABEL[runner.groundCondition ?? 0]}  天气 ${WEATHER_LABEL[runner.weather ?? 1]}  季节 ${SEASON_LABEL[runner.season ?? 1]}(只影响「绿技能/环境条件类技能」是否生效)`);
   if (estPt.length > 0) {
     console.log(`[注意] 以下技能未提供 pt,使用兜底估算价(游戏内有折扣时请以实际显示价为准):\n  ${estPt.join('、')}`);
-  }
-  if (missingChains.length > 0) {
-    console.log(`[注意] ${describeMissingChains(missingChains)}`);
-    for (const m of missingChains) {
-      console.log(`        ${m.skillName} ${m.cost}pt + ${m.prereqName} ${m.totalCost - m.cost}pt = ${m.totalCost}pt(白会被重复计价)`);
-    }
   }
 
   const result = optimize({
