@@ -1,5 +1,267 @@
-369 INFO: PyInstaller: 6.22.3, contrib hooks: 2026.7
-370 INFO: Python: 3.13.14
-416 INFO: Platform: Windows-11-10.0.22631-SP0
-417 INFO: Python environment: C:\Users\mio\.workbuddy\binaries\python\envs\default
-383 WARNING: Failed to collect submodules for 'rapidocr.inference_engine.tensorrt' because importing 'rapidocr.inference_engine.tensorrt' raised: ModuleNotFoundError: No module named 'tensorrt'
+317 INFO: PyInstaller: 6.22.3, contrib hooks: 2026.7
+318 INFO: Python: 3.13.14
+359 INFO: Platform: Windows-11-10.0.22631-SP0
+359 INFO: Python environment: C:\Users\mio\.workbuddy\binaries\python\envs\default
+491 WARNING: Failed to collect submodules for 'rapidocr.inference_engine.tensorrt' because importing 'rapidocr.inference_engine.tensorrt' raised: ModuleNotFoundError: No module named 'tensorrt'
+4491 WARNING: Failed to collect submodules for 'onnxruntime.quantization' because importing 'onnxruntime.quantization' raised: ModuleNotFoundError: No module named 'onnx'
+30701 INFO: Module search paths (PYTHONPATH):
+['C:\\Users\\mio\\Desktop\\uma-skill-optimizer',
+ 'D:\\360Downloads\\WorkBuddy\\resources\\app.asar.unpacked\\cli\\vendor\\shim',
+ 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\versions\\3.13.12\\python313.zip',
+ 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\versions\\3.13.12\\DLLs',
+ 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\versions\\3.13.12\\Lib',
+ 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\versions\\3.13.12',
+ 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default',
+ 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages',
+ 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\win32',
+ 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\win32\\lib',
+ 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\pythonwin',
+ 'C:\\Users\\mio\\Desktop\\uma-skill-optimizer']
+32356 INFO: Appending 'binaries' from .spec
+32357 INFO: Appending 'datas' from .spec
+32442 INFO: checking Analysis
+32484 INFO: Building because excludes changed
+32484 INFO: Looking for Python shared library...
+32484 INFO: Using Python shared library: C:\Users\mio\.workbuddy\binaries\python\versions\3.13.12\python313.dll
+32484 INFO: Running Analysis Analysis-00.toc
+32484 INFO: Target bytecode optimization level: 0
+32484 INFO: Initializing module dependency graph...
+32487 INFO: Initializing module graph hook caches...
+32516 INFO: Analyzing modules for base_library.zip ...
+36951 INFO: Processing standard module hook 'hook-math.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+36974 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+37138 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+40516 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+42542 INFO: Caching module dependency graph...
+42599 INFO: Analyzing C:\Users\mio\Desktop\uma-skill-optimizer\desktop_main.py
+42774 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+43038 INFO: Processing standard module hook 'hook-xml.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+43436 INFO: Processing standard module hook 'hook-sysconfig.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+43446 INFO: Processing standard module hook 'hook-_ctypes.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+43497 INFO: Processing standard module hook 'hook-PIL.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+43643 INFO: Processing standard module hook 'hook-PIL.Image.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+44853 INFO: Processing standard module hook 'hook-numpy.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+45299 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+45302 INFO: SetuptoolsInfo: initializing cached setuptools info...
+48489 INFO: Processing standard module hook 'hook-platform.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+48882 INFO: Processing standard module hook 'hook-webbrowser.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+50656 INFO: Processing standard module hook 'hook-difflib.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+51277 INFO: Processing standard module hook 'hook-psutil.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+51790 INFO: Processing standard module hook 'hook-charset_normalizer.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+52378 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+52627 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+53018 INFO: Processing standard module hook 'hook-cv2.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+56077 INFO: Processing standard module hook 'hook-onnxruntime.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+56229 INFO: Processing pre-safe-import-module hook 'hook-tensorflow.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\pre_safe_import_module'
+56256 INFO: Processing standard module hook 'hook-urllib3.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+56403 INFO: Processing pre-safe-import-module hook 'hook-backports.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+56405 INFO: Setuptools: 'backports' appears to be a full setuptools-vendored copy - creating alias to 'setuptools._vendor.backports'!
+56416 INFO: Processing standard module hook 'hook-setuptools.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+56441 INFO: Processing pre-safe-import-module hook 'hook-distutils.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+56501 INFO: Processing pre-safe-import-module hook 'hook-jaraco.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+56502 INFO: Setuptools: 'jaraco' appears to be a full setuptools-vendored copy - creating alias to 'setuptools._vendor.jaraco'!
+56520 INFO: Processing pre-safe-import-module hook 'hook-more_itertools.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+56521 INFO: Setuptools: 'more_itertools' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.more_itertools'!
+56733 INFO: Processing standard module hook 'hook-_osx_support.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+56762 INFO: Processing pre-safe-import-module hook 'hook-packaging.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+57158 INFO: Processing standard module hook 'hook-setuptools._vendor.jaraco.text.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+57161 INFO: Processing pre-safe-import-module hook 'hook-importlib_resources.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+58270 INFO: Processing pre-safe-import-module hook 'hook-tomli.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+58272 INFO: Setuptools: 'tomli' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.tomli'!
+59073 INFO: Processing pre-safe-import-module hook 'hook-wheel.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+59075 INFO: Setuptools: 'wheel' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.wheel'!
+59760 INFO: Processing standard module hook 'hook-certifi.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+59872 INFO: Processing standard module hook 'hook-cryptography.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+65757 INFO: hook-cryptography: cryptography does not seem to be using dynamically linked OpenSSL.
+C:\Users\mio\.workbuddy\binaries\python\envs\default\Lib\site-packages\rapidocr\inference_engine\pytorch\networks\heads\multiheadAttention.py:14: SyntaxWarning: invalid escape sequence '\d'
+  \text{MultiHead}(Q, K, V) = \text{Concat}(head_1,\dots,head_h)W^O
+67295 INFO: Processing standard module hook 'hook-shapely.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+67711 INFO: Processing standard module hook 'hook-webview.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\webview\\__pyinstaller'
+68162 INFO: Processing standard module hook 'hook-jinja2.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+69090 INFO: Processing pre-safe-import-module hook 'hook-gi.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+69295 INFO: Processing standard module hook 'hook-clr.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\pythonnet\\_pyinstaller'
+69423 INFO: Processing standard module hook 'hook-clr_loader.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+69584 INFO: Processing standard module hook 'hook-pycparser.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+70667 INFO: Analyzing hidden import 'rapidocr_onnxruntime'
+70697 INFO: Analyzing hidden import 'pywebview'
+70699 ERROR: Hidden import 'pywebview' not found
+70699 INFO: Analyzing hidden import 'rapidocr._version'
+70702 INFO: Analyzing hidden import 'rapidocr_onnxruntime.ch_ppocr_v2_cls'
+70718 INFO: Analyzing hidden import 'rapidocr_onnxruntime.ch_ppocr_v3_det'
+70800 INFO: Analyzing hidden import 'rapidocr_onnxruntime.ch_ppocr_v3_rec'
+70816 INFO: Analyzing hidden import 'onnxruntime.capi.convert_npz_to_onnx_adapter'
+70821 INFO: Analyzing hidden import 'onnxruntime.datasets'
+70824 INFO: Analyzing hidden import 'onnxruntime.tools'
+70834 INFO: Analyzing hidden import 'onnxruntime.tools.check_onnx_model_mobile_usability'
+70891 INFO: Analyzing hidden import 'onnxruntime.tools.convert_onnx_models_to_ort'
+70968 INFO: Analyzing hidden import 'onnxruntime.tools.make_dynamic_shape_fixed'
+70973 INFO: Analyzing hidden import 'onnxruntime.tools.offline_tuning'
+70983 INFO: Analyzing hidden import 'onnxruntime.tools.onnx_randomizer'
+70990 INFO: Analyzing hidden import 'onnxruntime.tools.onnxruntime_test'
+71017 INFO: Analyzing hidden import 'onnxruntime.tools.optimize_onnx_model'
+71021 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py'
+71023 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs'
+71027 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.ArgType'
+71029 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.ArgTypeAndIndex'
+71124 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.Attribute'
+71144 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.AttributeType'
+71147 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.Checkpoint'
+71156 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.DeprecatedKernelCreateInfos'
+71164 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.DeprecatedNodeIndexAndKernelDefHash'
+71170 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.DeprecatedSessionState'
+71178 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.DeprecatedSubGraphSessionState'
+71184 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.Dimension'
+71189 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.DimensionValue'
+71195 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.DimensionValueType'
+71197 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.EdgeEnd'
+71200 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.FloatProperty'
+71204 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.Graph'
+71222 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.InferenceSession'
+71229 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.IntProperty'
+71234 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.KernelTypeStrArgsEntry'
+71240 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.KernelTypeStrResolver'
+71246 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.MapType'
+71251 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.Model'
+71306 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.ModuleState'
+71315 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.Node'
+71335 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.NodeEdge'
+71343 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.NodeType'
+71345 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.NodesToOptimizeIndices'
+71353 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.OpIdKernelTypeStrArgsEntry'
+71358 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.OperatorSetId'
+71364 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.OptimizerGroup'
+71371 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.ParameterOptimizerState'
+71378 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.PropertyBag'
+71388 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.RuntimeOptimizationRecord'
+71397 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.RuntimeOptimizationRecordContainerEntry'
+71402 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.RuntimeOptimizations'
+71409 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.SequenceType'
+71413 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.Shape'
+71418 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.SparseTensor'
+71424 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.StringProperty'
+71429 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.StringStringEntry'
+71435 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.Tensor'
+71445 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.TensorDataType'
+71448 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.TensorTypeAndShape'
+71453 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.TypeInfo'
+71458 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.TypeInfoValue'
+71460 INFO: Analyzing hidden import 'onnxruntime.tools.ort_format_model.ort_flatbuffers_py.fbs.ValueInfo'
+71466 INFO: Analyzing hidden import 'onnxruntime.tools.pytorch_export_contrib_ops'
+71473 INFO: Analyzing hidden import 'onnxruntime.tools.qdq_helpers'
+71475 INFO: Analyzing hidden import 'onnxruntime.tools.qdq_helpers.optimize_qdq_model'
+71478 INFO: Analyzing hidden import 'onnxruntime.tools.reduced_build_config_parser'
+71485 INFO: Analyzing hidden import 'onnxruntime.tools.remove_initializer_from_input'
+71488 INFO: Analyzing hidden import 'onnxruntime.tools.symbolic_shape_infer'
+89960 INFO: Processing standard module hook 'hook-xml.dom.domreg.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+90417 INFO: Processing standard module hook 'hook-lxml.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+91731 INFO: Processing standard module hook 'hook-lxml.etree.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+93008 INFO: Analyzing hidden import 'onnxruntime.tools.update_onnx_opset'
+93011 INFO: Analyzing hidden import 'onnxruntime.transformers.affinity_helper'
+93014 INFO: Analyzing hidden import 'onnxruntime.transformers.benchmark'
+93049 INFO: Analyzing hidden import 'onnxruntime.transformers.benchmark_helper'
+93077 INFO: Analyzing hidden import 'onnxruntime.transformers.bert_perf_test'
+93100 INFO: Analyzing hidden import 'onnxruntime.transformers.bert_test_data'
+93122 INFO: Analyzing hidden import 'onnxruntime.transformers.compare_bert_results'
+93134 INFO: Analyzing hidden import 'onnxruntime.transformers.constants'
+93137 INFO: Analyzing hidden import 'onnxruntime.transformers.convert_generation'
+93404 INFO: Analyzing hidden import 'onnxruntime.transformers.convert_tf_models_to_pytorch'
+93415 INFO: Analyzing hidden import 'onnxruntime.transformers.convert_to_packing_mode'
+93437 INFO: Analyzing hidden import 'onnxruntime.transformers.dynamo_onnx_helper'
+93450 INFO: Analyzing hidden import 'onnxruntime.transformers.float16'
+93473 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention'
+93522 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_clip'
+93536 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_sam2'
+93558 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_unet'
+93613 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_vae'
+93628 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_bart_attention'
+93651 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_base'
+93661 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_bias_add'
+93666 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_biasgelu'
+93672 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_biassplitgelu'
+93678 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_conformer_attention'
+93692 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_constant_fold'
+93702 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_embedlayer'
+93734 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_fastgelu'
+93756 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gelu'
+93770 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gelu_approximation'
+93774 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gemmfastgelu'
+93780 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gpt_attention'
+93798 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gpt_attention_megatron'
+93813 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gpt_attention_no_past'
+93824 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_group_norm'
+93833 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_layernorm'
+93852 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_mha_dit'
+93872 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_mha_mmdit'
+93890 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_nhwc_conv'
+93896 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_options'
+93905 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_attention'
+93921 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_gelu'
+93926 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_layernorm'
+93931 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_matmul'
+93938 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_quickgelu'
+93942 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_reshape'
+93951 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_rotary_attention'
+94024 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_shape'
+94030 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_simplified_layernorm'
+94038 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_skip_group_norm'
+94049 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_skiplayernorm'
+94060 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_transpose'
+94070 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_utils'
+94085 INFO: Analyzing hidden import 'onnxruntime.transformers.huggingface_models'
+94089 INFO: Analyzing hidden import 'onnxruntime.transformers.import_utils'
+94091 INFO: Analyzing hidden import 'onnxruntime.transformers.io_binding_helper'
+94116 INFO: Analyzing hidden import 'onnxruntime.transformers.large_model_exporter'
+94136 INFO: Analyzing hidden import 'onnxruntime.transformers.metrics'
+94146 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_exporter'
+94176 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model'
+94246 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bart'
+94260 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bert'
+94313 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bert_keras'
+94337 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bert_tf'
+94361 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_clip'
+94366 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_conformer'
+94370 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_gpt2'
+94379 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_mmdit'
+94411 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_phi'
+94455 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_sam2'
+94465 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_t5'
+94498 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_tnlr'
+94507 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_unet'
+94531 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_vae'
+94539 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_utils'
+94543 INFO: Analyzing hidden import 'onnxruntime.transformers.optimizer'
+94596 INFO: Analyzing hidden import 'onnxruntime.transformers.past_helper'
+94605 INFO: Analyzing hidden import 'onnxruntime.transformers.profile_result_processor'
+94623 INFO: Analyzing hidden import 'onnxruntime.transformers.profiler'
+94641 INFO: Analyzing hidden import 'onnxruntime.transformers.quantize_helper'
+95457 INFO: Analyzing hidden import 'onnxruntime.transformers.shape_infer_helper'
+95466 INFO: Analyzing hidden import 'onnxruntime.transformers.shape_optimizer'
+95483 INFO: Analyzing hidden import 'onnxruntime.transformers.torch_onnx_export_helper'
+95486 INFO: Processing module hooks (post-graph stage)...
+96450 INFO: Processing standard module hook 'hook-lxml.isoschematron.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+96489 WARNING: Hidden import "pycparser.lextab" not found!
+96490 WARNING: Hidden import "pycparser.yacctab" not found!
+96955 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks'
+97078 INFO: Processing standard module hook 'hook-lxml.objectify.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+97106 INFO: Performing binary vs. data reclassification (606 entries)
+97515 INFO: Looking for ctypes DLLs
+97694 INFO: Analyzing run-time hooks ...
+97706 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+97711 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+97718 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+97722 INFO: Including run-time hook 'pyi_rth_setuptools.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+97725 INFO: Including run-time hook 'pyi_rth_cryptography_openssl.py' from 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\rthooks'
+98619 INFO: Creating base_library.zip...
+98648 INFO: Looking for dynamic libraries
+108504 INFO: Extra DLL search directories (AddDllDirectory): ['C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\numpy.libs', 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\torch\\lib', 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\cv2\\../../x64/vc17/bin', 'C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\shapely.libs']
+108504 INFO: Extra DLL search directories (PATH): ['C:\\Users\\mio\\.workbuddy\\binaries\\python\\envs\\default\\Lib\\site-packages\\cv2\\../../x64/vc17/bin']
+111415 INFO: Warnings written to C:\Users\mio\Desktop\uma-skill-optimizer\packaging\build\build_desktop\warn-build_desktop.txt
+111602 INFO: Graph cross-reference written to C:\Users\mio\Desktop\uma-skill-optimizer\packaging\build\build_desktop\xref-build_desktop.html
+111697 INFO: checking PYZ
+111939 INFO: checking PKG
+111941 INFO: Bootloader C:\Users\mio\.workbuddy\binaries\python\envs\default\Lib\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+111942 INFO: checking EXE
+111950 INFO: checking COLLECT
+111963 INFO: Building COLLECT COLLECT-00.toc
+115077 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+115096 INFO: Build complete! The results are available in: C:\Users\mio\Desktop\uma-skill-optimizer\packaging\dist
