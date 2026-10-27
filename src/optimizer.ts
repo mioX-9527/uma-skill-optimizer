@@ -84,14 +84,12 @@ export interface OptimizerInput {
 export interface OptimizerStages {
   /** 1 换 1 交换局部搜索(SWAP_ROUNDS 轮) */
   readonly swap?: boolean;
-  /** 2 出 1 入邻域(两个已选换一个未选;1换1 与多换一都补不了这个方向) */
+  /** 2 出 1 入邻域(两个已选换一个未选;1换1 补不了这个方向) */
   readonly twoOutSwap?: boolean;
   /** 把剩余 PT 花完的收尾补选 */
   readonly spendDown?: boolean;
   /** 期望口径复核(12 点期望下的加入/换出) */
   readonly polish?: boolean;
-  /** 多换一(N 个便宜技能换掉一个贵的) */
-  readonly groupSwap?: boolean;
 }
 
 export interface ChosenSkill {
@@ -342,7 +340,6 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const doTwoOut = stages.twoOutSwap ?? true;
   const doSpendDown = stages.spendDown ?? true;
   const doPolish = stages.polish ?? true;
-  const doGroupSwap = stages.groupSwap ?? true;
 
   let simsUsed = 0;
   // 搜索共用一个「模拟预算」。超限不再 throw(审计 P4 / 优先级5:此前 maxSims 给小一点就整次
@@ -742,7 +739,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   });
 
   // ── 2 出 1 入:两个已选换一个未选(审计 P1)───────────────────────
-  // 1换1 与「多换一」的方向都是"换出更少、换入更多",补不了反向:当两个凑数技能
+  // 1换1 的方向是"换出更少、换入更多",补不了反向:当两个凑数技能
   // 各自的边际都不高、但占着预算时,只有"两个一起让位给一个更优的"能跳出。
   // **必须在 spendDown 之后**:凑数项(○/小边际白)是 spendDown 才装进来的,
   // 排在它前面时换出对根本还不在组合里(plan_v2 实测踩过)。
@@ -861,7 +858,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     }
   });
   if (twoOutMoves > 0) {
-    notes.push(`做了 ${twoOutMoves} 次「2换1」调整:两个已选技能让位给一个更优的候选(1换1/多换一 都补不了这个方向)。`);
+    notes.push(`做了 ${twoOutMoves} 次「2换1」调整:两个已选技能让位给一个更优的候选(1换1 补不了这个方向)。`);
   }
 
   // ── 期望口径复核(把"猜"清掉)────────────────────────────────────
@@ -904,61 +901,6 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     polishMoves++;
     }
   });
-  // ── 多换一:**N 个便宜技能换掉一个贵的**(用户 2026-10-26:白打折高、金打折低时,
-  //    可能三个白 ≈ 一个金)。贪心按 马身/PT 排序,天然不会主动"拆金成三个白",
-  //    这里补一次:枚举「换出 1 项 × 换入 1~3 项」。
-  //    审计 P2:全走期望口径时每个组合 12 次模拟,真实规模吃了 ~240 次(约 1/5)却
-  //    13 个实例 0 兑现。改为**口径 S 预筛**(1 次/组合)、只对筛出的最优者用
-  //    期望口径确认 —— 真变快才动,成本降一个量级,能力保留。
-  let groupMoves = 0;
-  runStage(() => {
-    for (let round = 0; round < (doGroupSwap ? 2 : 0); round++) {
-      const curS = simSearch(skillsOf(chosen));
-      const weakest = chosen.slice().sort((a, b) => a.lastMarginal - b.lastMarginal).slice(0, 2);
-      const priciest = chosen.slice().sort((a, b) => costOf(b, chosenIds()) - costOf(a, chosenIds()))[0];
-      const outs = [...new Set([...weakest, ...(priciest !== undefined ? [priciest] : [])])];
-      const ins = pool().slice().sort((a, b) => b.lastMarginal - a.lastMarginal).slice(0, 5);
-      const subsets: Cand[][] = [];
-      for (let i = 0; i < ins.length; i++) {
-        subsets.push([ins[i]!]);
-        for (let j = i + 1; j < ins.length; j++) {
-          subsets.push([ins[i]!, ins[j]!]);
-          for (let k = j + 1; k < ins.length; k++) subsets.push([ins[i]!, ins[j]!, ins[k]!]);
-        }
-      }
-      let best: { out: Cand; group: Cand[]; sGain: number } | null = null;
-      for (const a of outs) {
-        const rest = chosen.filter(x => x !== a);
-        for (const group of subsets) {
-          const set = [...rest, ...group];
-          if (totalSpent(set) > budget) continue;
-          const sGain = timeGain(curS, simSearch(combine(skillsOf(rest), ...group.map(g => g.withSkills))));
-          if (sGain > eps && (best === null || sGain > best.sGain)) best = { out: a, group, sGain };
-        }
-      }
-      if (best === null) break;
-      // 期望口径确认:筛出来的最优移动要真变快才落子(搜索口径可能有 ~7% 偏差)
-      const rest = chosen.filter(x => x !== best.out);
-      const curA = simExpected(skillsOf(chosen));
-      const tA = simExpected(combine(skillsOf(rest), ...best.group.map(g => g.withSkills))).finishTimeSec;
-      if (curA.finishTimeSec - tA <= eps) break;
-      chosen.splice(chosen.indexOf(best.out), 1);
-      best.out.state = 'pool';
-      best.out.lastMarginal = 0;
-      for (const g of best.group) {
-        g.state = 'chosen';
-        g.filler = false;
-        chosen.push(g);
-      }
-      spent = totalSpent(chosen);
-      groupMoves++;
-    }
-  });
-  if (groupMoves > 0) {
-    notes.push(
-      `做了 ${groupMoves} 次「多换一」调整:用 1~3 个更便宜的技能替换掉更贵的一项(搜索口径预筛、期望口径确认后落子)。`,
-    );
-  }
   const fillerCount = chosen.filter(c => c.filler === true).length;
 
   // ── 汇报:最终组合的 leave-one-out 边际 + 未上车技能分类 ────────────

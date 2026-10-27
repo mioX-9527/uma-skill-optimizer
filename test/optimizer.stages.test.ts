@@ -60,7 +60,7 @@ describe('optimize 对外行为回归', () => {
   it('stages 全关 = 纯贪心,模拟次数不多于全开', () => {
     const off = optimize({
       course, runner, candidates, budget: 900,
-      stages: { swap: false, twoOutSwap: false, spendDown: false, polish: false, groupSwap: false },
+      stages: { swap: false, twoOutSwap: false, spendDown: false, polish: false },
     });
     const on = optimize({ course, runner, candidates, budget: 900 });
     expect(off.simsUsed).toBeLessThanOrEqual(on.simsUsed);

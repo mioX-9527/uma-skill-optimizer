@@ -52,7 +52,7 @@ function loadPlan(path: string) {
   return { course, runner, candidates, budget: plan.budget as number };
 }
 
-const ON = { swap: true, spendDown: true, polish: true, groupSwap: true, twoOutSwap: true } as const;
+const ON = { swap: true, spendDown: true, polish: true, twoOutSwap: true } as const;
 const OFF = { ...ON, twoOutSwap: false } as const;
 
 console.log('plan        预算   | 关掉 2换1                       | 开启 2换1                       | Δ');

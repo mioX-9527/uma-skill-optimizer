@@ -13,12 +13,11 @@ import { loadPlan } from './probe.js';
 import { SKILL_INDEX, expandPool, skillsOf, ExpectedEvaluator, toBody, type Item } from './model.js';
 
 const LADDER: readonly (readonly [string, OptimizerStages])[] = [
-  ['L0 纯贪心', { swap: false, twoOutSwap: false, spendDown: false, polish: false, groupSwap: false }],
-  ['L1 +1换1交换', { swap: true, twoOutSwap: false, spendDown: false, polish: false, groupSwap: false }],
-  ['L2 +预算花完', { swap: true, twoOutSwap: false, spendDown: true, polish: false, groupSwap: false }],
-  ['L3 +2换1', { swap: true, twoOutSwap: true, spendDown: true, polish: false, groupSwap: false }],
-  ['L4 +期望复核', { swap: true, twoOutSwap: true, spendDown: true, polish: true, groupSwap: false }],
-  ['L5 +多换一(现状)', {}],
+  ['L0 纯贪心', { swap: false, twoOutSwap: false, spendDown: false, polish: false }],
+  ['L1 +1换1交换', { swap: true, twoOutSwap: false, spendDown: false, polish: false }],
+  ['L2 +预算花完', { swap: true, twoOutSwap: false, spendDown: true, polish: false }],
+  ['L3 +2换1', { swap: true, twoOutSwap: true, spendDown: true, polish: false }],
+  ['L4 +期望复核(现状)', { swap: true, twoOutSwap: true, spendDown: true, polish: true }],
 ];
 
 function main(): void {
