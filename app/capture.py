@@ -34,6 +34,12 @@ class CaptureResult:
     pages_seen: list[list[str]] = field(default_factory=list)
     # 按钮检测到了但名字没识别出来(OCR 空/被遮),这类行是真漏,必须报出来
     unread: list[str] = field(default_factory=list)
+    # 现场读到的双圈价:{单圈基名(不含 ○): 双圈还需点数}。见 circle.py
+    circle_pt: dict[str, int] = field(default_factory=dict)
+
+
+# 一次读取最多现场补几个双圈价(每个约 2.5 秒,多了用户会等烦)
+CIRCLE_PROBE_LIMIT = 3
 
 
 def frame_diff(a: Image.Image, b: Image.Image) -> float:
@@ -193,7 +199,7 @@ def check_on_skill_page(adb: Adb, profile: Profile, ocr: Ocr) -> None:
 
 def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
                 max_pages: int | None = None, progress=None,
-                read_evolve: bool = True) -> CaptureResult:
+                read_evolve: bool = True, read_circle: bool = True) -> CaptureResult:
     if not profile.calibrated:
         raise RuntimeError(
             "版式还没校准(profile.calibrated=false),先跑 `python -m app.cli calibrate`。\n"
@@ -243,6 +249,21 @@ def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
         # 可进化的金技能:点开「进化 ⓘ」读弹窗(只读操作,用返回键关闭)
         if read_evolve:
             attach_evolutions(adb, image, profile, ocr, rows, progress)
+
+        # 缺基准价的单圈:现场点加号读一次「◎ 还需多少」,读完立刻点减号撤回。
+        # 这一步会动游戏里的购物车(但**全程可逆、不点确认**),细节见 circle.py。
+        if read_circle:
+            from .circle import attach_circle_prices
+
+            got = attach_circle_prices(
+                adb, profile, ocr, rows, result.pt_balance,
+                limit=CIRCLE_PROBE_LIMIT - len(result.circle_pt),
+                known=set(result.circle_pt),      # 跨屏重叠时会重复遇到同一行,别重复点
+            )
+            if got:
+                result.circle_pt.update(got)
+                if progress:
+                    progress("补读双圈价:" + "、".join(f"{k}◎ {v}pt" for k, v in got.items()))
         new = 0
         for row in rows:
             key = (normalize(row.name_text), row.price)

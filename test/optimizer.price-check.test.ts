@@ -116,3 +116,38 @@ describe('缺价的单双圈方向要明说「没算」', () => {
     expect(r.notes.some(n => n.includes('没有纳入比较'))).toBe(false);
   });
 });
+
+describe('现场读到的双圈价直接生效（circleUpOverride）', () => {
+  // 良场地○(200152)的 ◎ 在数据里没有基准价,本来进不了候选
+  const BASE_ID = '200152';
+  const UP_ID = '200151';
+
+  it('给了现场读到的价 → ◎ 进候选,且用的是这个价(不是推算值)', () => {
+    const without = optimize({ course, runner, candidates: [{ id: BASE_ID, pt: 81 }], budget: 400 });
+    expect(without.chosen.some(c => c.id === UP_ID)).toBe(false);   // 缺价时不提供
+
+    const withPrice = optimize({
+      course, runner,
+      candidates: [{ id: BASE_ID, pt: 81 }],
+      budget: 400,
+      circleUpOverride: { [BASE_ID]: 99 },
+    });
+    const up = [...withPrice.chosen, ...withPrice.rejected].find(c => c.id === UP_ID);
+    expect(up).toBeDefined();
+    expect(up!.pt).toBe(99);            // 原样采用读到的数
+    expect(up!.ptInferred ?? false).toBe(false); // 不是推算出来的,不标「≈」
+  });
+
+  it('没给价时仍然报「这次没有纳入比较」', () => {
+    const r = optimize({ course, runner, candidates: [{ id: BASE_ID, pt: 81 }], budget: 400 });
+    expect(r.notes.some(n => n.includes('没有纳入比较'))).toBe(true);
+  });
+
+  it('给了价之后就不该再报「没有纳入比较」', () => {
+    const r = optimize({
+      course, runner, candidates: [{ id: BASE_ID, pt: 81 }], budget: 400,
+      circleUpOverride: { [BASE_ID]: 99 },
+    });
+    expect(r.notes.some(n => n.includes('没有纳入比较'))).toBe(false);
+  });
+});

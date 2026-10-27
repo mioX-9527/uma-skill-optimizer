@@ -70,6 +70,12 @@ export interface OptimizerInput {
   readonly budget: number;
   /** 模拟次数上限(默认 30000;单次模拟 ~1.3ms,30000 次 ≈ 40s) */
   readonly maxSims?: number;
+  /**
+   * 现场从游戏里读到的双圈(◎)实付价,键是**单圈技能 id**。
+   * 来源:app/circle.py 点加号读「◎ 还需多少」再撤回(全程不点确认)。
+   * 有值的 ◎ 不再用「◎基准 × 单圈折扣」推算 —— 缺基准价的那 16 个也因此能进候选。
+   */
+  readonly circleUpOverride?: Readonly<Record<string, number>>;
   /** 视为有效收益的最小时间差(秒),默认 0.0005s ≈ 0.003 马身 */
   readonly minImprovementSec?: number;
   readonly onProgress?: (line: string) => void;
@@ -493,25 +499,38 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     const seenIds = new Set(cands.map(c => c.id));
     for (const base of [...cands]) {
       const up = CIRCLE_UPGRADES.get(base.id);
-      if (up === undefined || seenIds.has(up.upId)) continue;
-      const upSkill = SKILL_INDEX.get(up.upId);
+      const missingUp = CIRCLE_UPGRADES_MISSING.get(base.id);
+      // 现场从游戏里读到的双圈价(见 app/circle.py):有就直接用,不再用折扣推算 ——
+      // 这样连"缺基准价"的那些 ◎(CIRCLE_UPGRADES 里没有)也能进候选。
+      const measured = input.circleUpOverride?.[base.id];
+      const upId = measured !== undefined ? (up?.upId ?? missingUp?.upId) : up?.upId;
+      if (upId === undefined || seenIds.has(upId)) continue;
+      if (measured === undefined && up === undefined) continue;   // 没基准价、也没读到 → 不提供
+      const upSkill = SKILL_INDEX.get(upId);
       if (upSkill === undefined) continue;
-      seenIds.add(up.upId);
-      const ratio = up.basePt > 0 ? base.pt / up.basePt : 1;
-      const sane = ratio >= 0.4 && ratio <= 1.05;          // 折扣只可能更低;超出必是 OCR 读错
-      if (!sane) {
-        // 审计 P8:此前只是静默回落基准价,OCR 读错时用户毫不知情——
-        // 而 ○ 的价格读偏 ±40pt 就能让推荐组合变化(±0.245 马身),必须让人去核对。
-        notes.push(
-          `${MUST_CHECK}` +
-          `「${up.upName}」的价格是按单圈折扣推算的,但推算数据异常` +
-          `(「${base.skill.name}」实付 ${base.pt}pt / 基准 ${up.basePt}pt = ${ratio.toFixed(2)},` +
-          `合理区间 0.40~1.05),已改按基准价 ${up.upPt}pt 计 —— 请核对单圈的实际价格是否读对。`,
-        );
+      seenIds.add(upId);
+      let upPt: number;
+      let inferred = false;
+      if (measured !== undefined) {
+        upPt = Math.max(1, Math.round(measured));   // 游戏里真实显示的数,不推算
+      } else {
+        const ratio = up!.basePt > 0 ? base.pt / up!.basePt : 1;
+        const sane = ratio >= 0.4 && ratio <= 1.05;        // 折扣只可能更低;超出必是 OCR 读错
+        if (!sane) {
+          // 审计 P8:此前只是静默回落基准价,OCR 读错时用户毫不知情——
+          // 而 ○ 的价格读偏 ±40pt 就能让推荐组合变化(±0.245 马身),必须让人去核对。
+          notes.push(
+            `${MUST_CHECK}` +
+            `「${up!.upName}」的价格是按单圈折扣推算的,但推算数据异常` +
+            `(「${base.skill.name}」实付 ${base.pt}pt / 基准 ${up!.basePt}pt = ${ratio.toFixed(2)},` +
+            `合理区间 0.40~1.05),已改按基准价 ${up!.upPt}pt 计 —— 请核对单圈的实际价格是否读对。`,
+          );
+        }
+        upPt = sane ? Math.max(1, Math.round(up!.upPt * ratio)) : up!.upPt;
+        inferred = sane && Math.abs(ratio - 1) > 1e-9;
       }
-      const upPt = sane ? Math.max(1, Math.round(up.upPt * ratio)) : up.upPt;
       cands.push({
-        id: up.upId,
+        id: upId,
         skill: upSkill,
         pt: upPt,
         withSkills: [upSkill],          // ◎ 是 ○ 的升级版(同格替换),效果只算 ◎ 不叠加
@@ -528,7 +547,7 @@ export function optimize(input: OptimizerInput): OptimizerResult {
         blockedDetail: null,
         circleChain: true,
         baseId: base.id,
-        ptInferred: sane && Math.abs(ratio - 1) > 1e-9,
+        ptInferred: inferred,
       });
     }
   }
@@ -574,6 +593,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   {
     const miss = cands
       .filter(c => c.state !== 'blocked')
+      // 现场读到价的那些已经进候选了,不该再报「没算」
+      .filter(c => input.circleUpOverride?.[c.id] === undefined)
       .map(c => CIRCLE_UPGRADES_MISSING.get(c.id))
       .filter((x): x is { upId: string; upName: string } => x !== undefined);
     if (miss.length > 0) {

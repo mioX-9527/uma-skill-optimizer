@@ -48,6 +48,11 @@ export interface PlanState {
    * 金技能的列表价 = 前置价 + 金自己的折后价,不声明这个会把「金+前置」重复计费。
    */
   readonly chains: readonly PlanChain[];
+  /**
+   * 读取时现场从游戏里读到的双圈实付价:{单圈技能 id: 双圈还需点数}。
+   * 有值的 ◎ 不再用「◎基准 × 单圈折扣」推算(那些缺基准价的 ◎ 也能进候选了)。
+   */
+  readonly circleUp?: Record<string, number>;
 }
 
 export const RARITY_LABEL: Record<string, string> = {
@@ -220,6 +225,15 @@ export function importPlan(text: string): PlanState {
     weather: int(r.weather, 1, 4, 1) as Weather,
     season: int(r.season, 1, 5, 1) as Season,
     skills,
+    ...(p.circleUp !== undefined && typeof p.circleUp === 'object' && p.circleUp !== null
+      ? {
+          circleUp: Object.fromEntries(
+            Object.entries(p.circleUp as Record<string, unknown>)
+              .filter(([k, v]) => typeof k === 'string' && typeof v === 'number' && (v as number) > 0)
+              .map(([k, v]) => [k, v as number]),
+          ),
+        }
+      : {}),
     chains: Array.isArray(p.chains)
       ? (p.chains as unknown[])
           .map(c => c as Record<string, unknown>)
@@ -267,6 +281,8 @@ export interface RunInput {
   readonly groundCondition: GroundCondition;
   readonly weather: Weather;
   readonly season: Season;
+  /** 现场读到的双圈实付价:{单圈 id: 点数};由 App 从 plan.circleUp 传下来 */
+  readonly circleUp?: Record<string, number>;
   /** requires = 下位技能 id(列表价已含它);由 App 从 plan.chains 展开后传入 */
   readonly skills: readonly {
     id: string; pt: number; requires?: string;
@@ -291,7 +307,10 @@ function runOnMain(input: RunInput): Promise<OptimizerResult> {
     skills: [],
   };
   try {
-    return Promise.resolve(optimizeSync({ course, runner, candidates: input.skills, budget: input.budget }));
+    return Promise.resolve(optimizeSync({
+      course, runner, candidates: input.skills, budget: input.budget,
+      ...(input.circleUp !== undefined ? { circleUpOverride: input.circleUp } : {}),
+    }));
   } catch (e) {
     return Promise.reject(e as Error);
   }

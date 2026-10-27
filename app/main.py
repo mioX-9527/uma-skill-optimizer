@@ -122,6 +122,13 @@ class Bridge:
             self._last_plan = skills
             self._pt_balance = result.pt_balance
 
+            # 现场读到的双圈价:按单圈技能 id 传给前端,让它直接用真价(不再用折扣推算)
+            circle_up: dict[str, int] = {}
+            for s in skills:
+                nm = str(s.get("name", ""))
+                if nm.endswith("○") and nm[:-1] in result.circle_pt:
+                    circle_up[str(s["id"])] = result.circle_pt[nm[:-1]]
+
             # 上下位关系:金技能的列表价已含前置价,前端要据此避免重复计费
             from .chains import load_chains, pairs_within
 
@@ -146,6 +153,7 @@ class Bridge:
                 "skills": skills,
                 "chains": [{"skillId": g, "prereqId": p} for g, p in pairs],
                 "evolutions": evolutions,
+                "circle_up": circle_up,
                 "pt_balance": result.pt_balance,
                 "pages": result.pages,
                 "frames": result.frames,

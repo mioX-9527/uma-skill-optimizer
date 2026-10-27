@@ -221,6 +221,14 @@ def cmd_capture(args: argparse.Namespace) -> int:
     # 必须回全量技能库把名字解析成 id —— 和桌面壳共用 evolutions_of。
     evolutions = evolutions_of(matches, index, note=lambda m: _say(f"[注意] {m}"))
 
+    circle_up = {
+        str(s["id"]): result.circle_pt[str(s["name"])[:-1]]
+        for s in skills
+        if str(s.get("name", "")).endswith("○") and str(s["name"])[:-1] in result.circle_pt
+    }
+    if circle_up:
+        _say(f"现场补读双圈价:{circle_up}")
+
     plan = {
         "course": args.course or "东京 草 2400m",
         "budget": result.pt_balance if result.pt_balance else args.budget,
@@ -232,6 +240,7 @@ def cmd_capture(args: argparse.Namespace) -> int:
         "skills": [{"id": s["id"], "pt": s["pt"]} for s in skills],
         "chains": [{"skillId": g, "prereqId": p} for g, p in pairs],
         "evolutions": evolutions,
+        **({"circleUp": circle_up} if circle_up else {}),
     }
     out = Path(args.out or (DEBUG_DIR / "plan.json"))
     out.parent.mkdir(parents=True, exist_ok=True)

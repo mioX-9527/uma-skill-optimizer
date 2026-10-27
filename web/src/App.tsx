@@ -179,7 +179,11 @@ export default function App() {
       // 进化关系必须挂到候选上:进化后的技能不在候选列表里(金技能免费变来的),
       // 不挂的话优化器只会按进化前的数值算 —— 表现就是"怎么还是只有迅速果断"。
       const evo = applyEvolutions(merged.skills, resp.evolutions);
-      patch({ skills: evo.skills, budget: merged.budget, chains: resp.chains ?? [] });
+      patch({
+        skills: evo.skills, budget: merged.budget, chains: resp.chains ?? [],
+        // 现场读到的双圈价随读取一起落地;读不到就清空,避免上一份的价串到这一份
+        circleUp: merged.circleUp ?? {},
+      });
       setResult(null);
       if (merged.dropped > 0) setReadLog(prev => [...prev, `有 ${merged.dropped} 条未能对应到技能库,已丢弃`]);
       if (evo.evolved.length > 0) {
@@ -229,6 +233,8 @@ export default function App() {
               : {}),
           };
         }),
+        // 读取时现场从游戏里读到的双圈价(点加号读「◎ 还需多少」再撤回),有值就用真价
+        ...(plan.circleUp !== undefined ? { circleUp: plan.circleUp } : {}),
       });
       setResult(r);
     } catch (e) {

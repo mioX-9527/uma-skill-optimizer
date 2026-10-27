@@ -64,6 +64,11 @@ interface PlanInput {
    * 可进化关系(可选),由游戏「技能进化」弹窗读到。
    * conditionMet=true 表示当前马娘已满足条件,结束养成时会免费进化,此时按进化后的数值算收益。
    */
+  /**
+   * 现场从游戏里读到的双圈(◎)实付价:{单圈技能 id: 双圈还需点数}。
+   * 由桌面版读取时自动带上(app/circle.py 点加号读一次再撤回),有值就不再用折扣推算。
+   */
+  readonly circleUp?: Readonly<Record<string, number>>;
   readonly evolutions?: readonly {
     readonly fromId: string;
     readonly toId: string;
@@ -252,6 +257,7 @@ function main(): void {
     candidates,
     budget,
     ...(maxSims !== undefined ? { maxSims } : {}),
+    ...(plan.circleUp !== undefined ? { circleUpOverride: plan.circleUp } : {}),
   });
 
   console.log('');

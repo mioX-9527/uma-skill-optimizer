@@ -14,6 +14,8 @@ interface WorkerInput {
   readonly groundCondition: GroundCondition;
   readonly weather: Weather;
   readonly season: Season;
+  /** 现场读到的双圈实付价:{单圈 id: 点数} */
+  readonly circleUp?: Record<string, number>;
   readonly skills: readonly {
     id: string; pt: number; requires?: string;
     evolvesTo?: string; evolveAlternatives?: readonly string[];
@@ -51,6 +53,7 @@ ctx.addEventListener('message', (e: MessageEvent) => {
       runner,
       candidates: input.skills,
       budget: input.budget,
+      ...(input.circleUp !== undefined ? { circleUpOverride: input.circleUp } : {}),
     });
     ctx.postMessage({ seq: input.seq, ok: true, result });
   } catch (err) {
