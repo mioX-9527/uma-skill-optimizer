@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { COURSES, SKILLS } from '../src/data.js';
+import { restrictionSatisfied } from '../src/engine/index.js';
 import { optimize } from '../src/optimizer.js';
 import type { CandidateSkill } from '../src/optimizer.js';
 
@@ -90,9 +91,19 @@ describe('optimize', () => {
   });
 
   it('绿技能(常时被动)进入候选池并产生正收益', () => {
+    // 不靠数据顺序「撞」:上游数据一旦给某条补上 undetermined(临场条件),或插进一条负面绿技能,
+    // find 就会挑中不生效/负收益的那条 —— 2026-10-29 同步 0.8.5 时正好撞上
+    // 「99 Problems」(根性 −40 / 智力 −40),测试就地变红而引擎没错。
+    // 显式要求:纯正收益的常时被动,且装配限制在当前赛道/跑法下确实满足。
     const green = SKILLS.find(
-      s => s.precision === 'precise' && s.restriction === undefined && s.effects.length > 0 && s.effects.every(e => e.type === 'passive'),
+      s =>
+        s.precision === 'precise' &&
+        s.condition?.kind === 'raceStart' &&
+        s.effects.length > 0 &&
+        s.effects.every(e => e.type === 'passive' && e.value > 0) &&
+        (s.restriction === undefined || restrictionSatisfied(s.restriction, runner, course)),
     )!;
+    expect(green).toBeDefined();
     const r = optimize({ course, runner, candidates: [{ id: green.id, pt: 100 }], budget: 500 });
     expect(r.chosen).toHaveLength(1);
     expect(r.totalBody).toBeGreaterThan(0);
