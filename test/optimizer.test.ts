@@ -109,6 +109,19 @@ describe('optimize', () => {
     expect(r.totalBody).toBeGreaterThan(0);
   });
 
+  it('临场条件(闸位/人气/抽选)说「由开赛决定」,不冒充装配限制', () => {
+    // 性质测试:不依赖具体是哪一条,只要求「带 undetermined 的技能」都被这样解释
+    const green = SKILLS.find(s => s.restriction?.undetermined !== undefined && s.condition?.kind === 'raceStart')!;
+    expect(green).toBeDefined();
+    const r = optimize({ course, runner, candidates: [{ id: green.id, pt: 100 }], budget: 500 });
+    const rej = r.rejected.find(x => x.id === green.id)!;
+    expect(rej.reason).toBe('inapplicable');
+    expect(rej.detail).toContain('临场条件');
+    expect(rej.detail).toContain('由开赛决定');
+    // 关键:不能说成「装配限制不满足」——那会让人以为换个赛道就能用
+    expect(rej.detail).not.toBe('装配限制不满足');
+  });
+
   it('受季节限制的绿技能:默认春标为不适配,改成秋季后生效有收益', () => {
     const autumn = SKILLS.find(s => s.name === '风霜高洁')!; // 仅限秋季
     const spring = optimize({ course, runner, candidates: [{ id: autumn.id, pt: 100 }], budget: 500 });

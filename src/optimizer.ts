@@ -282,9 +282,47 @@ const SEASON_LABEL = ['', '春', '夏', '秋', '冬', '樱花'];
 const ROTATION_LABEL: Record<number, string> = { 1: '顺时针', 2: '逆时针' };
 const STAT_LABEL: Record<string, string> = { speed: '速度', stamina: '耐力', power: '力量', guts: '根性', wisdom: '智力' };
 
+/**
+ * 临场条件(触发代码 token → 中文)。引擎对这类条件一律判「不满足」(赛道与跑法都定不了,
+ * 不能保证 100% 发动 ⇒ 不算收益),这里只负责把 token 讲成人话,判定仍以引擎为准。
+ */
+const UNDETERMINED_LABEL: ReadonlyArray<readonly [RegExp, string]> = [
+  [/^popularity/, '人气'],
+  [/^post_number/, '闸位'],
+  [/^random_lot/, '抽选'],
+  [/^grade/, '赛事等级'],
+  [/^time/, '比赛时段'],
+  [/^lane_type/, '赛道内外'],
+  [/^furlong/, '赛程分段'],
+  [/^visiblehorse/, '可见马数'],
+];
+
+function describeUndetermined(tokens: readonly string[]): string {
+  const human = tokens.map(t => {
+    const hit = UNDETERMINED_LABEL.find(([re]) => re.test(t));
+    if (hit === undefined) return t;
+    const head = /^[a-z_]+/.exec(t)?.[0] ?? t;
+    const tail = t
+      .slice(head.length)
+      .replace(/^>=/, '≥')
+      .replace(/^<=/, '≤')
+      .replace(/^==/, '=')
+      .replace(/^!=/, '≠');
+    return `${hit[1]}${tail}`;
+  });
+  return human.join('、');
+}
+
 /** 单条限制子句里不满足的项(仅供展示,判定以引擎 skillApplicable 为准) */
 function describeClause(c: RestrictionClause, runner: RunnerConfig, course: Course): string[] {
   const parts: string[] = [];
+  // 临场条件排在最前:它不是「赛道不对」,而是「看开赛实际情况」,说反了会让人以为换赛道能解决
+  if (c.undetermined !== undefined && c.undetermined.length > 0) {
+    parts.push(`临场条件(${describeUndetermined(c.undetermined)})由开赛决定,不保证发动`);
+  }
+  if (c.dirtGrade !== undefined && (course.dirtGrade === true) !== c.dirtGrade) {
+    parts.push(c.dirtGrade ? '仅限交流重赏(地方赛场)' : '仅限非交流重赏');
+  }
   if (c.tactics !== undefined && !c.tactics.includes(runner.tactic)) {
     parts.push(`仅限${c.tactics.map(t => TACTIC_LABEL[t]).join('/')}`);
   }
@@ -343,10 +381,16 @@ function describeClause(c: RestrictionClause, runner: RunnerConfig, course: Cour
 
 /** 装配限制不满足时,说明是哪一条不满足;anyOf 多分支按「或」拼接 */
 function describeRestriction(r: SkillRestriction, runner: RunnerConfig, course: Course): string {
+  // 顶层临场条件与 anyOf 并列时是「额外必满足」,不落在任何子句里,得单独说
+  // (没有 anyOf 时 describeClause 已经讲过,别重复)
+  const top =
+    r.anyOf !== undefined && r.undetermined !== undefined && r.undetermined.length > 0
+      ? `临场条件(${describeUndetermined(r.undetermined)})由开赛决定,不保证发动`
+      : '';
   const clauses = r.anyOf ?? [r];
   const per = clauses.map(c => describeClause(c, runner, course).join('、')).filter(s => s !== '');
-  if (r.anyOf !== undefined && per.length > 1) return per.map(s => `(${s})`).join(' 或 ');
-  return per[0] ?? '';
+  const rest = r.anyOf !== undefined && per.length > 1 ? per.map(s => `(${s})`).join(' 或 ') : (per[0] ?? '');
+  return [top, rest].filter(s => s !== '').join('；');
 }
 
 function timeGain(before: SimResult, after: SimResult): number {
