@@ -17,8 +17,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_EXE = ROOT / "uma-skill-optimizer.exe"
-# 网页层:前端改过的东西里挑几个稳定的字符串常量(压缩后的 JS 里字符串原样保留)
-NEEDLES = ("btn-pick", "在游戏里勾选这")
+# 网页层:挑「这一版才有的字符串」。只求"稳定"是不够的 —— 稳定字符串在旧版同样成立,
+# 就等于验不出「exe 忘了重建」(2026-10-29 实际踩过:10-28 的旧 exe 照样全 ✓,给了假的信心)。
+# 换引擎/换界面文案时往这里补一条**本次新增**的字符串,旧产物会立刻露馅。
+NEEDLES = ("btn-pick", "在游戏里勾选这", "由开赛决定", "undetermined")
 # Python 层按模块列出"这一版才有的名字"。加新功能时往这里补一行,以后就能一条命令验版本。
 PY_NEEDLES: dict[str, tuple[str, ...]] = {
     "app.select": ("circle_family", "_targets_of", "_tap_n_times", "select_in_shop", "_MAX_STEP"),
