@@ -1,8 +1,8 @@
 {
-  "syncedAt": "2026-10-25T10:10:25.409Z",
+  "syncedAt": "2026-10-29T11:41:10.522Z",
   "from": "C:\\Users\\mio\\Desktop\\uma-race-sim",
   "version": {
-    "version": "0.8.2-spurt-carry",
+    "version": "0.8.5-dirtgrade",
     "generatedAt": "2026-10-25",
     "sources": [
       "BWIKI 技能速查表(api.php action=ask,1907 条原始;tools/scrape-once.ts)",
@@ -46,15 +46,18 @@
       "注:引擎 v0.2 的双马对比等次级功能沿用 simulate 输出;courseSetStatus 的门槛属性种类由 make-courses.ts 从 stat-kind ID(1速度/2耐力/3力量/4根性/5智力)映射为属性名",
       "赛场回转方向取自解包 course_data.json 的 turn 字段:1=右回り(顺时针)/2=左回り(逆时针)/4=直線;与 JRA 官方口径一致(逆时针=东京/中京/新潟,其余顺时针),分布 74 顺时针 / 63 逆时针 / 1 无回转(新潟草1000m 直線,回转方向类技能不生效)",
       "天气与季节不进物理公式(解包 RaceSolver/HpPolicy 与 614tools worker 均无对应项),仅决定 weather==N / season==N 类技能是否生效;场地状态只进体力消耗系数(草地 良1.0/稍重1.0/重1.02/不良1.02,泥地 良1.0/稍重1.0/重1.01/不良1.02),不改速度与加速度",
-      "装配限制(触发代码级):running_style / distance_type / is_basis_distance / ground_type / ground_condition(含 !=、>=、<=)/ track_id(含范围成对合并)/ course_distance(精确与范围)/ rotation / weather / season / motivation / is_abroad / base_speed·base_stamina·base_power·base_guts·base_wiz,任一不满足 ⇒ 整场不生效;绿技能(213 条)中 164 条带限制",
+      "装配限制(触发代码级):running_style / distance_type / is_basis_distance / ground_type / ground_condition(含 !=、>=、<=)/ track_id(含范围成对合并)/ course_distance(精确与范围)/ rotation / weather / season / motivation / is_abroad / is_dirtgrade / base_speed·base_stamina·base_power·base_guts·base_wiz,任一不满足 ⇒ 整场不生效;绿技能(213 条)中 164 条带限制",
       "标准距离 is_basis_distance = 赛程全长为 400 米整数倍(1200/1600/2000/2400/3200...),与距离档(短/英里/中/长)是两条独立的轴:1600 属英里但是 400 倍数、2500 属长距离但非 400 倍数。存为独立布尔 restriction.basisDistance(6 条绿技能:标准距离◎○× / 非标准距离◎○×);此前误映射为 distanceTypes(标准→中/长),已修正",
       "装配限制采用 DNF 子句:同一支(& 连接)= 与,同字段取交集;`@` 变体 = 或,输出 restriction.anyOf(任一满足即生效);condition_1 / condition_2 是两组独立效果块(拆成 -b1/-b2),不是或分支;单字段差异分支化简回扁平结构,仅 10 条异构技能保留 anyOf",
-      "仍未建模的 token(单马模型无法判断,按满足处理并记入 skill-notes.json):popularity / post_number / fan_count / grade(100=G1)/ is_dirtgrade(交流重赏)/ lane_type / furlong / time / visiblehorse / random_lot(_shared)/ succession_skill_count / is_move_lane / remain_distance_viewer_id / is_exist_*;is_tight_track(小回り)由文本侧落成 venues(札幌/函馆/福岛/小仓/川崎/船桥)",
+      "仍未建模的 token(单马模型无法判断,按满足处理并记入 skill-notes.json):popularity / post_number / fan_count / grade(100=G1)/ lane_type / furlong / time / visiblehorse / random_lot(_shared)/ succession_skill_count / is_move_lane / remain_distance_viewer_id / is_exist_*;is_tight_track(小回り)由文本侧落成 venues(札幌/函馆/福岛/小仓/川崎/船桥);is_dirtgrade(交流重赏)已改为由赛场确定,见下一条",
       "技能发动前提(prereq)建模:触发代码里依赖自身技能发动史的 token 不再当作近似丢掉 —— activate_count_all/start/middle/later_half/end_after/heal/param_skill、succession_skill_count、is_activate_any_skill、is_activate_heal_skill、is_used_skill_id(±with_detail_one)、is_exist_skill_id、is_activate_other_skill_detail(即 -b2 依赖 -b1),共 200 条技能带前提(129 条为 -b2 依赖 -b1)",
       "前提不满足 = 本帧不发动、后续帧继续判(不是整场禁用):计数器为 all/start/middle/laterHalf/endAfter/heal/green/heir,闭区间;只有前提无位置锚点的技能按前提统计范围重建可发动区间(start→序盘、middle→中盘、laterHalf→50%~终点、endAfter→终盘起),否则只会在起跑帧判一次而永不发动;带前提的常时被动不并入起跑属性(标不支持)",
       "仍未建模的前提类 token(单马模型无法判断):activate_count_all_team(队伍)、is_activate_other_character_activate_advantage_skill、running_style_count_*(他马跑法统计);is_used_skill_id_with_detail_one 只建模「该技能已发动」,细节条件忽略并保留 approx",
       "消融口径:逐技能收益 = 「只去掉效果、保留发动」(inertSkills,仍记入发动史供其他技能前提计数),不再从牌组删掉 —— 否则需「回复技能≥3」的技能会让每个回复技能都背上大招收益、重复计 N 次;「从牌组删掉会连带失去谁」用 AblationRow.dependentIds(UI「被依赖」角标)单独提示",
-      "存速(Spurt Speed Carry-over)核对:速度技能抬高的是目标速度上限而非加速度,马以固定加速度爬到上限(2400m 约 9~10 秒);进入末脚那一帧仍在生效的技能把起步速度整体抬高,加速段全程少爬该差值且技能结束后不需还回去 —— 收益 ≈ 值×加速段时长。SimResult 新增 spurtStartMeter/spurtStartSec,AblationRow 新增 carryOverSpeed/carryOverLeftSec(完整−只去掉效果 的同位置速度差),收益表以「存速 +x」角标显示"
+      "存速(Spurt Speed Carry-over)核对:速度技能抬高的是目标速度上限而非加速度,马以固定加速度爬到上限(2400m 约 9~10 秒);进入末脚那一帧仍在生效的技能把起步速度整体抬高,加速段全程少爬该差值且技能结束后不需还回去 —— 收益 ≈ 值×加速段时长。SimResult 新增 spurtStartMeter/spurtStartSec,AblationRow 新增 carryOverSpeed/carryOverLeftSec(完整−只去掉效果 的同位置速度差),收益表以「存速 +x」角标显示",
+      "消融口径三分支:① 时机确定(开赛 X 秒后 / 终点前 X 米 / 末脚入口等,触发代码不含 *_random)→ 只有一个确定值,不给期望与区间(先走一步！201662 = behind_near_lane_time>=3&accumulatetime>=10,单马模型把邻道条件按满足处理并标 approx);② 区段随机(触发代码含 *_random,1118 条)→ 位置采样 + 联合蒙特卡洛,报期望与区间;③ 同场多次发动(带冷却,冷却也 ×距离/1000:先走一步！2400m 实际 72s → 10s/82s 两次)→ 引擎新增 SimOptions.inertFirings(只去掉第 i 次的效果,其余各次照常且仍记入发动史),消融报 AblationRow.firingSamples,收益表标「逐次」可展开每次的位置/时刻/收益(东京2400 默认属性实测:第1次 175m +1.43、第2次 1573m +1.69、整条 +3.14)",
+      "绿技能「临场条件」默认不计:触发代码里的 post_number(枠番)/popularity(人气)/random_lot(_shared)(抽选)/grade(赛事等级)/time(比赛时段)等 token 由开赛时的实际情况决定,赛道/跑法/环境配置都确定不了 ⇒ 常时被动(绿技能)据此不能保证 100% 发动,写入 restriction.undetermined,引擎视为不满足(不进起跑属性、收益 0),UI 标「临场条件」并说明原因;共 22 条(幸运7/超级幸运7/七福即生/擅长内道·外道◎○×/伏兵◎○/胆小鬼/夜间赛◎○×/博弈者/投机取巧/凶悍博弈者/不擅长一级赛事)。非被动技能不加此字段(它们按规则取位发动,本身已标 approx);is_tight_track(可由赛场确定)、furlong、is_dirtgrade(可由赛场确定,见下一条)不在此列。只有靠赛道/跑法/环境就能百分百判定的绿技能(赛场/回转方向/距离档/标准距离/场地/天气/季节/脚质/干劲/面板属性/交流重赏)照常计入",
+      "交流重赏 is_dirtgrade 由赛场确定(2026-10-29 修正):游戏里交流重赏 = 地方竞马场的泥地重赏(ダートグレード競走),JRA 十场与海外赛场都不办 ⇒ 「是否交流重赏」等价于「赛场是否地方赛场」。赛道数据(tools/make-courses.ts)给 10100~10199 打 dirtGrade:true(大井3/川崎3/船桥4/盛冈4,共 14 条,全为泥地),技能限制落成 restriction.dirtGrade(==1→true,!=1→false),引擎按 course.dirtGrade 一票判定。受影响 5 条技能:交流重赏◎○×/交流重赏之鬼(202251~202254,全部 +dirtGrade)、奔跑的吉祥物 109802211 的 -b1(dirtGrade)/ -b2(非 dirtGrade)互补。因此它不再计入「临场条件」,undetermined 由 28 条降到 22 条"
     ]
   }
 }

@@ -6667,7 +6667,8 @@
    "guts",
    "wisdom"
   ],
-  "rotation": 1
+  "rotation": 1,
+  "dirtGrade": true
  },
  {
   "id": "c11102",
@@ -6725,7 +6726,8 @@
   "courseSetStatus": [
    "power"
   ],
-  "rotation": 1
+  "rotation": 1,
+  "dirtGrade": true
  },
  {
   "id": "c11103",
@@ -6783,7 +6785,8 @@
   "courseSetStatus": [
    "stamina"
   ],
-  "rotation": 1
+  "rotation": 1,
+  "dirtGrade": true
  },
  {
   "id": "c11203",
@@ -6907,7 +6910,8 @@
   "courseSetStatus": [
    "wisdom"
   ],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11302",
@@ -6965,7 +6969,8 @@
   "courseSetStatus": [
    "wisdom"
   ],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11303",
@@ -7039,7 +7044,8 @@
    "stamina",
    "wisdom"
   ],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11401",
@@ -7082,7 +7088,8 @@
   "courseSetStatus": [
    "speed"
   ],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11402",
@@ -7138,7 +7145,8 @@
   },
   "baseSpeed": 20.4,
   "courseSetStatus": [],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11403",
@@ -7194,7 +7202,8 @@
   },
   "baseSpeed": 20.2,
   "courseSetStatus": [],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11404",
@@ -7267,7 +7276,8 @@
   "courseSetStatus": [
    "stamina"
   ],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11501",
@@ -7326,7 +7336,8 @@
   "courseSetStatus": [
    "stamina"
   ],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11502",
@@ -7386,7 +7397,8 @@
    "stamina",
    "wisdom"
   ],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11503",
@@ -7461,7 +7473,8 @@
    "stamina",
    "wisdom"
   ],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11504",
@@ -7540,7 +7553,8 @@
   "courseSetStatus": [
    "stamina"
   ],
-  "rotation": 2
+  "rotation": 2,
+  "dirtGrade": true
  },
  {
   "id": "c11612",

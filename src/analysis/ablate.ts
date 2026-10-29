@@ -8,6 +8,16 @@ const MC_DRAWS_MAX = 24;
 /** 联合蒙特卡洛抽样组数下限 */
 const MC_DRAWS_MIN = 8;
 
+/** 同场多次发动的技能的「逐次」收益拆分(带冷却技能,如 先走一步！:开赛10s + 冷却30s) */
+export interface FiringSample {
+  /** 第几次发动(1 基) */
+  readonly index: number;
+  readonly atMeter: number;
+  readonly atSec: number;
+  /** 只去掉这一次发动的效果后,完赛变慢的幅度(马身);其余各次照常生效 */
+  readonly deltaBody: number;
+}
+
 export interface PositionSample {
   /** 强制发动位置(米) */
   readonly meter: number;
@@ -61,6 +71,13 @@ export interface AblationRow {
   readonly carryOverSpeed?: number;
   /** 存速还能保持多久(秒,自末脚起点起算;超过加速段的部分会在上限处被吃掉) */
   readonly carryOverLeftSec?: number;
+  /**
+   * 同场多次发动(带冷却)的技能 = 逐次收益拆分:每次发动各值多少马身。
+   * 总量(deltaBody)是「整条技能都去掉」,逐次量是「只去掉这一次」——
+   * 因技能间/前后段耦合,Σ逐次 与 deltaBody 不必严格相等,但同一技能内可看出哪一次在挣钱。
+   * 缺省 = 只发动一次(或无发动)。
+   */
+  readonly firingSamples?: readonly FiringSample[];
 }
 
 export interface AblationReport {
@@ -281,6 +298,20 @@ export function ablate(course: Course, runner: RunnerConfig): AblationReport {
       }
     }
 
+    // 同场多次发动(带冷却):逐次拆分 —— 只去掉第 i 次的效果,其余各次照常
+    const firingSamples: FiringSample[] | undefined =
+      acts.length > 1 && !isPassiveRaceStart
+        ? acts.map((a, i) => {
+            const withoutI = simulate(course, runner, { inertFirings: new Map([[skill.id, new Set([i])]]) });
+            return {
+              index: i + 1,
+              atMeter: a.atMeter,
+              atSec: a.atSec,
+              deltaBody: ((withoutI.finishTimeSec - full.finishTimeSec) * endV) / BODY_LENGTH_METERS,
+            };
+          })
+        : undefined;
+
     return {
       skillId: skill.id,
       name: skill.name,
@@ -297,6 +328,7 @@ export function ablate(course: Course, runner: RunnerConfig): AblationReport {
         const carry = carryOverOf(skill, without, acts);
         return carry !== null ? { carryOverSpeed: carry.speed, carryOverLeftSec: carry.leftSec } : {};
       })(),
+      ...(firingSamples !== undefined ? { firingSamples } : {}),
       ...(positionSamples !== undefined ? { positionSamples } : {}),
       ...(expectedBody !== undefined ? { expectedBody, bodyRange } : {}),
     };

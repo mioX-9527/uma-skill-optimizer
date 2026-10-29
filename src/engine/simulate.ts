@@ -110,6 +110,10 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
   const positionOverrides = opts.positionOverrides;
   /** 消融「只去掉效果、保留发动」的技能 id(仍计入 fired / activations) */
   const inert = opts.inertSkills;
+  /** 消融「逐次发动拆分」:只去掉这些 (技能, 发动序号) 的效果 */
+  const inertFirings = opts.inertFirings;
+  /** 各技能本场已发动次数(供 inertFirings 定位第几次) */
+  const fireIdx = new Map<string, number>();
   const baseV = baseSpeedOf(course);
   const maxHp = maxHpOf(course, runner, inert);
   const minSpeed = minSpeedOf(course, runner, inert);
@@ -187,10 +191,10 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
     });
   };
 
-  /** 发动效果入栈(共用路径:规则发动与位置采样强制发动) */
-  const applyFire = (s: SkillConfig, frame: FrameState): void => {
+  /** 发动效果入栈(共用路径:规则发动与位置采样强制发动);inertThis = 只去掉这一次的效果 */
+  const applyFire = (s: SkillConfig, frame: FrameState, inertThis = false): void => {
     // 消融「只去掉效果」:照常算发动(已记入 fired/activations),但不施加效果
-    if (inert?.has(s.id) === true) return;
+    if (inertThis || inert?.has(s.id) === true) return;
     const mult = effectMultiplier(s, runner, frame.phase, course);
     const dur = s.durationSec !== null && s.durationSec > 0 ? s.durationSec * distScale : 0;
     if (dur > 0) buffs.push({ skill: s, untilSec: t + dur, mult });
@@ -315,8 +319,10 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
         if (once) activated.add(s.id);
         else readyAt.set(s.id, t + s.cooldownSec * distScale);
         activations.push({ skillId: s.id, name: s.name, atSec: t, atMeter: x, precision: s.precision });
+        const idx = fireIdx.get(s.id) ?? 0;
+        fireIdx.set(s.id, idx + 1);
         noteFired(s, frame);
-        applyFire(s, frame);
+        applyFire(s, frame, inertFirings?.get(s.id)?.has(idx) === true);
         continue;
       }
       if (s.restriction !== undefined && !restrictionSatisfied(s.restriction, runner, course)) continue;
@@ -328,8 +334,10 @@ export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions 
       if (once) activated.add(s.id);
       else readyAt.set(s.id, t + s.cooldownSec * distScale);
       activations.push({ skillId: s.id, name: s.name, atSec: t, atMeter: x, precision: s.precision });
+      const idx = fireIdx.get(s.id) ?? 0;
+      fireIdx.set(s.id, idx + 1);
       noteFired(s, frame);
-      applyFire(s, frame);
+      applyFire(s, frame, inertFirings?.get(s.id)?.has(idx) === true);
     }
 
     if (ashiiroRemaining > 0) ashiiroRemaining = Math.max(0, ashiiroRemaining - dt);

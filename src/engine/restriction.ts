@@ -11,6 +11,10 @@ import type { Course, RestrictionClause, RunnerConfig, Season, SkillConfig, Skil
  * 赛道无 rotation 字段(如新潟草1000m 直線)→ 回转方向类技能不匹配。
  */
 export function clauseSatisfied(c: RestrictionClause, runner: RunnerConfig, course: Course): boolean {
+  // 临场条件(枠番/人气/抽选/赛事等级/比赛时段):赛道与跑法都确定不了 ⇒ 默认不计入,视为不满足。
+  // 只要触发代码带着它,就不能保证 100% 发动;宁可少算,也不要把不确定的绿技能算成常驻加成。
+  // 注意 `is_dirtgrade`(交流重赏)**不在列**:它由赛场确定,落在下面的 dirtGrade 判定。
+  if (c.undetermined !== undefined && c.undetermined.length > 0) return false;
   if (c.tactics !== undefined && !c.tactics.includes(runner.tactic)) return false;
   if (c.distanceTypes !== undefined && (course.distanceType === undefined || !c.distanceTypes.includes(course.distanceType))) return false;
   if (c.surfaces !== undefined && !c.surfaces.includes(course.surface)) return false;
@@ -27,6 +31,8 @@ export function clauseSatisfied(c: RestrictionClause, runner: RunnerConfig, cour
   if (c.seasons !== undefined && !c.seasons.includes(runner.season ?? DEFAULT_SEASON)) return false;
   if (c.motivations !== undefined && !c.motivations.includes(runner.motivation)) return false;
   if (c.abroad !== undefined && (course.overseas === true) !== c.abroad) return false;
+  // is_dirtgrade:交流重赏 ⇒ 地方赛场(大井/川崎/船桥/盛冈),由赛道数据确定
+  if (c.dirtGrade !== undefined && (course.dirtGrade === true) !== c.dirtGrade) return false;
   if (c.statsAtLeast !== undefined) {
     for (const [k, v] of Object.entries(c.statsAtLeast)) {
       if (v !== undefined && runner.stats[k as keyof Stats] < v) return false;
@@ -42,6 +48,8 @@ export function clauseSatisfied(c: RestrictionClause, runner: RunnerConfig, cour
 
 /** 装配限制是否满足(anyOf 任一子句满足即生效;无 anyOf 则按本层字段判定) */
 export function restrictionSatisfied(r: SkillRestriction, runner: RunnerConfig, course: Course): boolean {
+  // 顶层临场条件(与 anyOf 并列时视作「全部支都要满足」的额外条件):默认不满足
+  if (r.undetermined !== undefined && r.undetermined.length > 0) return false;
   if (r.anyOf !== undefined) {
     if (r.anyOf.length === 0) return true;
     return r.anyOf.some(c => clauseSatisfied(c, runner, course));

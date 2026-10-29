@@ -17570,6 +17570,12 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "popularity>=4",
+    "random_lot_shared==60"
+   ]
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
   "fetchedAt": "2026-10-24"
@@ -17602,6 +17608,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "popularity<=3",
+    "random_lot_shared==30"
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -19070,6 +19082,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "post_number==7"
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容2)",
@@ -26853,7 +26870,8 @@
   "restriction": {
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "dirtGrade": true
   },
   "restrictionText": "泥地",
   "wisdomScaled": true,
@@ -26886,7 +26904,8 @@
   "restriction": {
    "surfaces": [
     "dirt"
-   ]
+   ],
+   "dirtGrade": false
   },
   "restrictionText": "泥地",
   "wisdomScaled": true,
@@ -42616,6 +42635,11 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "post_number<=3"
+   ]
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -42638,6 +42662,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "post_number<=3"
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -42662,6 +42691,11 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "post_number<=3"
+   ]
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -42684,6 +42718,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "post_number>=6"
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -42708,6 +42747,11 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "post_number>=6"
+   ]
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -42730,6 +42774,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "post_number>=6"
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -42915,6 +42964,11 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "popularity>=4"
+   ]
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -42937,6 +42991,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "popularity>=4"
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -42961,6 +43020,11 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "grade==100"
+   ]
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -42983,6 +43047,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "popularity==1"
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -50080,6 +50149,12 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "random_lot==50",
+    "post_number==7"
+   ]
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -50112,6 +50187,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "random_lot==50",
+    "post_number==7"
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -52271,6 +52352,11 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "time==4"
+   ]
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -52294,6 +52380,11 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "time==4"
+   ]
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -52316,6 +52407,11 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "time==4"
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -52439,6 +52535,9 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "dirtGrade": true
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -52462,6 +52561,9 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "dirtGrade": true
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -52484,6 +52586,9 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "dirtGrade": true
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -52511,6 +52616,9 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "dirtGrade": true
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -53888,6 +53996,12 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "popularity>=4",
+    "random_lot_shared==60"
+   ]
+  },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -53920,6 +54034,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "popularity<=3",
+    "random_lot_shared==30"
+   ]
   },
   "wisdomScaled": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
@@ -53954,6 +54074,12 @@
   "condition": {
    "kind": "raceStart"
   },
+  "restriction": {
+   "undetermined": [
+    "popularity>=4",
+    "random_lot_shared==30"
+   ]
+  },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
   "fetchedAt": "2026-10-24"
@@ -53986,6 +54112,12 @@
   "durationSec": null,
   "condition": {
    "kind": "raceStart"
+  },
+  "restriction": {
+   "undetermined": [
+    "popularity<=3",
+    "random_lot_shared==15"
+   ]
   },
   "wisdomScaled": false,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",

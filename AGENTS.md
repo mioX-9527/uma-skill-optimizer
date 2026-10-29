@@ -152,8 +152,8 @@ const r = simulate(course, runner);   // r.finishTimeSec 完赛时间, r.spurtTa
 6. `simsUsed` 接近 maxSims 时打"提前收敛"note。
 
 **回归锚点**(改算法、改示例或跑完 `npm run sync` 后必对):示例输入(`examples/input.example.json`,东京草2400/先行/预算1000/14候选)
-当前应得到:无技能 118.463s → 有技能 **117.177s**,购买 **7 项 970pt**,总收益 **12.15 马身**,**517 次模拟**,
-单项之和 21.17 马身(与 totalBody 差 9.02 = 技能间重叠)。CLI 与网页结果必须一致。
+当前应得到:无技能 118.463s → 有技能 **117.177s**,购买 **7 项 970pt**,总收益 **12.15 马身**,**721 次模拟**,
+单项之和 20.01 马身(与 totalBody 差 7.86 = 技能间重叠)。CLI 与网页结果必须一致。
 示例特意覆盖了这几类现象:
 - **单项高、集内几乎不减**:`Into High Gear!(继承)(1)` 4.35 → 4.25;
 - **单项被同类挤掉大半**:`Seirios(继承)(1)` 3.24 → 1.78(与其他继承技能重叠);
@@ -165,11 +165,25 @@ const r = simulate(course, runner);   // r.finishTimeSec 完赛时间, r.spurtTa
 > 锚点历史:2026-10-25 同步上游 0.8.2 时记的是「6 项 1000pt / 13.23 马身 / 183 次」。
 > 之后收尾改用 12 点期望口径(`simExpected`)复核,绝对值因此系统性下移(13.23 → 12.15);
 > 交换/多换一阶段又把模拟次数推到 517。**数字变了不等于改坏了** —— 先分清是口径变了,还是收益真掉了。
+> 2026-10-29 同步上游 0.8.5(绿技能「临场条件」默认不计收益)后:**推荐组合与四项核心数字一字未变**
+> (7 项 / 970pt / 117.177s / 12.15 马身)。唯一变化是「博弈者(1)」需要 `popularity>=4`,被判
+> 「不适配本配置」而从单项表退出 → 单项之和 21.17 → 20.01、模拟次数 721。这是**口径变了,不是改坏了**
+> (博弈者本来就没被选中,一直在 outbid 那一档)。
+> 顺带说明:同步前旧引擎实测是 780 次模拟,文档里那个 517 在 10-28 的交换/多换一提交后就已过时,
+> 与本次同步无关 —— 记锚点日志时别把这两个原因混在一起。
 
 ## 5. 数据与 sync
 
 - `data/skills.json`:字段 id/name/nameJa/nameTrad/cnReleased/rarity/effects/durationSec/condition/restriction/restrictionText/wisdomScaled/precision/cooldownSec/randomPosition/**prereq**/source/fetchedAt。
-  0.8.2 数据快照:2641 条,precision 分布 precise 409 / approx 1988 / unsupported 244;`prereq`(发动前提)200 条、`restriction.anyOf`(「或」分支)10 条。
+  0.8.5 数据快照:2641 条,precision 分布 precise 409 / approx 1988 / unsupported 244;`prereq`(发动前提)200 条、`restriction.anyOf`(「或」分支)10 条、`restriction.undetermined`(临场条件)22 条。
+  **`undetermined`(上游 2026-10-29 新增,同步后必须知道)**:闸位/人气/抽选/赛事等级/比赛时段这类
+  「赛道与跑法都确定不了」的条件,引擎一律按**不满足**处理 —— 技能整场不生效,绿技能也不计起跑属性。
+  语义是「不能保证 100% 发动,所以不算收益」,不是「一定不发动」。目前 22 条,全是绿技能
+  (`博弈者` / `凶悍博弈者` / `幸运7` / `擅长内道◎` / `擅长外道◎` / `伏兵` / `夜间赛` / `投机取巧` 等)。
+  **对本项目的影响**:这些技能会落进 `rejected` 的 `inapplicable`,不再出现在单项收益表 —— 不是算不出,是不该算。
+  **`dirtGrade`**:交流重赏(`is_dirtgrade`)由赛场确定(地方:大井/川崎/船桥/盛冈),**不属于**临场条件;
+  海外泥地(圣安妮塔公园/德尔马)不算交流重赏。
+  **`inertFirings` / `firingSamples`**:带冷却技能的同场逐次发动拆分(只去掉第 i 次的效果),`AblationRow.firingSamples` 给逐次马身。
   **rarity 映射**:normal=白技能,rareEvolved=金技能,evolved=进化技能,unique1~6=本体固有,uniqueHeir=继承固有(900xxx)。固有多等级同名,如 全心全意(1)/(2)/(继承) 三条——名称匹配歧义时报错列出让用户用 id。
   **注意 `is_basis_distance`** ≠ 距离档:1 = 赛程是 400 米整数倍(标准距离),引擎判 `distance % 400 === 0`;按中文技能名猜会全反。
 - `tools/sync-from-uma-race-sim.mjs`:从 `../uma-race-sim`(可 `--from` 覆盖)复制 engine/analysis 源码与数据 → 把 ablate.ts 里 `@uma-race-sim/engine` 改写为 `../engine/index.js` → 写 `data/SYNC_INFO.json` → **自动跑 `npm run web:standalone` 重建 打开规划器.html**(node_modules 未装则跳过并提示)。上游引擎更新后跑 `npm run sync` 一条命令全量同步。
@@ -210,14 +224,20 @@ const r = simulate(course, runner);   // r.finishTimeSec 完赛时间, r.spurtTa
 ```bash
 npm install          # 若 node_modules 缺失
 npm run typecheck    # tsc -p . 零输出
-npm test             # 12 passed
+npm test             # 96 passed(9 个文件)
 npm run optimize -- --input examples/input.example.json
-                     # 对照 §4 回归锚点:118.463s→117.067s,1000pt,13.23 马身
+                     # 对照 §4 回归锚点:118.463s→117.177s,7 项 970pt,12.15 马身,721 次模拟
 npm run web          # 浏览器打开 5183,载入默认示例点"开始计算",结果应与 CLI 一致
 ```
 
 单测覆盖:预算硬约束、总收益>0、组合不劣于最优单项、交互口径区分、超预算拒绝与分类、确定性复现、未知 id 报错、
 装配限制→不适配(含 detail)、未建模→不适配、绿技能进入候选池有正收益、季节限制绿技能换季前后行为、可发动无收益仍归 no-gain。
+
+> **挑测试样本不要靠数据顺序 `find`。** 上游每次同步都可能给某条补上 `undetermined`、
+> 插进负面技能、或只改顺序,`SKILLS.find(只要 effects 全是 passive)` 这种写法就会挑中不生效/负收益的那条。
+> 2026-10-29 同步 0.8.5 时正好撞上「99 Problems」(根性 −40 / 智力 −40),测试变红而引擎完全没错 ——
+> 排查成本全花在"是不是引擎坏了"上。挑法要把**可验证的性质**写死:
+> 正收益(`e.value > 0`)+ `condition.kind === 'raceStart'` + `restrictionSatisfied(...)` 实际满足。
 
 ## 9. 路线图
 

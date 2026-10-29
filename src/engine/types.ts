@@ -53,6 +53,11 @@ export interface Course {
   /** 海外赛场(触发代码 is_abroad:隆尚/圣安妮塔公园/德尔马) */
   readonly overseas?: boolean;
   /**
+   * 交流重赏赛场(触发代码 is_dirtgrade):地方竞马场(大井/川崎/船桥/盛冈)只办交流重赏,
+   * 因此这一条**由赛场确定**,不是临场条件。海外泥地(圣安妮塔公园/德尔马)不属于交流重赏。
+   */
+  readonly dirtGrade?: boolean;
+  /**
    * 赛场回转方向:1=顺时针(中山/京都/阪神/札幌/函馆/福岛/小仓/大井/隆尚),
    * 2=逆时针(东京/中京/新潟/川崎/船桥/盛冈/圣安妮塔公园/德尔马);
    * 直線赛道(新潟草1000m)无回转,缺省 → 回转方向类技能一律不生效。
@@ -280,10 +285,24 @@ export interface RestrictionClause {
   readonly motivations?: readonly Motivation[];
   /** 是否为海外赛场(触发代码 is_abroad==0/1) */
   readonly abroad?: boolean;
+  /**
+   * 是否为交流重赏(触发代码 is_dirtgrade==1/!=1)。
+   * 与枠番/人气不同,它**能由赛场确定**:地方竞马场(大井/川崎/船桥/盛冈)办的泥地重赏即交流重赏
+   * (ダートグレード競走),JRA 十场与海外赛场都不是。
+   */
+  readonly dirtGrade?: boolean;
   /** 面板属性下限(含,触发代码 base_speed>=N 等;取面板值,不含绿技能与干劲) */
   readonly statsAtLeast?: Readonly<Partial<Record<PassiveStat, number>>>;
   /** 面板属性上限(不含,触发代码 base_wiz<N 等) */
   readonly statsBelow?: Readonly<Partial<Record<PassiveStat, number>>>;
+  /**
+   * **临场条件**(触发代码里的 post_number/publicity/random_lot 等,原始 token 形式)。
+   * 这些条件由开赛时的实际情况决定(闸位、人气、抽选、赛事等级、比赛时段),**无法由赛道、
+   * 跑法或环境配置确定** ⇒ 引擎不做猜测:默认视为「不满足」,技能整场不生效、绿技能不计入起跑属性。
+   * 语义上是「不能保证 100% 发动,所以不计收益」,不是「一定不发动」;UI 用「临场条件」标注。
+   * 例:幸运7(`random_lot==50&post_number==7`)、擅长外道◎(`post_number>=6`)。
+   */
+  readonly undetermined?: readonly string[];
   /** 原始限制文本(展示用) */
   readonly rawText?: string;
 }
@@ -353,6 +372,13 @@ export interface SimOptions {
    * 剥出来 —— 否则 3 个回复技能各自都会背上「大招因此不发动」的收益,重复计账。
    */
   readonly inertSkills?: ReadonlySet<string>;
+  /**
+   * 消融「逐次发动拆分」:只去掉该技能**第 i 次发动**(0 基序号)的效果,其余各次照常生效。
+   * 该次仍记入发动史(前提计数)与 activations,只是不施加效果。
+   * 用于带冷却、同场多次发动的技能(如 先走一步！ 开赛10s + 冷却30s):
+   * 总量是「去掉整条技能」,逐次量是「只去掉这一次」—— 两者可对照,看哪一次在挣钱。
+   */
+  readonly inertFirings?: ReadonlyMap<string, ReadonlySet<number>>;
 }
 
 export interface SimResult {
