@@ -212,6 +212,17 @@ export interface SkillPrereq {
   readonly anyOf?: readonly SkillPrereq[];
 }
 
+/**
+ * 绿技能发动数分档(如 小林历奇固有 时来运转，龙腾九霄):效果随「当前生效的绿技能数」分档。
+ * 数据来源为 BWIKI 技能页备注(解包为单行满档值,无分档编码),由 clean-skills 写入。
+ */
+export interface ScaleByGreen {
+  /** 不随绿技能数变化的固定效果 */
+  readonly base: readonly SkillEffect[];
+  /** 分档:[min, max] 含端点(max 省略=∞)→ 档位效果(叠加在 base 上);未落入任何档 = 仅 base */
+  readonly tiers: readonly { readonly min: number; readonly max?: number; readonly effects: readonly SkillEffect[] }[];
+}
+
 export interface SkillConfig {
   readonly id: string;
   readonly name: string;
@@ -241,6 +252,8 @@ export interface SkillConfig {
    * 消融时按位置采样求期望(见 analysis ablate);false/缺省 = 条件满足即发动,无需采样。
    */
   readonly randomPosition?: boolean;
+  /** 绿技能发动数分档:simulate 开头按当前生效绿技能数展开成普通 effects(见 ScaleByGreen) */
+  readonly scaleByGreen?: ScaleByGreen;
 }
 
 /** 场地状态:0=良 1=稍重 2=重 3=不良(触发代码 ground_condition 1良~4不良,映射为代码−1) */

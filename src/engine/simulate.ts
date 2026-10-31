@@ -23,12 +23,13 @@ import {
 } from './conditions';
 import { effectiveStatsOf, passiveBonusOf } from './effstats';
 import { phaseAt } from './phase';
-import { baseIdOf, prereqSatisfied } from './prereq';
+import { baseIdOf, counterValue, prereqSatisfied } from './prereq';
 import { baseAccelOf, baseSpeedOf, lastSpurtSpeedOf, minSpeedOf, phaseTargetSpeed } from './speed';
 import {
   accelerationBonus,
   applyInstant,
   effectMultiplier,
+  expandScaleByGreen,
   restrictionSatisfied,
   spurtExtensionGrowth,
   targetSpeedBonus,
@@ -106,6 +107,10 @@ function solveSpurtTransition(
  * 随机项(焦躁/追比/下坡模式/位置保持等)v0.1 不参与计算;全开冲刺/前提机制按期望建模。
  */
 export function simulate(course: Course, runner: RunnerConfig, opts: SimOptions = {}): SimResult {
+  // 绿技能发动数分档(小林历奇固有等):绿技能均在起跑时生效,数量整场恒定,
+  // 开局按 counterValue('green') 一次性展开成普通 effects,后续发动/效果/消融流程完全复用
+  const greenCount = counterValue('green', { course, runner, baseId: '', fired: [] });
+  runner = { ...runner, skills: expandScaleByGreen(runner.skills, greenCount) };
   const ignoreExhaustion = opts.ignoreExhaustion === true;
   const positionOverrides = opts.positionOverrides;
   /** 消融「只去掉效果、保留发动」的技能 id(仍计入 fired / activations) */

@@ -1,8 +1,29 @@
 import { LAST_SPURT_EXT_ACCEL_SCALE, MOTIVATION_WISDOM_MULT, RARITY_LEVEL_FACTOR, WISDOM_BASE_MULT } from './constants';
 import { passiveBonusOf } from './effstats';
-import type { Course, PhaseId, RunnerConfig, SkillConfig } from './types';
+import type { Course, PhaseId, RunnerConfig, SkillConfig, SkillEffect } from './types';
 
 export { restrictionSatisfied, skillApplicable } from './restriction';
+
+/**
+ * 绿技能发动数分档(小林历奇固有等)展开:把 scaleByGreen 按当前生效绿技能数
+ * 展开成普通 effects,之后的发动/效果/消融流程完全复用。
+ * 未落入任何档 = 仅 base;无 scaleByGreen 的技能原样返回(引用不变)。
+ */
+export function expandScaleByGreen(skills: readonly SkillConfig[], greenCount: number): SkillConfig[] {
+  return skills.map(s => {
+    const sc = s.scaleByGreen;
+    if (sc === undefined) return s;
+    const tier = sc.tiers.find(t => greenCount >= t.min && (t.max === undefined || greenCount <= t.max));
+    const effects: readonly SkillEffect[] = tier === undefined ? sc.base : [...sc.base, ...tier.effects];
+    if (sameEffects(effects, s.effects)) return s;
+    return { ...s, effects };
+  });
+}
+
+/** 展开结果与原 effects 逐项相等时保留原引用(避免无谓的引用变更破坏调用方缓存/比较) */
+function sameEffects(a: readonly SkillEffect[], b: readonly SkillEffect[]): boolean {
+  return a.length === b.length && a.every((e, i) => JSON.stringify(e) === JSON.stringify(b[i]));
+}
 
 export interface Buff {
   readonly skill: SkillConfig;

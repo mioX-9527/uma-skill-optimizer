@@ -842,11 +842,6 @@
    {
     "type": "targetSpeed",
     "value": 0.35
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
    }
   ],
   "durationSec": 5,
@@ -890,13 +885,8 @@
   "nameTrad": "最大集中",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型10",
-    "value": 0.4
-   },
    {
     "type": "acceleration",
     "value": 0.2
@@ -1247,16 +1237,11 @@
   "nameTrad": "緊緊追著妳",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.25
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.05
    }
   ],
   "durationSec": 6,
@@ -1482,13 +1467,8 @@
   "nameTrad": "帝王舞步",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
-   },
    {
     "type": "acceleration",
     "value": 0.3
@@ -1976,16 +1956,11 @@
   "nameTrad": "trigger:BEAT",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.35
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
    }
   ],
   "durationSec": 5,
@@ -2817,13 +2792,8 @@
   "nameTrad": "震撼全場的手法",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标20)",
-    "value": -0.03
-   },
    {
     "type": "targetSpeed",
     "value": 0.35
@@ -4114,13 +4084,8 @@
   "nameTrad": "564之眼讓視野清晰！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 10
-   },
    {
     "type": "heal",
     "value": 0.015
@@ -4327,13 +4292,8 @@
   "nameTrad": "喜愛驚濤密岩的黃金船",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型14",
-    "value": 0.1
-   },
    {
     "type": "passive",
     "stat": "power",
@@ -4852,16 +4812,11 @@
   "nameTrad": "看我超車！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
    },
    {
     "type": "heal",
@@ -5174,16 +5129,11 @@
   "nameTrad": "保持至高",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "currentSpeed",
     "value": 0.25
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标7)",
-    "value": -0.05
    }
   ],
   "durationSec": 5,
@@ -6067,14 +6017,6 @@
    {
     "type": "targetSpeed",
     "value": 0.25
-   },
-   {
-    "type": "targetSpeed",
-    "value": 0.05
-   },
-   {
-    "type": "acceleration",
-    "value": 0.05
    }
   ],
   "durationSec": 5,
@@ -6086,7 +6028,58 @@
   "wisdomScaled": true,
   "randomPosition": true,
   "source": "BWIKI 速查表 + 触发代码(模块:技能数据库内容)",
-  "fetchedAt": "2026-10-24"
+  "fetchedAt": "2026-10-24",
+  "scaleByGreen": {
+   "base": [
+    {
+     "type": "targetSpeed",
+     "value": 0.25
+    }
+   ],
+   "tiers": [
+    {
+     "min": 3,
+     "max": 4,
+     "effects": [
+      {
+       "type": "targetSpeed",
+       "value": 0.05
+      },
+      {
+       "type": "acceleration",
+       "value": 0.05
+      }
+     ]
+    },
+    {
+     "min": 5,
+     "max": 5,
+     "effects": [
+      {
+       "type": "targetSpeed",
+       "value": 0.1
+      },
+      {
+       "type": "acceleration",
+       "value": 0.1
+      }
+     ]
+    },
+    {
+     "min": 6,
+     "effects": [
+      {
+       "type": "targetSpeed",
+       "value": 0.15
+      },
+      {
+       "type": "acceleration",
+       "value": 0.15
+      }
+     ]
+    }
+   ]
+  }
  },
  {
   "id": "100991-b1",
@@ -6303,16 +6296,11 @@
   "nameTrad": "認真比試喔！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": 1.8,
@@ -6955,16 +6943,11 @@
   "nameTrad": "堅定不移的意志",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": 1.8,
@@ -8637,16 +8620,11 @@
   "nameJa": "Weaving History",
   "nameTrad": "Weaving History",
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.25
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型42",
-    "value": 2
    }
   ],
   "durationSec": 8,
@@ -8966,13 +8944,8 @@
   "nameTrad": "鷹之眼",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 15
-   },
    {
     "type": "targetSpeed",
     "value": 0.25
@@ -10170,13 +10143,8 @@
   "nameTrad": "鏡花水月",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
-   },
    {
     "type": "currentSpeed",
     "value": 0.15
@@ -10470,13 +10438,8 @@
   "nameTrad": "絕不讓出最前排！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
-   },
    {
     "type": "acceleration",
     "value": 0.3
@@ -11277,16 +11240,11 @@
   "nameTrad": "戰鬥女神的矛戟",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": 1.8,
@@ -11721,16 +11679,11 @@
   "nameTrad": "I copy!",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
    },
    {
     "type": "heal",
@@ -11753,13 +11706,8 @@
   "nameTrad": "純白的細語",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.03
-   },
    {
     "type": "targetSpeed",
     "value": 0.15
@@ -11998,13 +11946,8 @@
   "nameTrad": "不要丟下我",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.01
-   },
    {
     "type": "heal",
     "value": 0.035
@@ -12320,12 +12263,12 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型10",
+    "label": "效果类型10(出闸)",
     "value": 0.4
    },
    {
     "type": "unsupported",
-    "label": "效果类型32",
+    "label": "效果类型32(全属性(临场))",
     "value": 10
    }
   ],
@@ -12502,13 +12445,8 @@
   "nameTrad": "事前準備萬無一失！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
-   },
    {
     "type": "acceleration",
     "value": 0.3
@@ -12707,16 +12645,11 @@
   "nameTrad": "夢想中的都市女孩",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
    }
   ],
   "durationSec": 4,
@@ -13048,13 +12981,8 @@
   "nameTrad": "要糖也要搗蛋",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标20)",
-    "value": -0.03
-   },
    {
     "type": "targetSpeed",
     "value": 0.35
@@ -13173,16 +13101,11 @@
   "nameTrad": "狂野風神",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.35
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.15
    }
   ],
   "durationSec": 4,
@@ -13212,12 +13135,12 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型10",
+    "label": "效果类型10(出闸)",
     "value": 0.4
    },
    {
     "type": "unsupported",
-    "label": "效果类型32",
+    "label": "效果类型32(全属性(临场))",
     "value": 10
    }
   ],
@@ -13595,13 +13518,8 @@
   "nameJa": "被験体観察",
   "nameTrad": "觀察受試者",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标11)",
-    "value": 0.15
-   },
    {
     "type": "targetSpeed",
     "value": 0.3
@@ -14015,16 +13933,11 @@
   "nameTrad": "獨演舞姿",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": 0.9,
@@ -14432,13 +14345,8 @@
   "nameTrad": "Gluttony's Grip",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.01
-   },
    {
     "type": "heal",
     "value": 0.055
@@ -14466,13 +14374,8 @@
   "nameJa": "ノイズキャンセリング",
   "nameTrad": "噪音消彌",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.01
-   },
    {
     "type": "currentSpeed",
     "value": 0.35
@@ -14528,13 +14431,8 @@
   "nameTrad": "閃光的魔法",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
-   },
    {
     "type": "currentSpeed",
     "value": 0.25
@@ -14781,13 +14679,8 @@
   "nameTrad": "#可愛的干擾♪",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -5
-   },
    {
     "type": "currentSpeed",
     "value": 0.15
@@ -14816,13 +14709,8 @@
   "nameTrad": "#對我如痴如醉吧♪",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.25
-   },
    {
     "type": "targetSpeed",
     "value": 0.15
@@ -14851,13 +14739,8 @@
   "nameTrad": "#要染成真機伶的顏色嗎？",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.25
-   },
    {
     "type": "targetSpeed",
     "value": 0.15
@@ -14917,16 +14800,11 @@
   "nameTrad": "#漂亮短途賽",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": 3,
@@ -14952,16 +14830,11 @@
   "nameTrad": "不停頓公主",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.5
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
    }
   ],
   "durationSec": 3,
@@ -15140,16 +15013,11 @@
   "nameTrad": "先見之明",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "heal",
     "value": 0.055
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.2
    },
    {
     "type": "targetSpeed",
@@ -15180,16 +15048,11 @@
   "nameTrad": "伸展台的主角",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": 1.8,
@@ -15278,13 +15141,8 @@
   "nameTrad": "艷麗的布陣",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.3
-   },
    {
     "type": "heal",
     "value": 0.015
@@ -15973,7 +15831,7 @@
   "nameTrad": "泥巴魔王大人",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -15984,11 +15842,6 @@
     "type": "passive",
     "stat": "power",
     "value": 40
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型32",
-    "value": 20
    }
   ],
   "durationSec": null,
@@ -16143,13 +15996,8 @@
   "nameTrad": "魅惑魔法",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标4)",
-    "value": -0.25
-   },
    {
     "type": "currentSpeed",
     "value": 0.15
@@ -16509,13 +16357,8 @@
   "nameTrad": "魅惑的木乃伊細語",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.03
-   },
    {
     "type": "heal",
     "value": 0.015
@@ -16799,13 +16642,8 @@
   "nameJa": "立ち位置ゼロ番！",
   "nameTrad": "站位零號！",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型10",
-    "value": 0.4
-   },
    {
     "type": "acceleration",
     "value": 0.2
@@ -17624,7 +17462,7 @@
   "name": "All-in!!(1)",
   "nameJa": "All-in!!",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
@@ -17635,11 +17473,6 @@
     "type": "passive",
     "stat": "power",
     "value": 60
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型50",
-    "value": 1
    }
   ],
   "durationSec": null,
@@ -17868,16 +17701,11 @@
   "nameTrad": "難以壓抑的意志",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": 0.9,
@@ -17902,16 +17730,11 @@
   "nameTrad": "就讓你們見識一下！！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.35
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
    }
   ],
   "durationSec": 4,
@@ -18172,13 +17995,8 @@
   "nameTrad": "祝福的花童",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标11)",
-    "value": 0.15
-   },
    {
     "type": "targetSpeed",
     "value": 0.3
@@ -18239,13 +18057,8 @@
   "nameJa": "末永く、寄り添う花",
   "nameTrad": "永恆陪伴的花朵",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标11)",
-    "value": 0.15
-   },
    {
     "type": "targetSpeed",
     "value": 0.3
@@ -18273,16 +18086,11 @@
   "nameTrad": "還能繼續跑喔！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "heal",
     "value": 0.075
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
    }
   ],
   "durationSec": 2,
@@ -18331,13 +18139,8 @@
   "nameTrad": "看好囉看好囉！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.045
-   },
    {
     "type": "targetSpeed",
     "value": 0.15
@@ -18359,13 +18162,8 @@
   "nameJa": "勝ちたいんだもん！",
   "nameTrad": "就是想贏嘛！",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.045
-   },
    {
     "type": "acceleration",
     "value": 0.3
@@ -18813,16 +18611,11 @@
   "nameTrad": "前進吧！世界美麗計畫☆",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
    },
    {
     "type": "currentSpeed",
@@ -18848,16 +18641,11 @@
   "nameTrad": "前進吧！世界美麗計畫☆",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
    }
   ],
   "durationSec": 3,
@@ -19276,16 +19064,11 @@
   "nameTrad": "震撼大地",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": 0.9,
@@ -19647,13 +19430,8 @@
   "nameTrad": "冷酷的視線",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标4)",
-    "value": -0.03
-   },
    {
     "type": "currentSpeed",
     "value": 0.15
@@ -19934,16 +19712,11 @@
   "nameTrad": "不停頓聲援",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
    },
    {
     "type": "heal",
@@ -20119,13 +19892,8 @@
   "nameTrad": "王的大局觀",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 15
-   },
    {
     "type": "targetSpeed",
     "value": 0.15
@@ -20619,7 +20387,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型32",
+    "label": "效果类型32(全属性(临场))",
     "value": 60
    }
   ],
@@ -21321,13 +21089,8 @@
   "nameTrad": "沒有不會拂曉的夜晚！",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.01
-   },
    {
     "type": "heal",
     "value": 0.035
@@ -24343,13 +24106,8 @@
   "nameTrad": "Burn Down",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标11)",
-    "value": 0.15
-   },
    {
     "type": "targetSpeed",
     "value": 0.3
@@ -24617,21 +24375,11 @@
   "nameTrad": "保持華麗",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.45
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.15
    }
   ],
   "durationSec": 1.8,
@@ -24710,16 +24458,11 @@
   "nameTrad": "時時刻刻綻放最耀眼的光芒",
   "cnReleased": true,
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.15
    }
   ],
   "durationSec": 2,
@@ -26128,13 +25871,8 @@
   "nameJa": "彗星色の羽搏き",
   "nameTrad": "彗星光暈的振翅",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标11)",
-    "value": 0.15
-   },
    {
     "type": "targetSpeed",
     "value": 0.35
@@ -26297,13 +26035,8 @@
   "name": "加油鼓劲三三七拍！(1)",
   "nameJa": "気合いの三三七拍子！",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标24)",
-    "value": 0.35
-   },
    {
     "type": "currentSpeed",
     "value": 0.35
@@ -26921,7 +26654,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型32",
+    "label": "效果类型32(全属性(临场))",
     "value": 60
    }
   ],
@@ -27639,16 +27372,11 @@
   "nameTrad": "Adventure of 564",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型37",
-    "value": 2
    }
   ],
   "durationSec": 5,
@@ -28213,21 +27941,11 @@
   "nameJa": "トライアンフ",
   "nameTrad": "凱旋調",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.45
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.15
    }
   ],
   "durationSec": 1.8,
@@ -28289,13 +28007,8 @@
   "name": "璀璨乐章",
   "nameJa": "ムジカ・シンティッランテ",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标11)",
-    "value": 0.15
-   },
    {
     "type": "currentSpeed",
     "value": 0.35
@@ -28329,13 +28042,8 @@
   "name": "花之女神的馈赠！(1)",
   "nameJa": "ドーノ・ディ・フローラ！",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标11)",
-    "value": 0.15
-   },
    {
     "type": "currentSpeed",
     "value": 0.35
@@ -28842,16 +28550,11 @@
   "nameTrad": "Drain for rose",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "heal",
     "value": 0.055
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.005
    },
    {
     "type": "targetSpeed",
@@ -30073,13 +29776,8 @@
   "nameJa": "ルミナス・スペクトラム",
   "nameTrad": "璀璨光譜",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标11)",
-    "value": 0.15
-   },
    {
     "type": "currentSpeed",
     "value": 0.35
@@ -30120,18 +29818,11 @@
     "type": "passive",
     "stat": "speed",
     "value": 100
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标2)",
-    "value": 0
    }
   ],
   "durationSec": null,
   "condition": {
-   "kind": "distanceRate",
-   "fromPct": 0,
-   "toPct": 100
+   "kind": "raceStart"
   },
   "restriction": {
    "distanceTypes": [
@@ -30386,21 +30077,11 @@
   "nameTrad": "Spooky-Scary-Happy",
   "cnReleased": true,
   "rarity": "unique5",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.35
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.05
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.05
    }
   ],
   "durationSec": 5,
@@ -34329,17 +34010,12 @@
   "name": "这么可爱真是抱歉♡(1)",
   "nameJa": "愛されすぎてマジごめん♡",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
     "stat": "speed",
     "value": 80
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型32",
-    "value": 20
    }
   ],
   "durationSec": null,
@@ -34763,11 +34439,6 @@
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
    }
   ],
   "durationSec": 3,
@@ -35445,13 +35116,8 @@
   "name": "那么，该宣告结束了",
   "nameJa": "さて、収めに参りましょう",
   "rarity": "evolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标11)",
-    "value": 0.15
-   },
    {
     "type": "targetSpeed",
     "value": 0.35
@@ -38072,7 +37738,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型14",
+    "label": "效果类型14(出迟时长)",
     "value": 0.1
    }
   ],
@@ -43538,7 +43204,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型10",
+    "label": "效果类型10(出闸)",
     "value": 0.4
    }
   ],
@@ -43561,7 +43227,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型10",
+    "label": "效果类型10(出闸)",
     "value": 0.9
    }
   ],
@@ -43584,7 +43250,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型10",
+    "label": "效果类型10(出闸)",
     "value": 1.5
    }
   ],
@@ -43603,16 +43269,11 @@
   "nameTrad": "鋼鐵意志",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "heal",
     "value": 0.055
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
    }
   ],
   "durationSec": 2,
@@ -43634,15 +43295,10 @@
   "nameTrad": "隱藏身影",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "heal",
-    "value": 0.015
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
     "value": 0.015
    }
   ],
@@ -43855,16 +43511,11 @@
   "nameTrad": "不停頓女孩",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.4
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
    }
   ],
   "durationSec": 3,
@@ -43883,16 +43534,11 @@
   "nameTrad": "避開力竭賽馬娘",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "acceleration",
     "value": 0.2
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.005
    }
   ],
   "durationSec": 3,
@@ -44975,16 +44621,11 @@
   "nameTrad": "慧眼",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "heal",
     "value": 0.055
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.2
    }
   ],
   "durationSec": 3,
@@ -45011,16 +44652,11 @@
   "nameTrad": "觀察情勢",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "heal",
     "value": 0.015
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.05
    }
   ],
   "durationSec": 3,
@@ -46309,13 +45945,8 @@
   "nameTrad": "準備萬全！",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
-   },
    {
     "type": "acceleration",
     "value": 0.3
@@ -46344,13 +45975,8 @@
   "nameTrad": "準備進攻",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
-   },
    {
     "type": "acceleration",
     "value": 0.2
@@ -46866,13 +46492,8 @@
   "nameTrad": "速度貪食者",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.2
-   },
    {
     "type": "targetSpeed",
     "value": 0.25
@@ -46901,13 +46522,8 @@
   "nameTrad": "速度吞噬者",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.15
-   },
    {
     "type": "targetSpeed",
     "value": 0.15
@@ -47176,7 +46792,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型8",
+    "label": "效果类型8(视野)",
     "value": 15
    }
   ],
@@ -47207,7 +46823,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型8",
+    "label": "效果类型8(视野)",
     "value": 10
    }
   ],
@@ -47234,13 +46850,8 @@
   "nameTrad": "閃光步伐",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
-   },
    {
     "type": "acceleration",
     "value": 0.3
@@ -47269,13 +46880,8 @@
   "nameTrad": "閃電步伐",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
-   },
    {
     "type": "acceleration",
     "value": 0.2
@@ -47845,13 +47451,8 @@
   "nameTrad": "持久力貪食者",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.01
-   },
    {
     "type": "heal",
     "value": 0.035
@@ -47880,13 +47481,8 @@
   "nameTrad": "持久力吞噬者",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.005
-   },
    {
     "type": "heal",
     "value": 0.015
@@ -48159,7 +47755,7 @@
    },
    {
     "type": "unsupported",
-    "label": "效果类型35",
+    "label": "效果类型35(切换跑道)",
     "value": 0.5
    }
   ],
@@ -48194,7 +47790,7 @@
    },
    {
     "type": "unsupported",
-    "label": "效果类型35",
+    "label": "效果类型35(切换跑道)",
     "value": 0.5
    }
   ],
@@ -49263,7 +48859,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型8",
+    "label": "效果类型8(视野)",
     "value": 15
    }
   ],
@@ -49294,7 +48890,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型8",
+    "label": "效果类型8(视野)",
     "value": 5
    }
   ],
@@ -49561,7 +49157,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型8",
+    "label": "效果类型8(视野)",
     "value": 10
    }
   ],
@@ -49590,7 +49186,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型8",
+    "label": "效果类型8(视野)",
     "value": 5
    }
   ],
@@ -49735,7 +49331,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型8",
+    "label": "效果类型8(视野)",
     "value": 15
    }
   ],
@@ -49766,7 +49362,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型8",
+    "label": "效果类型8(视野)",
     "value": 5
    }
   ],
@@ -49855,17 +49451,12 @@
   "nameTrad": "領頭的訣竅◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
     "stat": "wisdom",
     "value": 60
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 10
    }
   ],
   "durationSec": null,
@@ -49889,17 +49480,12 @@
   "nameTrad": "領頭的訣竅○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
     "stat": "wisdom",
     "value": 40
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": null,
@@ -49923,17 +49509,12 @@
   "nameTrad": "前列的訣竅◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
     "stat": "wisdom",
     "value": 60
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 10
    }
   ],
   "durationSec": null,
@@ -49957,17 +49538,12 @@
   "nameTrad": "前列的訣竅○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
     "stat": "wisdom",
     "value": 40
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": null,
@@ -49991,17 +49567,12 @@
   "nameTrad": "居中的訣竅◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
     "stat": "wisdom",
     "value": 60
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 10
    }
   ],
   "durationSec": null,
@@ -50025,17 +49596,12 @@
   "nameTrad": "居中的訣竅○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
     "stat": "wisdom",
     "value": 40
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": null,
@@ -50059,17 +49625,12 @@
   "nameTrad": "後追的訣竅◎",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
     "stat": "wisdom",
     "value": 60
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 10
    }
   ],
   "durationSec": null,
@@ -50093,17 +49654,12 @@
   "nameTrad": "後追的訣竅○",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
     "stat": "wisdom",
     "value": 40
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型8",
-    "value": 5
    }
   ],
   "durationSec": null,
@@ -50500,18 +50056,11 @@
     "type": "passive",
     "stat": "speed",
     "value": 60
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标2)",
-    "value": 0
    }
   ],
   "durationSec": null,
   "condition": {
-   "kind": "distanceRate",
-   "fromPct": 0,
-   "toPct": 100
+   "kind": "raceStart"
   },
   "restriction": {
    "surfaces": [
@@ -50716,13 +50265,8 @@
   "nameTrad": "目標是最前排！",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
-   },
    {
     "type": "acceleration",
     "value": 0.3
@@ -50751,13 +50295,8 @@
   "nameTrad": "鎖定前排",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.025
-   },
    {
     "type": "acceleration",
     "value": 0.2
@@ -51312,7 +50851,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型6",
+    "label": "效果类型6(跑法行为)",
     "value": 0
    }
   ],
@@ -51752,16 +51291,11 @@
   "nameTrad": "狂野旋風",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.35
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.15
    }
   ],
   "durationSec": 1.8,
@@ -51787,16 +51321,11 @@
   "nameTrad": "灌注氣魄",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.035
    }
   ],
   "durationSec": 1.8,
@@ -51822,13 +51351,8 @@
   "nameTrad": "不要命令我！！",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
-   {
-    "type": "unsupported",
-    "label": "效果类型14",
-    "value": 0.085
-   },
    {
     "type": "passive",
     "stat": "wisdom",
@@ -51918,17 +51442,12 @@
   "nameTrad": "自制之心",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "precise",
   "effects": [
    {
     "type": "passive",
     "stat": "wisdom",
     "value": 60
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型29",
-    "value": -3
    }
   ],
   "durationSec": null,
@@ -53560,16 +53079,11 @@
   "nameTrad": "突破",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.35
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.035
    }
   ],
   "durationSec": 2.4,
@@ -53595,16 +53109,11 @@
   "nameTrad": "突圍計策",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.015
    }
   ],
   "durationSec": 2.4,
@@ -54496,7 +54005,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型29",
+    "label": "效果类型29(焦躁率)",
     "value": 10
    }
   ],
@@ -54637,21 +54146,11 @@
   "nameTrad": "威風凜凜",
   "cnReleased": true,
   "rarity": "rareEvolved",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.35
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.15
    }
   ],
   "durationSec": 1.8,
@@ -54676,21 +54175,11 @@
   "nameTrad": "壓力",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.035
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.035
    }
   ],
   "durationSec": 1.8,
@@ -57022,21 +56511,11 @@
   "nameTrad": "瓦解敵勢",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.035
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.035
    }
   ],
   "durationSec": 1.8,
@@ -57187,16 +56666,11 @@
   "nameTrad": "鬼氣逼人",
   "cnReleased": true,
   "rarity": "normal",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.035
    }
   ],
   "durationSec": 1.8,
@@ -61567,12 +61041,12 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型29",
+    "label": "效果类型29(焦躁率)",
     "value": 40
    },
    {
     "type": "unsupported",
-    "label": "效果类型32",
+    "label": "效果类型32(全属性(临场))",
     "value": -20
    }
   ],
@@ -62031,7 +61505,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型32",
+    "label": "效果类型32(全属性(临场))",
     "value": 20
    }
   ],
@@ -64766,11 +64240,6 @@
    {
     "type": "currentSpeed",
     "value": 0.25
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型48",
-    "value": 0.1
    }
   ],
   "durationSec": 2,
@@ -66338,12 +65807,12 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型14",
+    "label": "效果类型14(出迟时长)",
     "value": 0.1
    },
    {
     "type": "unsupported",
-    "label": "效果类型32",
+    "label": "效果类型32(全属性(临场))",
     "value": -20
    }
   ],
@@ -66364,7 +65833,7 @@
   "effects": [
    {
     "type": "unsupported",
-    "label": "效果类型29",
+    "label": "效果类型29(焦躁率)",
     "value": 10
    }
   ],
@@ -67217,7 +66686,7 @@
    },
    {
     "type": "unsupported",
-    "label": "效果类型8",
+    "label": "效果类型8(视野)",
     "value": 15
    }
   ],
@@ -67247,7 +66716,7 @@
    },
    {
     "type": "unsupported",
-    "label": "效果类型8",
+    "label": "效果类型8(视野)",
     "value": 5
    }
   ],
@@ -69243,11 +68712,6 @@
    {
     "type": "targetSpeed",
     "value": 0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.015
    }
   ],
   "durationSec": 3,
@@ -69423,16 +68887,11 @@
   "nameTrad": "緊緊追著妳(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.05
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.025
    }
   ],
   "durationSec": 3.6,
@@ -69787,16 +69246,11 @@
   "nameTrad": "trigger:BEAT(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型28",
-    "value": 0.015
    }
   ],
   "durationSec": 3,
@@ -71452,16 +70906,11 @@
   "nameTrad": "保持至高(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "currentSpeed",
     "value": 0.05
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标7)",
-    "value": -0.025
    }
   ],
   "durationSec": 3,
@@ -73994,16 +73443,11 @@
   "nameTrad": "Adventure of 564(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.035
-   },
-   {
-    "type": "unsupported",
-    "label": "效果类型37",
-    "value": 1
    }
   ],
   "durationSec": 3,
@@ -74897,16 +74341,11 @@
   "nameTrad": "Drain for rose(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "heal",
     "value": 0.015
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.0025
    },
    {
     "type": "targetSpeed",
@@ -75911,21 +75350,11 @@
   "nameTrad": "Spooky-Scary-Happy(繼承)",
   "cnReleased": true,
   "rarity": "uniqueHeir",
-  "precision": "unsupported",
+  "precision": "approx",
   "effects": [
    {
     "type": "targetSpeed",
     "value": 0.15
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标9)",
-    "value": -0.025
-   },
-   {
-    "type": "unsupported",
-    "label": "妨害/他人(目标10)",
-    "value": -0.025
    }
   ],
   "durationSec": 3,

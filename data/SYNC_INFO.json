@@ -1,9 +1,9 @@
 {
-  "syncedAt": "2026-10-29T11:41:10.522Z",
+  "syncedAt": "2026-10-31T13:55:10.564Z",
   "from": "C:\\Users\\mio\\Desktop\\uma-race-sim",
   "version": {
-    "version": "0.8.5-dirtgrade",
-    "generatedAt": "2026-10-25",
+    "version": "0.9.0-quantifiable-only",
+    "generatedAt": "2026-10-31",
     "sources": [
       "BWIKI 技能速查表(api.php action=ask,1907 条原始;tools/scrape-once.ts)",
       "BWIKI 模块:技能数据库内容(游戏解包触发代码/效果/冷却;tools/parse-skill-lua.js 转存为 data/raw/skill-data-lua.json)",
@@ -17,9 +17,9 @@
       "skills": 2641
     },
     "skillPrecision": {
-      "precise": 409,
-      "approx": 1988,
-      "unsupported": 244,
+      "precise": 430,
+      "approx": 2076,
+      "unsupported": 135,
       "excludedEvolution": 47,
       "codeParsed": 1857,
       "textFallback": 2,
@@ -30,7 +30,7 @@
     },
     "notes": [
       "技能条件以触发代码优先解析(1224 条命中解包数据,2 条回退中文文本规则):distance_rate/remain_distance 数值窗口、corner 序号、is_finalcorner/_laterhalf、is_last_straight、is_lastspurt、straight_front_type==2(看台对面直线)、@ 分隔的\"或\"变体(限制取并集)",
-      "效果取解包效果槽(最多 3 个/条件):21/27→速度、31→加速度、22→即时速度、9→耐力恢复(含负值=消耗体力)、1-5→被动前提值;target_type≠1 标记不支持",
+      "效果取解包效果槽(最多 3 个/条件):21/27→速度、31→加速度、22→即时速度、9→耐力恢复(含负值=消耗体力)、8→视野(处理规则见下)、1-5→被动前提值;target_type≠1 标记不支持",
       "冷却时间来自解包 float_cooldown_time;<400s 的技能(如 弧线大师 30s)同场可多次发动;500s 视为一次性",
       "近似层变多(1059 条)为如实标注:触发代码暴露了文本解析此前漏看的名次/随机条款(order_rate 出现于约 766 个技能)",
       "进化稀有度 680 条按范围排除;固有双分支(condition_1/condition_2)拆为 -b1/-b2;复核清单 data/skill-review.json(228 条,多为纯被动与纯名次条件)",
@@ -57,7 +57,9 @@
       "存速(Spurt Speed Carry-over)核对:速度技能抬高的是目标速度上限而非加速度,马以固定加速度爬到上限(2400m 约 9~10 秒);进入末脚那一帧仍在生效的技能把起步速度整体抬高,加速段全程少爬该差值且技能结束后不需还回去 —— 收益 ≈ 值×加速段时长。SimResult 新增 spurtStartMeter/spurtStartSec,AblationRow 新增 carryOverSpeed/carryOverLeftSec(完整−只去掉效果 的同位置速度差),收益表以「存速 +x」角标显示",
       "消融口径三分支:① 时机确定(开赛 X 秒后 / 终点前 X 米 / 末脚入口等,触发代码不含 *_random)→ 只有一个确定值,不给期望与区间(先走一步！201662 = behind_near_lane_time>=3&accumulatetime>=10,单马模型把邻道条件按满足处理并标 approx);② 区段随机(触发代码含 *_random,1118 条)→ 位置采样 + 联合蒙特卡洛,报期望与区间;③ 同场多次发动(带冷却,冷却也 ×距离/1000:先走一步！2400m 实际 72s → 10s/82s 两次)→ 引擎新增 SimOptions.inertFirings(只去掉第 i 次的效果,其余各次照常且仍记入发动史),消融报 AblationRow.firingSamples,收益表标「逐次」可展开每次的位置/时刻/收益(东京2400 默认属性实测:第1次 175m +1.43、第2次 1573m +1.69、整条 +3.14)",
       "绿技能「临场条件」默认不计:触发代码里的 post_number(枠番)/popularity(人气)/random_lot(_shared)(抽选)/grade(赛事等级)/time(比赛时段)等 token 由开赛时的实际情况决定,赛道/跑法/环境配置都确定不了 ⇒ 常时被动(绿技能)据此不能保证 100% 发动,写入 restriction.undetermined,引擎视为不满足(不进起跑属性、收益 0),UI 标「临场条件」并说明原因;共 22 条(幸运7/超级幸运7/七福即生/擅长内道·外道◎○×/伏兵◎○/胆小鬼/夜间赛◎○×/博弈者/投机取巧/凶悍博弈者/不擅长一级赛事)。非被动技能不加此字段(它们按规则取位发动,本身已标 approx);is_tight_track(可由赛场确定)、furlong、is_dirtgrade(可由赛场确定,见下一条)不在此列。只有靠赛道/跑法/环境就能百分百判定的绿技能(赛场/回转方向/距离档/标准距离/场地/天气/季节/脚质/干劲/面板属性/交流重赏)照常计入",
-      "交流重赏 is_dirtgrade 由赛场确定(2026-10-29 修正):游戏里交流重赏 = 地方竞马场的泥地重赏(ダートグレード競走),JRA 十场与海外赛场都不办 ⇒ 「是否交流重赏」等价于「赛场是否地方赛场」。赛道数据(tools/make-courses.ts)给 10100~10199 打 dirtGrade:true(大井3/川崎3/船桥4/盛冈4,共 14 条,全为泥地),技能限制落成 restriction.dirtGrade(==1→true,!=1→false),引擎按 course.dirtGrade 一票判定。受影响 5 条技能:交流重赏◎○×/交流重赏之鬼(202251~202254,全部 +dirtGrade)、奔跑的吉祥物 109802211 的 -b1(dirtGrade)/ -b2(非 dirtGrade)互补。因此它不再计入「临场条件」,undetermined 由 28 条降到 22 条"
+      "交流重赏 is_dirtgrade 由赛场确定(2026-10-29 修正):游戏里交流重赏 = 地方竞马场的泥地重赏(ダートグレード競走),JRA 十场与海外赛场都不办 ⇒ 「是否交流重赏」等价于「赛场是否地方赛场」。赛道数据(tools/make-courses.ts)给 10100~10199 打 dirtGrade:true(大井3/川崎3/船桥4/盛冈4,共 14 条,全为泥地),技能限制落成 restriction.dirtGrade(==1→true,!=1→false),引擎按 course.dirtGrade 一票判定。受影响 5 条技能:交流重赏◎○×/交流重赏之鬼(202251~202254,全部 +dirtGrade)、奔跑的吉祥物 109802211 的 -b1(dirtGrade)/ -b2(非 dirtGrade)互补。因此它不再计入「临场条件」,undetermined 由 28 条降到 22 条",
+      "不可建模槽统一丢弃(2026-10-31 用户决策:仅保留能产生马身收益的效果):凡 1D 单马无法量化的效果槽 —— 妨害/他人(target≠1)、视野(8)、焦躁率(29)、跑法行为(6,大逃)、出闸(10)、出迟时长(14)、全属性临场变化(32)、切换跑道(35)、触发其他技能(37)、横向速度(28,按同日走位回滚决策)、未知类型(42/48/49/50) —— 一律忽略,其余可量化效果(速度/加速度/即时速度/回复/被动)照常保留并按各自条件发动;语义出处 = BWIKI 技能页「技能类型」字段(INFO_SLOT_NAMES 命名表)。丢弃后无可留数值的技能(千里眼/领跑牵制/大逃等 135 条 unsupported 中的纯信息槽)维持 unsupported 保留标签;每次丢弃记入 skill-notes 可追溯。unsupported 244→135、approx 1988→2076、precise 409→430(相对 0.8.5 基线)。⚠️ 口径为下界:妨害特化技的真实价值(压制对手)不在模型;未知类型语义未核实即丢弃,若实为自身负面会高估(已核实混合技能未发现负面案例)",
+      "绿技能发动数分档固有(2026-10-31):SkillConfig 新增 scaleByGreen={base,tiers:[{min,max?},effects]},simulate 开头按 counterValue('green') 展开成普通 effects,下游消融/采样全复用。现有 1 条:100981 小林历奇「时来运转，龙腾九霄」基础 速度+0.25,绿技能 0~2 追加无效/3~4 +0.05速+0.05加/5 ×2/6+ ×3 —— 解包为单行满档值无分档编码,分档表取自 BWIKI 技能页备注,clean-skills SCALE_BY_GREEN_OVERRIDES 覆盖写入;继承版 900981 无分档数据维持单值"
     ]
   }
 }

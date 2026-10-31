@@ -145,8 +145,9 @@ function quantileToMeter(spans: readonly Region[], u: number): number {
  * 依赖关系另外用 `dependentIds` 提示(从牌组删掉它才会连带失去那些技能)。
  *
  * 位置随机技能(触发代码含 *_random,randomPosition)的处理分两层:
- * 1. 逐位置明细(positionSamples):满足区段全长均匀取 K 点,强制发动后消融,
- *    其余技能按规则发动——展示"位置不同收益不同"的确定性曲线;
+ * 1. 逐位置明细(positionSamples):满足区段全长均匀取 K 点,逐点强制发动后做**单项消融**
+ *    (同位置强制发动 vs 强制发动但去掉本技能效果)= 该落点的边际收益,口径与期望一致
+ *    (2026-10-31 勘误:此前对比空场,明细混入了牌组其他技能的合计收益,与期望不可比);
  * 2. 联合蒙特卡洛期望(方案二):所有随机位置技能的发动位置联合拉丁超立方抽样
  *    (确定性、可复现),每组下跑全技能与逐技能 leave-one-out——
  *    Σ 单项与实测总收益的期望口径均来自联合随机环境,含技能间随机耦合。
@@ -278,12 +279,19 @@ export function ablate(course: Course, runner: RunnerConfig): AblationReport {
     let bodyRange: [number, number] | undefined;
     let expectedBody: number | undefined;
     if (skill.randomPosition === true && acts.length > 0) {
-      // 逐位置明细(固定其余技能规则发动,对照用)
+      // 逐位置明细(固定其余技能规则发动,对照用):同位置强制发动 vs 强制发动但去掉本技能效果
+      // —— 单项消融口径,与期望(联合 MC 边际)可直接对比(2026-10-31 勘误:此前对比空场,
+      //    明细值混入了牌组其他技能的合计收益,与期望口径不可比)
       const spans = sampleableSpans(skill.condition, course);
       if (spans !== null) {
         positionSamples = samplePositions(spans, POSITION_SAMPLES).map(meter => {
-          const forced = simulate(course, runner, { positionOverrides: new Map([[skill.id, meter]]) });
-          return { meter: Math.round(meter), deltaBody: ((none.finishTimeSec - forced.finishTimeSec) * endV) / BODY_LENGTH_METERS };
+          const ov = new Map([[skill.id, meter]]);
+          const forced = simulate(course, runner, { positionOverrides: ov });
+          const forcedWithout = simulate(course, runner, { positionOverrides: ov, inertSkills: new Set([skill.id]) });
+          return {
+            meter: Math.round(meter),
+            deltaBody: ((forcedWithout.finishTimeSec - forced.finishTimeSec) * endV) / BODY_LENGTH_METERS,
+          };
         });
       }
       // 期望 = 联合 MC 边际收益均值(与其他随机技能联合随机)
