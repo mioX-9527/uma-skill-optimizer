@@ -20,13 +20,18 @@ DEFAULT_EXE = ROOT / "uma-skill-optimizer.exe"
 # 网页层:挑「这一版才有的字符串」。只求"稳定"是不够的 —— 稳定字符串在旧版同样成立,
 # 就等于验不出「exe 忘了重建」(2026-10-29 实际踩过:10-28 的旧 exe 照样全 ✓,给了假的信心)。
 # 换引擎/换界面文案时往这里补一条**本次新增**的字符串,旧产物会立刻露馅。
-NEEDLES = ("btn-pick", "在游戏里勾选这", "由开赛决定", "undetermined")
+NEEDLES = ("btn-pick", "在游戏里勾选这", "由开赛决定", "undetermined",
+           "背景技能", "已学技能/本体固有", "参与模拟,不计预算")
 # Python 层按模块列出"这一版才有的名字"。加新功能时往这里补一行,以后就能一条命令验版本。
 PY_NEEDLES: dict[str, tuple[str, ...]] = {
     "app.select": ("circle_family", "_targets_of", "_tap_n_times", "select_in_shop", "_MAX_STEP"),
     "app.adb": ("local_ips", "android_id", "_is_private_ipv4", "dedupe_devices"),
     "app.capture": ("cart_state", "cart_state_from_lum", "cart_dirty"),
     "app.chains": ("supersede_pairs", "_prereqs_in"),
+    # 2026-10-31 背景技能/进化安全化:旧 exe 里这些名字不存在
+    "app.capture": ("find_owned_rows", "owned_scan_top", "cart_state"),
+    "app.match": ("match_owned", "unique_family", "UniqueIndex", "strip_owned_badge"),
+    "app.evolve": ("_popup_open", "_wait_closed", "CLOSE_BTN", "read_evolution"),
 }
 
 
