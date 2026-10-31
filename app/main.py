@@ -23,7 +23,7 @@ from pathlib import Path
 from .adb import Adb, AdbError, dedupe_devices, describe, list_devices, resolve_serial
 from .capture import capture_all
 from .layout import load_profile
-from .match import SkillIndex, evolutions_of, resolve_rows, to_plan_skills
+from .match import SkillIndex, UniqueIndex, evolutions_of, resolve_rows, to_plan_skills
 
 # pythonw(无控制台)下 sys.stdout/stderr 是 None,任何 print 都会直接崩。
 # 兜底进内存(不落盘);真启动失败时 main() 会把报错写到 app/_debug/startup-error.log 并弹窗。
@@ -44,6 +44,7 @@ class Bridge:
         # 前端会先调 devices() 让用户选,再把选中的 serial 传进来。
         self._serial = serial
         self._index: SkillIndex | None = None
+        self._uq_index: "UniqueIndex | None" = None
         self._last_plan: list[dict] = []
         self._pt_balance: int | None = None
         # 上一次「在游戏里勾选」之后剩下的点数。下次勾选时如果余额还停在这个值,
@@ -59,6 +60,12 @@ class Bridge:
         if self._index is None:
             self._index = SkillIndex.load()
         return self._index
+
+    def _get_uq_index(self) -> "UniqueIndex":
+        """固有本体索引(懒加载,理由同 _get_index 的下划线注释)。"""
+        if self._uq_index is None:
+            self._uq_index = UniqueIndex.load()
+        return self._uq_index
 
     def _err(self, exc: Exception) -> dict:
         return {"ok": False, "error": str(exc), "detail": traceback.format_exc(limit=3)}
@@ -109,8 +116,14 @@ class Bridge:
         except (AdbError, FileNotFoundError, OSError) as exc:
             return self._err(exc)
 
-    def capture_skills(self, serial: str | None = None) -> dict:
-        """抓取技能列表。整个过程要 10~20 秒,前端应显示进度/禁用按钮。"""
+    def capture_skills(self, serial: str | None = None, read_evolutions: bool = True) -> dict:
+        """抓取技能列表。整个过程要 10~20 秒,前端应显示进度/禁用按钮。
+
+        `read_evolutions` 默认开:读进化要点「进化 ⓘ」并点弹窗「关 闭」收起。
+        2026-10-31 起**返回键已从代码里彻底移除**(ⓘ 被游戏吞 tap 时它会把技能购买页
+        退出去,真机三次事故),关闭走「关闭」按钮 + 轮询确认;关不上就中止抓取,
+        不会替用户按返回。双圈实价补读(circle.py)只点 +/−、可逆,同样默认开。
+        """
         if not self._busy.acquire(blocking=False):
             return {"ok": False, "error": "正在读取中,请稍候"}
         try:
@@ -123,11 +136,79 @@ class Bridge:
             profile = load_profile(meta.width, meta.height)
             from .ocr import Ocr
 
-            result = capture_all(adb, meta, profile, Ocr())
+            result = capture_all(adb, meta, profile, Ocr(), read_evolve=read_evolutions)
             matches = resolve_rows(result.rows, self._get_index())
             skills = to_plan_skills(matches)
             self._last_plan = skills
             self._pt_balance = result.pt_balance
+
+            # 背景技能:已学行(无 + 按钮的卡)匹配回库后交给前端填进「背景技能」。
+            # **本体固有不需要单独定位**(真机实测 2026-10-31:它是一张紫卡混在滚动列表
+            # 最顶部、带「已获得」角标)—— owned 行里命中 unique1~6 的那一条就是它,
+            # 单独放进 unique 字段(前端用它显示「本体固有:xxx」)。
+            # 匹配不上的丢弃(match_owned 拿不准不猜),但要在 warnings 里留一句,
+            # 不然用户会问"我明明学了这个怎么没算进去"
+            from .match import match_owned, unique_family
+
+            uq_index = self._get_uq_index()
+            bg_warnings: list[str] = []     # 背景技能侧的提示(warnings 列表在后面才建)
+            unmatched_owned = 0
+            unmatched_sample: list[str] = []
+            owned: list[dict] = []
+            unique: dict | None = None
+            seen_owned: set[str] = set()
+            for r in result.owned:
+                ref = match_owned(r.name_text, self._get_index(), uq_index)
+                if ref is None:
+                    # 匹配不上多半是描述碎片/折扣角标(整簇收进来的杂簇),不值得逐条警告;
+                    # 汇总成一句 —— 真有技能漏了用户看得到总数,再手填
+                    unmatched_owned += 1
+                    if len(unmatched_sample) < 2:
+                        unmatched_sample.append(r.name_text)
+                    continue
+                if ref.id in seen_owned:
+                    continue
+                seen_owned.add(ref.id)
+                # 本体固有是多阶段拆条目的(如 Illuminate you -b1/-b2):整族一起进背景,
+                # 只带 (1) 会丢掉第二阶段(终盘加速那半)
+                if ref.rarity.startswith("unique") and ref.rarity != "uniqueHeir":
+                    fam = unique_family(ref.id)
+                    owned.extend({"id": f.id, "name": f.name} for f in fam)
+                    seen_owned.update(f.id for f in fam)
+                    if unique is None:
+                        main_ref = next((f for f in fam if f.id == ref.id), fam[0])
+                        unique = {"id": main_ref.id, "name": main_ref.name}
+                else:
+                    owned.append({"id": ref.id, "name": ref.name})
+            if unmatched_owned > 0:
+                bg_warnings.append(
+                    f"已学区有 {unmatched_owned} 条文字(技能描述/折扣角标这类)匹配不上技能库,已忽略;"
+                    f"样例:{'、'.join(unmatched_sample)}。如有已学技能没出现在背景技能里,请在界面手动添加。")
+            # 交叉校验:同一次读取里既出现在可购买候选、又出现在已学区的技能,**一定是
+            # 已学侧误检**(锚没检出的可购买卡被当成灰卡)—— 已学卡没有绿色 + 按钮,
+            # 游戏不会让一个技能既可买又已获得。按 id 剔除,不给用户添乱。
+            from .match import normalize as _norm
+
+            cand_id_set = {str(sk["id"]) for sk in skills}
+            # id 之外再按归一化名字对一遍:同一技能在已学区/候选区可能匹配到不同分支的 id
+            # (如「先走一步！」两侧同名但 id 不同)。只比全名,不比剥符号后的基名 ——
+            # 已学 ○ + 可买 ◎ 是合法状态(同格两次付费),不能误杀。
+            cand_name_set = {_norm(str(sk["name"])) for sk in skills}
+            dropped_owned = [
+                o["name"] for o in owned
+                if o["id"] in cand_id_set or _norm(o["name"]) in cand_name_set
+            ]
+            if dropped_owned:
+                bg_warnings.append(
+                    f"已学区误检 {len(dropped_owned)} 条(它们同时出现在可购买列表里,已剔除):"
+                    f"{('、'.join(dropped_owned[:4]))}{'…' if len(dropped_owned) > 4 else ''}")
+            owned = [
+                o for o in owned
+                if o["id"] not in cand_id_set and _norm(o["name"]) not in cand_name_set
+            ]
+            if unique is not None and (unique["id"] in cand_id_set
+                                       or _norm(unique["name"]) in cand_name_set):
+                unique = None
 
             # 现场读到的双圈价:按单圈技能 id 传给前端,让它直接用真价(不再用折扣推算)
             circle_up: dict[str, int] = {}
@@ -160,9 +241,12 @@ class Bridge:
             if result.stop_reason and "上限" in result.stop_reason:
                 warnings.append(result.stop_reason)
             warnings.extend(warning_lines)
+            warnings.extend(bg_warnings)
             return {
                 "ok": True,
                 "skills": skills,
+                "owned": owned,
+                "unique": unique,
                 "chains": [{"skillId": g, "prereqId": p} for g, p in pairs],
                 "supersedes": [{"gold": g, "lower": l} for g, l in supersedes],
                 "evolutions": evolutions,

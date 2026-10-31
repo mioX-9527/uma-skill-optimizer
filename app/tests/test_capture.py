@@ -51,6 +51,9 @@ def render_page(profile: Profile, items: list[Item], top: int = 520) -> Image.Im
 
     等级符号按真机画法画成**细线空心圆**(1px 描边)——这正是 PP-OCR 读不出、
     但 symbol.py 能靠连通域填充率认出来的形态。
+    真机上本体固有是**混在列表最顶部的一张紫卡**(带已获得角标),和已学卡一样
+    没有 + 按钮 —— 测试里就用 owned 卡代表它,固有身份由 match_owned 命中
+    UniqueIndex 来认。
     """
     img = Image.new("RGB", profile.resolution, (24, 26, 32))
     d = ImageDraw.Draw(img)
@@ -79,7 +82,9 @@ def render_page(profile: Profile, items: list[Item], top: int = 520) -> Image.Im
             pc = crops["price"]
             d.text((pc["x0"] + 2, cy + pc["dy0"] + 6), str(pt), font=font, fill=ink)
         else:
-            d.text((470, cy - 12), "已获得", font=font, fill=(220, 90, 120))
+            # 真机样式:粉底白字药丸(白字对比度高,OCR 读得出;灰底粉字读不出)
+            d.rounded_rectangle((455, cy - 26, 560, cy + 4), radius=12, fill=(233, 80, 140))
+            d.text((464, cy - 22), "已获得", font=font, fill=(255, 255, 255))
         y = bottom + 14
     return img
 
@@ -200,6 +205,38 @@ def main() -> int:
         check("不是技能页直接报错", False, "没抛异常")
     except RuntimeError as exc:
         check("不是技能页直接报错", "技能学习" in str(exc), str(exc))
+
+    print("背景技能:已学行/本体固有紫卡(假帧端到端)")
+    from app.match import UniqueIndex, match_owned  # noqa: E402
+
+    # 列表里一张已学灰卡(名字必须完整落在扫描区内;owned_scan.y0=460 比卡片默认
+    # 顶部 520 更高,所以放在第一个的已学卡名字也够得着)
+    p_bg: list[Item] = [("让你们见识一下白色闪电！", 0, 150, True, ""),
+                        ("迅疾如风", 200, 140, False, ""),
+                        ("弯道恢复", 90, 150, False, "○")]
+    bg_page = render_page(profile, p_bg)
+    bg = capture_all(FakeAdb([bg_page, bg_page], start=0), Meta(), profile, ocr, max_pages=3)
+    owned_hit = None
+    for r in bg.owned:
+        if "白色闪电" in r.name_text:
+            owned_hit = r
+            break
+    check("已学卡被读进 owned(不进候选)", owned_hit is not None and owned_hit.grayed,
+          f"owned={[r.name_text for r in bg.owned]}")
+    check("已学行不在可购买行里", not any("白色闪电" in r.name_text for r in bg.rows),
+          str([r.name_text for r in bg.rows]))
+    uq_index = UniqueIndex.load()
+    if owned_hit is not None:
+        ref = match_owned(owned_hit.name_text, index, uq_index)
+        check("已学行匹配回技能库", ref is not None, str(ref))
+        # 真机上本体固有就是列表顶部的一张紫卡:命中 unique1~6 的 owned 行 = 本体固有
+        if ref is not None:
+            is_unique = ref.rarity.startswith("unique") and ref.rarity != "uniqueHeir"
+            print(f"       (「{ref.name}」rarity={ref.rarity} → {'本体固有' if is_unique else '普通已学'})")
+    # 描述文字簇也会被收进 owned,但匹配不回库 —— 上面 match_owned 对它们的返回是 None,
+    # 由 main.py 丢弃;这里顺带确认 owned 里确实有匹配不上的杂簇(宁滥勿缺的设计)
+    check("描述簇进了 owned(由匹配层丢弃)", any(match_owned(r.name_text, index, uq_index) is None for r in bg.owned),
+          str([r.name_text for r in bg.owned]))
 
     print()
     if FAILS:

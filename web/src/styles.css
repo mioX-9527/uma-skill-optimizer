@@ -134,3 +134,9 @@ button:hover { border-color: var(--accent); }
 /* 桌面窗「从模拟器读取」的日志 */
 .read-log { list-style: none; margin: 8px 0 0; padding: 8px 10px; background: #f3f6fa; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; color: var(--dim); }
 .read-log li + li { margin-top: 2px; }
+
+/* 背景技能(已学/本体固有)的「每绿技能加成」编辑行 */
+.per-green {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  width: 100%; margin-top: 4px; padding-left: 2px; font-size: 12px;
+}

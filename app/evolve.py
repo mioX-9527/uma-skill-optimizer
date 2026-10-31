@@ -11,14 +11,16 @@
    而 `input swipe` 一直有效(翻列表用的就是它),所以不是 adb 不通。
 2. **必须点准 ⓘ 圆圈本身**,点在左边「进化」两个字上没有反应。
    ⓘ 的 bbox 实测约 30×30(720×1280),中心取白块质心最稳。
-3. 弹窗底部的「关闭」按钮**点不动**(同样是点击事件的问题),改用 `keyevent 4`(返回键)关闭,
-   稳定可靠且不影响列表位置。
+3. 弹窗的关闭:**点底部「关 闭」按钮 + 轮询确认**(2026-10-31 实测 adb tap 点得动;
+   旧记录「点不动、改用返回键」是关窗动画没播完就截图的误判,而返回键在 ⓘ 没点开时
+   会把技能购买页整个退出去 —— 真机三次事故后彻底移除,见 read_evolution)。
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -219,12 +221,113 @@ def read_popup(ocr, image: Image.Image) -> PopupInfo | None:
 
 
 def read_evolution(adb, ocr, image: Image.Image, btn: EvolveButton) -> PopupInfo | None:
-    """点开 → 读 → 返回键关闭。整个过程**只读**,不做任何会改存档的操作。"""
-    adb.tap(btn.tap_x, btn.tap_y)
-    adb.settle(1.1)
-    popup = adb.screencap()
-    evo = read_popup(ocr, popup)
-    # 关闭用返回键:弹窗底部的「关闭」按钮点不动(实测)
-    adb.shell("input", "keyevent", "4")
-    adb.settle(0.8)
-    return evo
+    """点开 → 读 → 点「关闭」收起。**全程不碰返回键**。
+
+    2026-10-31 真机三次事故的结论:
+    - 返回键(keyevent 4)曾用于关弹窗,但 ⓘ 偶发点不进去(游戏吞 tap)时它会把
+      技能购买页整个退出去 —— **已彻底移除,任何路径都不再发 keyevent**。
+    - 弹窗的「关闭」按钮 adb tap **点得动**(旧记录「点不动」是关窗动画没播完就
+      截图的误判),点完必须**轮询确认**真的回到列表,不能只等固定时长。
+    - ⓘ 点了个寂寞(diff=0)时什么都不按,直接跳过这条。
+    - 弹窗开着但「关闭」连点 3 次都没关掉 → 抛错中止整次抓取(弹窗开着继续抓
+      也没有意义),由用户手动点「关闭」。
+    - ⚠ 判"弹窗开了"的基线必须**点按前现拍一张**:页首截图到 attach 之间隔着
+      read_page/owned 扫描好几秒,而上一页双圈补读的 +/− 点按会给列表留下残余
+      惯性 —— 拿旧帧当基线,列表停稳后的位移就被误判成"弹窗开了"
+      (2026-10-31 第四次事故的根因:对着不存在的弹窗点「关闭」3 次)。
+    """
+    ref_band = None
+    from .capture import frame_diff
+
+    # ⓘ 偶发被游戏吞 tap、或只是把卡点成按压态(画面变暗但没弹窗):判定不用像素差,
+    # 用弹窗的硬特征 —— 顶部全宽绿色「技能进化」标题栏(列表页该区域绿像素为 0)。
+    # 没点开就补点,最多 3 次(全程不碰任何键,列表无副作用)。
+    evo = None
+    popup = None
+    for _attempt in range(3):
+        # ⓘ 坐标以**现拍帧**为准:attach 拿到的按钮位置来自页首帧,抓取流程里
+        # read_page/owned 扫描耗掉几秒,列表惯性可能让它漂移 —— 拿旧坐标点就落空。
+        tx, ty = btn.tap_x, btn.tap_y
+        fresh = adb.screencap()
+        fresh_btns = find_all_buttons(fresh, _band_top, _band_bottom)
+        if fresh_btns:
+            near = min(fresh_btns, key=lambda q: abs(q[1] - ty))
+            if abs(near[1] - ty) <= 150:
+                tx, ty = near
+        adb.tap(tx, ty)
+        adb.settle(1.1)
+        popup = adb.screencap()
+        if _popup_open(popup):
+            evo = read_popup(ocr, popup)
+            if evo is None:
+                # 弹窗开了但没读出来(可能截在入场动画上):等一下重读一次
+                adb.settle(0.8)
+                popup = adb.screencap()
+                evo = read_popup(ocr, popup)
+                if evo is None:
+                    _dump(popup, "evolve_parse_fail.png")
+            break
+    else:
+        return None                      # 三次都没开出弹窗:放弃这条,继续往下走
+    for attempt in range(3):
+        adb.tap(*CLOSE_BTN)
+        if _wait_closed(adb):
+            return evo
+        # 没关掉:把此刻画面存下来(「关不上」时弹窗长什么样是定位问题的关键)
+        _dump(adb.screencap(), f"evolve_close_fail_{attempt}.png")
+    raise RuntimeError(
+        "「技能进化」弹窗的「关闭」按钮点了 3 次都没关掉。"
+        "请在模拟器里手动点「关闭」,然后重新读取(工具不会替你按返回键)。"
+        f"现场帧已存 app/_debug/evolve_close_fail_*.png")
+
+
+# 「技能进化」弹窗是全屏的,底部「关闭」按钮中心(720x1280 实测)
+CLOSE_BTN = (360, 1180)
+# ⓘ 重定位的扫描范围(720x1280 列表可视区)
+_band_top, _band_bottom = 460, 978
+# 列表带(y 560~950)差异超过它 = 有东西盖上来了;没弹窗时列表带完全静止(实测 0.0)
+_POPUP_DIFF = 8.0
+
+
+def _band(img: Image.Image) -> Image.Image:
+    """列表带裁剪:避开立绘 Live2D 动画区(上方)和标题,是唯一静止的比对区。"""
+    return img.crop((0, 560, 720, 950))
+
+
+def _dump(img: Image.Image, name: str) -> None:
+    """调试帧落盘(失败现场);存图失败不影响主流程。"""
+    try:
+        dbg = Path(__file__).resolve().parent / "_debug"
+        dbg.mkdir(parents=True, exist_ok=True)
+        img.save(dbg / name)
+    except Exception:          # noqa: BLE001
+        pass
+
+
+def _popup_open(img: Image.Image) -> bool:
+    """「技能进化」弹窗的硬特征:顶部全宽绿色标题栏。
+
+    实测(720x1280):弹窗帧该区域绿像素 52206,列表帧(包括卡被点成按压态的)为 0
+    —— 列表上方是蓝色「技能获取」标题和立绘,永远凑不出这条绿带。比像素差可靠:
+    卡的按压态、滚动惯性、立绘动画都不会伪造出一条全宽绿带。
+    """
+    arr = np.asarray(img.convert("RGB"))[:, :, ::-1]
+    hsv = cv2.cvtColor(arr, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, (35, 90, 80), (75, 255, 255))
+    return int(mask[20:130].sum() / 255) > 10000
+
+
+def _wait_closed(adb, timeout_s: float = 4.0) -> bool:
+    """轮询等弹窗关掉:绿色「技能进化」标题栏消失即为关掉(关窗有动画,不能只等固定时长)。
+
+    不再比列表带像素差 —— 卡的按压态(点 ⓘ 时顺带点暗了)可能持续到关窗之后,
+    拿它当"没关上"的信号会把好端端关掉的弹窗误判成失败。
+    """
+    import time
+
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        time.sleep(0.5)
+        if not _popup_open(adb.screencap()):
+            return True
+    return False

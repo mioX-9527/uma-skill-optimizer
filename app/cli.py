@@ -16,8 +16,14 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+# Windows 控制台默认 GBK:OCR 读到「・」「♪」这类字符时 print 直接 UnicodeEncodeError,
+# 整个抓取中途崩掉(2026-10-31 实测)。换成 UTF-8 + 容错,打不出的字符降级成 ?,不中断。
+for _stream in (sys.stdout, sys.stderr):
+    if _stream is not None and hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 from .adb import Adb, AdbError, dedupe_devices, describe, list_devices, probe, resolve_serial
-from .capture import capture_all, frame_diff
+from .capture import capture_all, frame_diff, owned_scan_top
 from .layout import LAYOUT_DIR, load_profile
 from .match import SkillIndex, evolutions_of, resolve_rows, to_plan_skills
 
@@ -120,6 +126,12 @@ def cmd_calibrate(args: argparse.Namespace) -> int:
     pb = profile.pt_balance_box()
     d.rectangle(pb.as_tuple(), outline=(0, 255, 255), width=2)
     d.text((pb.x, pb.y - 16), "pt", font=font, fill=(0, 255, 255))
+    # 已学/固有扫描区顶部:本体固有紫卡混在列表最顶部,名字伸进渐隐带 —— 核对
+    # 橙色线以上是否还能盖住固有卡的名字(真机实测 Illuminate you 名字在 y≈505)
+    oy = owned_scan_top(profile)
+    if oy != profile.list_top:
+        d.line((0, oy, img.width, oy), fill=(255, 128, 0), width=2)
+        d.text((4, oy - 16), f"owned_scan y0={oy}(本体固有/已学卡的扫描从这里开始)", font=font, fill=(255, 128, 0))
 
     for i, cy in enumerate(rows):
         d.line((0, cy, img.width, cy), fill=(0, 220, 120), width=1)
@@ -195,7 +207,9 @@ def cmd_capture(args: argparse.Namespace) -> int:
     ocr = Ocr()
     try:
         result = capture_all(adb, meta, profile, ocr,
-                             max_pages=args.max_pages, progress=_say)
+                             max_pages=args.max_pages, progress=_say,
+                             # 进化读取默认关:要真点「进化 ⓘ」+ 返回键,点不进去会把页面退出去
+                             read_evolve=args.read_evolve)
     except RuntimeError as exc:
         _say(f"[失败] {exc}")
         return 1
@@ -286,6 +300,8 @@ def main(argv: list[str] | None = None) -> int:
 
     pc = sub.add_parser("capture", help="全流程抓取,输出 plan.json")
     pc.add_argument("-o", "--out")
+    pc.add_argument("--read-evolve", action="store_true",
+                    help="真点「进化 ⓘ」读进化方向(默认关:ⓘ 点不进去时返回键会退出技能页)")
     pc.add_argument("--max-pages", type=int, default=None, help="默认取版式里的 to_bottom.max_steps")
     pc.add_argument("--budget", type=int, default=1000)
     pc.add_argument("--course", default=None)

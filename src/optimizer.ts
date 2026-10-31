@@ -1,6 +1,6 @@
-import { BODY_LENGTH_METERS, sampleableSpans, simulate, skillApplicable } from './engine/index.js';
-import type { Course, Region, RestrictionClause, RunnerConfig, SimResult, SimOptions, SkillConfig, SkillRestriction, Tactic } from './engine/index.js';
-import { CIRCLE_BASE, CIRCLE_UPGRADES, CIRCLE_UPGRADES_MISSING, SKILL_CHAINS, SKILLS, type SkillEntry } from './data.js';
+import { BODY_LENGTH_METERS, baseIdOf, restrictionSatisfied, sampleableSpans, simulate, skillApplicable } from './engine/index.js';
+import type { Course, Region, RestrictionClause, RunnerConfig, SimResult, SimOptions, SkillConfig, SkillEffect, SkillRestriction, Tactic } from './engine/index.js';
+import { CIRCLE_BASE, CIRCLE_UPGRADES, CIRCLE_UPGRADES_MISSING, SKILL_CHAINS, SKILLS, UNIQUE_SCALING, type SkillEntry, type UniqueScaling } from './data.js';
 import { describeMissingChains, findMissingChains } from './chain-check.js';
 
 const SKILL_INDEX = new Map(SKILLS.map(s => [s.id, s] as const));
@@ -68,6 +68,27 @@ export interface OptimizerInput {
   readonly candidates: readonly CandidateSkill[];
   /** PT 预算(硬约束) */
   readonly budget: number;
+  /**
+   * 背景技能:**已学习的技能 + 马娘本体固有技能**。
+   *
+   * 参与每一次模拟、影响所有候选的边际收益(加速技能重叠、绿技能挤软上限、
+   * 固有与绿技能的联动等),但**不进候选池、不占预算、不出现在推荐清单**——
+   * 它们是你已经拥有的东西,所有"马身收益"因此都是**在背景技能基础上的增量**
+   * (基线 sim([]) 也含背景技能)。
+   *
+   * 条目可以是技能库 id(字符串)或完整 SkillConfig;与候选撞 id 的候选会被
+   * 剔除并标「已学习」。绿技能照常并入起跑属性,继承技计入 'heir' 计数。
+   */
+  readonly baseSkills?: readonly (string | SkillConfig)[];
+  /**
+   * 随「生效绿技能数」增强的本体固有的数值表,键是背景技能 id(去 -b 后缀)。
+   * 缺省回落 data/unique-scaling.json(如 100981 小林历奇「时来运转,龙腾九霄」:
+   * 基础速度 0.25,每绿技能 +0.05 速度 / +0.05 加速度);效果按
+   * `base + perGreen × 绿技能数` **替换** skills.json 里压平的 approx 条目。
+   * 绿技能数口径与引擎 prereq.counterValue('green') 逐字一致,所以买的绿技能
+   * 越多固有越强 —— 绿候选的边际收益自动包含"给固有加成"的那部分。
+   */
+  readonly greenScaling?: Readonly<Record<string, UniqueScaling>>;
   /** 模拟次数上限(默认 30000;单次模拟 ~1.3ms,30000 次 ≈ 40s) */
   readonly maxSims?: number;
   /**
@@ -183,6 +204,10 @@ export interface RejectedSkill {
 export interface OptimizerResult {
   /** 推荐购买清单(按购入顺序) */
   readonly chosen: readonly ChosenSkill[];
+  /** 背景技能(已学/本体固有)摘要;未传时为空数组 —— 全部马身都是在此基础上的增量 */
+  readonly baseSkills: readonly { readonly id: string; readonly name: string }[];
+  /** 最终组合下生效的绿技能数(含背景技能;有绿缩放固有时它决定固有效果档位) */
+  readonly greenCount: number;
   readonly totalBody: number;
   readonly totalPt: number;
   readonly remainingPt: number;
@@ -410,6 +435,66 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const doSpendDown = stages.spendDown ?? true;
   const doPolish = stages.polish ?? true;
 
+  // ── 背景技能:已学习技能 + 马娘本体固有 ──────────────────────────
+  // 参与每一次模拟、影响所有候选的边际收益,但不进候选池、不占预算、不出现在
+  // 推荐清单 —— 所有"马身"因此都是**在背景技能基础上的增量**(基线 sim([]) 同样含背景)。
+  const baseEntries: SkillConfig[] = (input.baseSkills ?? []).map(s => {
+    if (typeof s === 'string') {
+      const e = SKILL_INDEX.get(s);
+      if (e === undefined) throw new Error(`背景技能 id 不在技能库中: ${s}`);
+      return e;
+    }
+    return s;
+  });
+  const baseOwnedIds = new Set(baseEntries.map(s => baseIdOf(s.id)));
+  // 随生效绿技能数增强的固有(如小林历奇):默认表 UNIQUE_SCALING,input.greenScaling 逐条覆盖
+  // (覆盖项常由前端只带 base/perGreen 数值 → 缺的展示字段从默认表补齐)。
+  // 覆盖项给了 perGreen 而没给 tiers 时,丢弃默认表的 tiers —— 否则线性覆盖会被分档默认压住不生效
+  const scaledUniques = new Map<string, UniqueScaling>();
+  for (const b of baseEntries) {
+    const bid = baseIdOf(b.id);
+    const over = input.greenScaling?.[bid];
+    const def = UNIQUE_SCALING.get(bid);
+    const cfg = over === undefined
+      ? def
+      : { ...def, ...over, ...(over.tiers === undefined && over.perGreen !== undefined && def?.tiers !== undefined ? { tiers: undefined } : {}) };
+    if (cfg !== undefined) scaledUniques.set(bid, cfg);
+  }
+  /** 与引擎 prereq.counterValue('green') 逐字同口径:当前赛道/环境下真正生效的绿技能数 */
+  const countApplicableGreens = (skills: readonly SkillConfig[]): number =>
+    skills.filter(s =>
+      s.effects.length > 0
+      && s.effects.every(e => e.type === 'passive')
+      && s.condition.kind === 'raceStart'
+      && (s.restriction === undefined || restrictionSatisfied(s.restriction, runner, course)),
+    ).length;
+  const scaledCache = new Map<string, SkillConfig>();
+  const scaledEffect = (e: SkillEffect, g: number): SkillEffect =>
+    e.type === 'unsupported' || e.value === null ? e : ({ ...e, value: e.value * g } as SkillEffect);
+  /** 档位/线性两种模型:当前绿数下的追加效果 */
+  const bonusOf = (cfg: UniqueScaling, greens: number): readonly SkillEffect[] => {
+    if (cfg.tiers !== undefined) {
+      const t = cfg.tiers.find(t => greens >= t.min && (t.max === undefined || greens <= t.max));
+      return t ? t.bonus : [];
+    }
+    return (cfg.perGreen ?? []).map(e => scaledEffect(e, greens));
+  };
+  const scaledOf = (s: SkillConfig, cfg: UniqueScaling, greens: number): SkillConfig => {
+    const key = `${s.id}#${greens}`;
+    const hit = scaledCache.get(key);
+    if (hit !== undefined) return hit;
+    // 剥掉条目自带的 scaleByGreen:本地覆盖(用户改数值/上游未建模的技能)替换 effects 后,
+    // 若把上游的 scaleByGreen 一并带给引擎,引擎会按它的档位**再缩放一次**(双重缩放)。
+    // 上游 2026-10-31(d068aff)起已原生建模,本地覆盖只剩"用户临时改数"一种用途。
+    const { scaleByGreen: _engineNative, ...rest } = s;
+    const derived: SkillConfig = {
+      ...rest,
+      effects: [...cfg.base, ...bonusOf(cfg, greens)],
+    };
+    scaledCache.set(key, derived);
+    return derived;
+  };
+
   let simsUsed = 0;
   // 搜索共用一个「模拟预算」。超限不再 throw(审计 P4 / 优先级5:此前 maxSims 给小一点就整次
   // 求解失败,一个结果都拿不到),而是停掉剩余搜索阶段、用已找到的组合走完汇报。
@@ -423,7 +508,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       throw simsExhausted;
     }
     simsUsed++;
-    return opts === undefined ? simulate(course, { ...runner, skills }) : simulate(course, { ...runner, skills }, opts);
+    const merged = mergedOf(skills);
+    return opts === undefined ? simulate(course, { ...runner, skills: merged }) : simulate(course, { ...runner, skills: merged }, opts);
   };
 
   /** 包一层:某个搜索阶段把模拟预算用完时,剩余阶段整体跳过(汇报不受影响) */
@@ -464,8 +550,11 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const anyRandom = (skills: readonly SkillConfig[]): boolean => skills.some(s => spansOf(s) !== null);
 
   const simExpected = (skills: readonly SkillConfig[]): SimResult => {
-    if (!anyRandom(skills)) return sim(skills);
-    const randoms = skills.filter(s => spansOf(s) !== null);
+    // 随机取位要覆盖**合并后的列表**:背景里的固有(randomPosition)也要按期望口径取位,
+    // 否则引擎默认"进区段即发动",背景技能的收益被系统性压低,候选的边际随之失真。
+    const merged = mergedOf(skills);
+    if (!anyRandom(merged)) return sim(skills);
+    const randoms = merged.filter(s => spansOf(s) !== null);
     let sumSec = 0;
     let last: SimResult | null = null;
     for (const u of DRAWS) {
@@ -486,8 +575,9 @@ export function optimize(input: OptimizerInput): OptimizerResult {
    * 排序够用,且只要 1 次模拟。
    */
   const simSearch = (skills: readonly SkillConfig[]): SimResult => {
-    if (!anyRandom(skills)) return sim(skills);
-    const ov = new Map(skills.filter(s => spansOf(s) !== null).map(s => [s.id, midOf(s)] as const));
+    const merged = mergedOf(skills);
+    if (!anyRandom(merged)) return sim(skills);
+    const ov = new Map(merged.filter(s => spansOf(s) !== null).map(s => [s.id, midOf(s)] as const));
     return sim(skills, { positionOverrides: ov });
   };
 
@@ -607,9 +697,10 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     }
   }
 
-  /** 这个候选当前的实付价:前置已在组合里 → 只付差额;否则要连前置一起付 */
+  /** 这个候选当前的实付价:前置已在组合里(或已学习) → 只付差额;否则要连前置一起付 */
   const costOf = (c: Cand, chosenIds: ReadonlySet<string>): number => {
-    const prereqChosen = c.requires.length > 0 && c.requires.every(r => chosenIds.has(r));
+    const prereqChosen = c.requires.length > 0
+      && c.requires.every(r => chosenIds.has(r) || ownedBaseCandIds.has(r) || baseOwnedIds.has(baseIdOf(r)));
     if (c.circleChain === true) {
       // ◎:价格不含 ○。○ 还没买 → 要连 ○ 的实付价一起(点了单圈才能点双圈)
       const base = c.baseId !== undefined ? cands.find(x => x.id === c.baseId) : undefined;
@@ -642,6 +733,155 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       c.blockedDetail = blocked === '' ? '装配限制不满足' : blocked;
     }
   }
+
+  // ── 背景技能与候选撞车:已学过的技能不能再买 ─────────────────────
+  // 同 id(baseIdOf 口径)直接剔除;候选是 ○ 而背景里已有对应 ◎(同格已升到双圈)也剔除。
+  // 但候选是 ◎、背景里只有 ○ 时**不剔除**(◎ 仍可买,另一笔钱);候选是金、背景里有
+  // 它的下位白也不剔除(金照买,效果替换白 —— 覆盖关系由 mergedOf 的 supersedes 处理)。
+  const ownedBaseCandIds = new Set<string>();
+  for (const c of cands) {
+    if (c.state === 'blocked') continue;
+    const cb = CIRCLE_BASE.get(c.id);
+    if (baseOwnedIds.has(baseIdOf(c.id)) || (cb !== undefined && baseOwnedIds.has(baseIdOf(cb)))) {
+      c.state = 'blocked';
+      c.blockedDetail = '已学习(在背景技能里),不用再买';
+      ownedBaseCandIds.add(c.id);
+    }
+  }
+
+  // ── 覆盖关系(买金送下位 / ◎ 顶 ○)的传递闭包 ─────────────────────
+  // 必须在 baseSim 之前算好:背景技能与组合的合并(mergedOf)要用它删"被金顶掉的背景白"。
+  // 去重合并:前置技能可能已经被别的候选带进来了,同一技能在模拟里只能出现一次;
+  // 另外单双圈占同一格,**买了 ◎ 之后 ○ 不再重复生效**(◎ 是升级版,同格替换不叠加)
+  //
+  // 「买金就送下位」的覆盖关系也必须在这里生效 —— 不只是为了显示,是**模拟正确性**:
+  // 白装了、金也装了,引擎会各算一遍效果(实测良场地○ + 良场地恶煞 同装比只装金快
+  // 0.161 马身),收益直接虚高。2026-10-27 用户就问到了这点,而当时 chosen 里确实
+  // 同时留着这两项、finalSec 也是按叠加算的 —— 因为删白那段只认 `requires`,
+  // 而三级链(良场地○→良场地◎→良场地恶煞)的直接前置不在候选里,requires 是空的。
+  //
+  // ⚠ 覆盖关系必须展开到**整条链**:`○ → ◎ → 金` 本质是同一格"加钱一步步升上来"的
+  //   三级(用户 2026-10-28 点明的),金在最顶端、覆盖下面每一级。
+  //   只覆盖"第一个在池里的祖先"会漏:池里同时有 ○ 和 ◎ 时(现场读到双圈价就是这样)
+  //   只删了 ◎,○ 留了下来 —— 金 + ○ 又一起生效,实测 56.5092s vs 只装金 56.5253s,
+  //   收益虚高 0.16 马身、合计多算 81pt。所以这里做传递闭包。
+  const deeperOf = (id: string): string[] => {
+    const out: string[] = [];
+    const cb = CIRCLE_BASE.get(id);
+    if (cb !== undefined) out.push(cb);                 // ◎ → ○
+    // 数据里的双圈价不全(CIRCLE_BASE 只收有价的),所以还要走一遍技能链:
+    // 良场地○→良场地◎ 这条在 CIRCLE_BASE 里就没有,不查链的话 ◎ 的下位会漏。
+    const ch = SKILL_CHAINS.get(id)?.prereqId;
+    if (ch !== undefined && ch !== '') out.push(ch);
+    const c = cands.find(x => x.id === id);
+    if (c !== undefined) for (const r of c.requires) if (r !== id) out.push(r);
+    return out;
+  };
+  const supersedePairs: [string, string][] = (() => {
+    const out: [string, string][] = [];
+    const seen = new Set<string>();
+    const push = (g: string, l: string) => {
+      if (g === l) return;
+      const k = `${g}>${l}`;
+      if (seen.has(k)) return;
+      seen.add(k);
+      out.push([g, l]);
+    };
+    // ○/◎ 之间**不是**"买上位送下位":游戏里是同一格点两下、两笔钱。
+    // 所以凡是 `gold` 本身是双圈候选的配对一律不收 —— 它只做"效果不叠加"(下面 combine 里另处理),
+    // 不能进汇报层的"不用单独买"名单,否则合计会少算单圈那一份。
+    const circleIds = new Set(cands.filter(c => c.circleChain === true).map(c => c.id));
+    const poolIds = new Set(cands.map(c => c.id));
+    for (const c of cands) {
+      if (c.circleChain === true) continue;
+      for (const r of c.requires) push(c.id, r);
+      // 候选的 `requires` 只有"直接前置在池里"才有值,三级链(中间级不在池里)是空的。
+      // 所以再沿技能链一路往上找**所有在池的祖先** —— 这样即便调用方没传
+      // supersedes(旧 plan 文件 / 网页里手填的候选),也不会把下位又买一遍。
+      let up = SKILL_CHAINS.get(c.id)?.prereqId;
+      const visited = new Set<string>([c.id]);
+      for (let i = 0; up !== undefined && up !== '' && !visited.has(up) && i < 8; i++) {
+        if (poolIds.has(up)) push(c.id, up);
+        visited.add(up);
+        up = SKILL_CHAINS.get(up)?.prereqId;
+      }
+    }
+    for (const s of input.supersedes ?? []) {
+      if (circleIds.has(s.gold)) continue;
+      push(s.gold, s.lower);
+    }
+    for (let i = 0; i < out.length; i++) {
+      const [g, l] = out[i]!;
+      for (const d of deeperOf(l)) push(g, d);          // 被覆盖的那一级还有更下位 → 一起覆盖
+    }
+    return out;
+  })();
+
+  /**
+   * 背景技能 ⊕ 候选组合 → 引擎实际模拟的技能列表。
+   *
+   * 背景侧做两层"被顶替"检查(候选内部的顶替由 combine() 负责,背景在它的视野外):
+   *   ① 组合里的双圈顶掉背景里的单圈(CIRCLE_BASE,同格替换);
+   *   ② 组合里的金技能顶掉背景里的下位白(supersedePairs,效果被替换不叠加)。
+   * 然后对随绿技能数增强的固有按当前生效绿技能数重造效果(口径 = 引擎 counterValue('green'))。
+   */
+  const mergedOf = (skills: readonly SkillConfig[]): SkillConfig[] => {
+    const chosenIds = new Set(skills.map(s => s.id));
+    // ③ 背景内部的顶替:已学列表会**同时**读出金和它的下位白(游戏里买金自动拥有白,
+    //    两张卡都标「已获得」), owned 扫描按 id 去重挡不住不同 id 的上下位 ——
+    //    已学的金顶掉已学的白(效果替换不叠加)、已学的 ◎ 顶掉已学的 ○。
+    //    不处理的话,先走一步!+游戏到此为止! 这种组合会把白的效果叠进模拟(2026-10-31 用户指出)。
+    const baseSuperseded = new Set<string>();
+    for (const g of baseEntries) {
+      let low = SKILL_CHAINS.get(g.id)?.prereqId;         // 金的直接下位白
+      const visited = new Set<string>([g.id]);
+      for (let i = 0; low !== undefined && low !== '' && !visited.has(low) && i < 8; i++) {
+        if (baseOwnedIds.has(baseIdOf(low))) baseSuperseded.add(baseIdOf(low));
+        visited.add(low);
+        low = SKILL_CHAINS.get(low)?.prereqId;
+      }
+      const cb = CIRCLE_BASE.get(g.id);                   // ◎ 的 ○
+      if (cb !== undefined && baseOwnedIds.has(baseIdOf(cb))) baseSuperseded.add(baseIdOf(cb));
+      // 名字兜底:个别 ◎→○ 边两表都缺(实测 超长距离回复◎ 没基准价、链数据也没有)。
+      // ○/◎ 只差最后一个字,背景里同名配对直接按名字顶替。
+      if (g.name.endsWith('◎')) {
+        const o = baseEntries.find(b => b.name === g.name.slice(0, -1) + '○');
+        if (o !== undefined) baseSuperseded.add(baseIdOf(o.id));
+      }
+    }
+    const kept = baseEntries.filter(b => {
+      const bid = baseIdOf(b.id);
+      if (chosenIds.has(b.id)) return false;              // 与候选完全同 id(正常已被上面剔除,防御)
+      if (baseSuperseded.has(bid)) return false;          // ③ 被背景里自己的上位顶替
+      for (const s of skills) {
+        if (CIRCLE_BASE.get(s.id) === b.id) return false; // ① 双圈顶背景单圈
+        // 名字兜底(同上):候选 ◎ 顶背景 ○,两表缺边时按名字配对
+        if (s.name.endsWith('◎') && b.name === s.name.slice(0, -1) + '○') return false;
+        // ② 金顶背景白:沿前置链找祖先。背景白不在候选池里,supersedePairs 收不到它
+        //   (那里只沿"在池的祖先"推),必须单独走一遍链(与 supersedePairs 同口径,8 步封顶)。
+        let up = SKILL_CHAINS.get(s.id)?.prereqId;
+        const visited = new Set<string>([s.id]);
+        for (let i = 0; up !== undefined && up !== '' && !visited.has(up) && i < 8; i++) {
+          if (baseOwnedIds.has(baseIdOf(up))) return false;
+          visited.add(up);
+          up = SKILL_CHAINS.get(up)?.prereqId;
+        }
+      }
+      for (const [g, l] of supersedePairs) {
+        if (baseIdOf(l) === bid && chosenIds.has(g)) return false;   // 显式 supersedes 指到背景侧
+      }
+      return true;
+    });
+    let merged: SkillConfig[] = [...kept, ...skills];
+    if (scaledUniques.size > 0) {
+      const greens = countApplicableGreens(merged);
+      merged = merged.map(s => {
+        const cfg = scaledUniques.get(baseIdOf(s.id));
+        return cfg === undefined ? s : scaledOf(s, cfg, greens);
+      });
+    }
+    return merged;
+  };
 
   // ── 有些 ○ 能升到 ◎,但价格数据里没有 → 这个方向没参与比较。必须明说 ──
   // "没算"和"算过但更差"在界面上长得一样;不明说的话用户会以为算法主动放弃了双圈。
@@ -714,72 +954,6 @@ export function optimize(input: OptimizerInput): OptimizerResult {
     if (c.state === 'pool' && c.pt > budget) c.state = 'no-gain';
   }
 
-  // 去重合并:前置技能可能已经被别的候选带进来了,同一技能在模拟里只能出现一次;
-  // 另外单双圈占同一格,**买了 ◎ 之后 ○ 不再重复生效**(◎ 是升级版,同格替换不叠加)
-  //
-  // 「买金就送下位」的覆盖关系也必须在这里生效 —— 不只是为了显示,是**模拟正确性**:
-  // 白装了、金也装了,引擎会各算一遍效果(实测良场地○ + 良场地恶煞 同装比只装金快
-  // 0.161 马身),收益直接虚高。2026-10-27 用户就问到了这点,而当时 chosen 里确实
-  // 同时留着这两项、finalSec 也是按叠加算的 —— 因为删白那段只认 `requires`,
-  // 而三级链(良场地○→良场地◎→良场地恶煞)的直接前置不在候选里,requires 是空的。
-  //
-  // ⚠ 覆盖关系必须展开到**整条链**:`○ → ◎ → 金` 本质是同一格"加钱一步步升上来"的
-  //   三级(用户 2026-10-28 点明的),金在最顶端、覆盖下面每一级。
-  //   只覆盖"第一个在池里的祖先"会漏:池里同时有 ○ 和 ◎ 时(现场读到双圈价就是这样)
-  //   只删了 ◎,○ 留了下来 —— 金 + ○ 又一起生效,实测 56.5092s vs 只装金 56.5253s,
-  //   收益虚高 0.16 马身、合计多算 81pt。所以这里做传递闭包。
-  const deeperOf = (id: string): string[] => {
-    const out: string[] = [];
-    const cb = CIRCLE_BASE.get(id);
-    if (cb !== undefined) out.push(cb);                 // ◎ → ○
-    // 数据里的双圈价不全(CIRCLE_BASE 只收有价的),所以还要走一遍技能链:
-    // 良场地○→良场地◎ 这条在 CIRCLE_BASE 里就没有,不查链的话 ◎ 的下位会漏。
-    const ch = SKILL_CHAINS.get(id)?.prereqId;
-    if (ch !== undefined && ch !== '') out.push(ch);
-    const c = cands.find(x => x.id === id);
-    if (c !== undefined) for (const r of c.requires) if (r !== id) out.push(r);
-    return out;
-  };
-  const supersedePairs: [string, string][] = (() => {
-    const out: [string, string][] = [];
-    const seen = new Set<string>();
-    const push = (g: string, l: string) => {
-      if (g === l) return;
-      const k = `${g}>${l}`;
-      if (seen.has(k)) return;
-      seen.add(k);
-      out.push([g, l]);
-    };
-    // ○/◎ 之间**不是**"买上位送下位":游戏里是同一格点两下、两笔钱。
-    // 所以凡是 `gold` 本身是双圈候选的配对一律不收 —— 它只做"效果不叠加"(下面 combine 里另处理),
-    // 不能进汇报层的"不用单独买"名单,否则合计会少算单圈那一份。
-    const circleIds = new Set(cands.filter(c => c.circleChain === true).map(c => c.id));
-    const poolIds = new Set(cands.map(c => c.id));
-    for (const c of cands) {
-      if (c.circleChain === true) continue;
-      for (const r of c.requires) push(c.id, r);
-      // 候选的 `requires` 只有"直接前置在池里"才有值,三级链(中间级不在池里)是空的。
-      // 所以再沿技能链一路往上找**所有在池的祖先** —— 这样即便调用方没传
-      // supersedes(旧 plan 文件 / 网页里手填的候选),也不会把下位又买一遍。
-      let up = SKILL_CHAINS.get(c.id)?.prereqId;
-      const visited = new Set<string>([c.id]);
-      for (let i = 0; up !== undefined && up !== '' && !visited.has(up) && i < 8; i++) {
-        if (poolIds.has(up)) push(c.id, up);
-        visited.add(up);
-        up = SKILL_CHAINS.get(up)?.prereqId;
-      }
-    }
-    for (const s of input.supersedes ?? []) {
-      if (circleIds.has(s.gold)) continue;
-      push(s.gold, s.lower);
-    }
-    for (let i = 0; i < out.length; i++) {
-      const [g, l] = out[i]!;
-      for (const d of deeperOf(l)) push(g, d);          // 被覆盖的那一级还有更下位 → 一起覆盖
-    }
-    return out;
-  })();
-
   const combine = (...groups: readonly (readonly SkillConfig[])[]): SkillConfig[] => {
     const m = new Map<string, SkillConfig>();
     for (const g of groups) for (const s of g) m.set(s.id, s);
@@ -818,7 +992,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   const totalSpent = (cs: readonly Cand[]): number => {
     const ids = new Set(cs.map(c => c.id));
     return cs.reduce((sum, c) => {
-      const prereqChosen = c.requires.length > 0 && c.requires.every(r => ids.has(r));
+      const prereqChosen = c.requires.length > 0
+        && c.requires.every(r => ids.has(r) || ownedBaseCandIds.has(r) || baseOwnedIds.has(baseIdOf(r)));
       if (c.circleChain === true) {
         // ◎:价格不含 ○。○ 不在本组合里 → 要把它的实付价一起算(否则预算会虚低)
         const base = c.baseId !== undefined ? cands.find(x => x.id === c.baseId) : undefined;
@@ -1305,7 +1480,10 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       return c.pt + (base !== undefined && !baseBilled ? paidOf(base) : 0);
     }
     const prereqPaid = c.requires.length > 0
-      && c.requires.every(r => chosenSet.has(r) && !supersededBy.has(r));
+      && c.requires.every(r =>
+        (chosenSet.has(r) && !supersededBy.has(r))
+        || ownedBaseCandIds.has(r)
+        || baseOwnedIds.has(baseIdOf(r)));
     return prereqPaid ? Math.max(0, c.pt - c.requiresPt) : c.pt;
   };
   const totalPtFinal = payable.reduce((sum, c) => sum + paidOf(c), 0);
@@ -1316,12 +1494,29 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       `上面的合计已按"不买它们"计算。`,
     );
   }
+  // 背景技能计入后的最终口径:生效绿技能数(有绿缩放固有时决定效果档位)
+  const finalGreens = countApplicableGreens(mergedOf(skillsOf(chosen)));
+
   // 这条必须用**汇报口径**的余额:搜索阶段按账面花到剩 1pt,但下位那部分其实不用付,
   // 真实余量是 82pt —— 用 remaining() 会写出「合计 2859(剩 82)…还剩 1 PT」这种自相矛盾的话。
   const finalRemaining = budget - totalPtFinal;
   if (finalRemaining > 0) {
     notes.push(
       `还剩 ${finalRemaining} PT:未选技能最便宜的一档也买不起了(或买了会变慢,如自带速度惩罚的回复技能)。`,
+    );
+  }
+
+  if (baseEntries.length > 0) {
+    notes.push(
+      `已把 ${baseEntries.length} 项背景技能(已学/本体固有:${baseEntries.map(s => `「${s.name}」`).join('、')})计入全部模拟 —— ` +
+      `上面的马身收益都是**在它们基础上新增**的,不含背景技能自己的收益。`,
+    );
+  }
+  if (scaledUniques.size > 0) {
+    const names = [...scaledUniques.values()].map(c => `「${c.name ?? '固有技能'}」`).join('、');
+    notes.push(
+      `${names}的效果随生效绿技能数增强:当前组合生效绿技能 ${finalGreens} 个,` +
+      `固有效果按 基础值 + 每绿加成×${finalGreens} 折算 —— 多买绿技能会同时抬高固有收益(已计入上表边际)。`,
     );
   }
 
@@ -1364,6 +1559,8 @@ export function optimize(input: OptimizerInput): OptimizerResult {
       };
     }),
     totalBody: (baseSim.finishTimeSec - finalSim.finishTimeSec) * bodyPerSec,
+    baseSkills: baseEntries.map(s => ({ id: s.id, name: s.name })),
+    greenCount: finalGreens,
     totalPt: totalPtFinal,
     remainingPt: budget - totalPtFinal,
     baselineSec: baseSim.finishTimeSec,

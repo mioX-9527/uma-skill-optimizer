@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Aptitude, GroundCondition, Motivation, Season, Tactic, Weather } from '../../src/engine/index.js';
-import { SKILLS } from '../../src/data.js';
+import { SKILLS, UNIQUE_SCALING } from '../../src/data.js';
 import {
   courseOf, courseOptions, defaultPt, describeEffects, exportPlan, importPlan,
-  PRECISION_LABEL, RARITY_LABEL, runOptimize, searchSkills,
-  type OptimizerResult, type PlanSkill, type PlanState,
+  PRECISION_LABEL, RARITY_LABEL, runOptimize, searchBaseSkills, searchSkills,
+  type OptimizerResult, type PlanBaseSkill, type PlanSkill, type PlanState,
 } from './api.js';
 import {
   applyCapture, applyEvolutions, captureSummary, desktopBridge, deviceLabel, pickDevice, waitForDesktopBridge,
@@ -37,6 +37,11 @@ const SEASON_OPTIONS: readonly { v: Season; label: string }[] = [
 const REASON_LABEL: Record<string, string> = {
   unaffordable: '超预算', inapplicable: '不适配本配置', 'no-gain': '组合内无正收益', outbid: '被更优组合挤出',
 };
+/** 背景技能「每绿技能加成」编辑器里用的效果简称 */
+const EFFECT_SHORT_LABEL: Record<string, string> = {
+  targetSpeed: '速度', currentSpeed: '即时速度', acceleration: '加速度',
+  lastSpurtExtension: '末脚延展', heal: '回复',
+};
 
 const STORAGE_KEY = 'uma-skill-optimizer-plan-v1';
 /** 上次选中的 adb 设备(序列号) */
@@ -68,6 +73,8 @@ const EXAMPLE = {
     { name: '春初暖风', pt: 180 }, { name: '跟前直线◎', pt: 130 }, { name: 'Into High Gear!(继承)(1)', pt: 150 },
     { name: '王道征途', pt: 180 }, { name: '愿者上钩(继承)', pt: 120 },
   ],
+  // 背景技能示例:本体固有(小林历奇)—— 它随生效绿技能数增强,档位数值可改
+  baseSkills: [{ id: '100981' }],
 };
 
 export default function App() {
@@ -149,6 +156,9 @@ export default function App() {
 
   const courseOpts = useMemo(() => courseOptions(courseQuery).slice(0, 60), [courseQuery]);
   const results = useMemo(() => searchSkills(query), [query]);
+  /** 背景技能搜索:不过滤固有本体(本体固有正是要放这里的东西) */
+  const [baseQuery, setBaseQuery] = useState('');
+  const baseResults = useMemo(() => searchBaseSkills(baseQuery), [baseQuery]);
 
   const patch = (p: Partial<PlanState>) => setPlan(prev => ({ ...prev, ...p }));
 
@@ -166,6 +176,43 @@ export default function App() {
   };
   const removeSkill = (id: string) => {
     patch({ skills: plan.skills.filter(s => s.id !== id) });
+    setResult(null);
+  };
+
+  // ── 背景技能(已学 + 本体固有):参与模拟、不计预算、不进推荐 ──
+  const addBaseSkill = (entry: (typeof baseResults)[number]) => {
+    if (plan.baseSkills.some(s => s.id === entry.id)) return;
+    const b: PlanBaseSkill = { id: entry.id, name: entry.name, rarity: entry.rarity, precision: entry.precision };
+    // 命中「随绿技能数增强」表时,挂上默认档位数值(可编辑)
+    const greenScaling = { ...plan.greenScaling };
+    const def = UNIQUE_SCALING.get(entry.id);
+    if (def !== undefined && greenScaling[entry.id] === undefined) greenScaling[entry.id] = def;
+    patch({ baseSkills: [...plan.baseSkills, b], greenScaling });
+    setBaseQuery('');
+    setResult(null);
+  };
+  const removeBaseSkill = (id: string) => {
+    const greenScaling = { ...plan.greenScaling };
+    delete greenScaling[id];
+    patch({ baseSkills: plan.baseSkills.filter(s => s.id !== id), greenScaling });
+    setResult(null);
+  };
+  /** 编辑某固有的「每绿技能加成」数值(线性模型) */
+  const setPerGreen = (id: string, idx: number, value: number) => {
+    const cur = plan.greenScaling[id];
+    if (cur === undefined || cur.perGreen === undefined) return;
+    const perGreen = cur.perGreen.map((e, i) => (i === idx ? { ...e, value } : e));
+    patch({ greenScaling: { ...plan.greenScaling, [id]: { ...cur, perGreen } } });
+    setResult(null);
+  };
+  /** 编辑某固有分档表里某档的效果数值(分档模型) */
+  const setTierEffect = (id: string, ti: number, ei: number, value: number) => {
+    const cur = plan.greenScaling[id];
+    if (cur === undefined || cur.tiers === undefined) return;
+    const tiers = cur.tiers.map((t, i) => (i === ti
+      ? { ...t, bonus: t.bonus.map((e, j) => (j === ei ? { ...e, value } : e)) }
+      : t));
+    patch({ greenScaling: { ...plan.greenScaling, [id]: { ...cur, tiers } } });
     setResult(null);
   };
 
@@ -227,8 +274,16 @@ export default function App() {
       // 进化关系必须挂到候选上:进化后的技能不在候选列表里(金技能免费变来的),
       // 不挂的话优化器只会按进化前的数值算 —— 表现就是"怎么还是只有迅速果断"。
       const evo = applyEvolutions(merged.skills, resp.evolutions);
+      // 已学技能 + 本体固有 → 背景技能;命中绿缩放表的固有挂默认档位
+      const greenScaling = { ...plan.greenScaling };
+      for (const b of merged.baseSkills ?? []) {
+        const def = UNIQUE_SCALING.get(b.id);
+        if (def !== undefined) greenScaling[b.id] = greenScaling[b.id] ?? def;
+      }
       patch({
         skills: evo.skills, budget: merged.budget, chains: resp.chains ?? [],
+        baseSkills: merged.baseSkills ?? [],
+        greenScaling,
         // 现场读到的双圈价随读取一起落地;读不到就清空,避免上一份的价串到这一份
         circleUp: merged.circleUp ?? {},
         supersedes: merged.supersedes ?? [],
@@ -288,6 +343,9 @@ export default function App() {
         ...(plan.supersedes !== undefined && plan.supersedes.length > 0
           ? { supersedes: plan.supersedes }
           : {}),
+        // 背景技能(已学/本体固有):参与模拟、不计预算;输出马身=在它们基础上的新增收益
+        ...(plan.baseSkills.length > 0 ? { baseSkills: plan.baseSkills.map(b => b.id) } : {}),
+        ...(Object.keys(plan.greenScaling).length > 0 ? { greenScaling: plan.greenScaling } : {}),
       });
       setResult(r);
     } catch (e) {
@@ -482,6 +540,82 @@ export default function App() {
             {plan.skills.length === 0 && <li className="dim">从上方搜索添加候选技能…</li>}
           </ul>
 
+          {/* ── 背景技能:已学技能 + 本体固有(参与模拟、不计预算、不进推荐) ── */}
+          <h3>背景技能 <span className="hint">(已学技能/本体固有 —— 它们影响其他技能的收益,但不用再花钱;下面的马身=在其基础上的新增收益)</span></h3>
+          <div className="search">
+            <input
+              placeholder="搜索已学技能或本体固有(中/日/繁),点选添加"
+              value={baseQuery}
+              onChange={e => setBaseQuery(e.target.value)}
+            />
+            {baseResults.length > 0 && (
+              <ul className="search-results">
+                {baseResults.map(s => (
+                  <li key={s.id} onClick={() => addBaseSkill(s)}>
+                    <b>{s.name}</b>
+                    <span className={`tag rarity-${s.rarity === 'normal' ? 'n' : 'r'}`}>{RARITY_LABEL[s.rarity] ?? s.rarity}</span>
+                    <span className="dim">{describeEffects(s)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <ul className="skill-list">
+            {plan.baseSkills.map(b => (
+              <li key={b.id}>
+                <b>{b.name}</b>
+                <span className={`tag rarity-${b.rarity === 'normal' ? 'n' : 'r'}`}>{RARITY_LABEL[b.rarity] ?? b.rarity}</span>
+                <span className="grow dim">参与模拟,不计预算</span>
+                <button className="x" onClick={() => removeBaseSkill(b.id)} title="移除">×</button>
+                {plan.greenScaling[b.id] !== undefined && (
+                  <div className="per-green">
+                    {plan.greenScaling[b.id]!.tiers !== undefined ? (
+                      // 分档模型(如小林历奇:0-2 无 / 3-4 +0.05 / 5 +0.1 / 6+ +0.15)
+                      plan.greenScaling[b.id]!.tiers!.map((t, ti) => (
+                        <div key={ti} className="per-green" style={{ paddingLeft: 10 }}>
+                          <span className="dim">
+                            {t.max === undefined ? `绿 ≥${t.min}:` : t.min === t.max ? `绿 ${t.min}:` : `绿 ${t.min}–${t.max}:`}
+                          </span>
+                          {t.bonus.length === 0 && <span className="dim">无追加</span>}
+                          {t.bonus.map((e, i) => (
+                            e.type === 'unsupported' || e.value === null ? null : (
+                              <label key={i} className="pt-edit">
+                                {EFFECT_SHORT_LABEL[e.type] ?? e.type}
+                                <input
+                                  type="number" step={0.01} value={e.value}
+                                  onChange={ev => setTierEffect(b.id, ti, i, Number(ev.target.value) || 0)}
+                                />
+                              </label>
+                            )
+                          ))}
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        <span className="dim">随绿技能数增强 — 每生效绿技能追加:</span>
+                        {(plan.greenScaling[b.id]!.perGreen ?? []).map((e, i) => (
+                          e.type === 'unsupported' || e.value === null ? null : (
+                            <label key={i} className="pt-edit">
+                              {EFFECT_SHORT_LABEL[e.type] ?? e.type}
+                              <input
+                                type="number" step={0.01} value={e.value}
+                                onChange={ev => setPerGreen(b.id, i, Number(ev.target.value) || 0)}
+                              />
+                            </label>
+                          )
+                        ))}
+                        <span className="dim">× 生效绿技能数</span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </li>
+            ))}
+            {plan.baseSkills.length === 0 && (
+              <li className="dim">没有背景技能。把已学技能、马娘本体固有加进来 —— 它们会参与模拟并影响候选技能的收益。</li>
+            )}
+          </ul>
+
           <div className="actions">
             <button className="primary" onClick={compute} disabled={running || plan.skills.length === 0}>
               {running ? '计算中…(几秒到几十秒)' : '开始计算'}
@@ -538,6 +672,13 @@ export default function App() {
           <p className="dim">
             单项收益之和 {result.sumSoloBody.toFixed(2)} 马身;与总收益的差 = 技能间交互(重叠/联动),单项列仅供对照
           </p>
+          {result.baseSkills.length > 0 && (
+            <p className="dim">
+              背景技能(已学/本体固有)已计入模拟:{result.baseSkills.map(b => b.name).join('、')}
+              {result.greenCount > 0 && <> —— 当前生效绿技能 {result.greenCount} 个(有「随绿技能数增强」的固有时,它决定固有效果档位)</>}
+              ;上表马身均为在背景技能基础上的新增收益。
+            </p>
+          )}
           <p className="dim">下表按游戏购买界面的顺序(从上到下)排列,方便照着买。</p>
           {bridge !== null && (
             <div className="row-actions">

@@ -1,5 +1,5 @@
 import type { Aptitude, GroundCondition, Motivation, Season, Stats, Tactic, Weather } from '../../src/engine/index.js';
-import { COURSES, SKILLS, type SkillEntry } from '../../src/data.js';
+import { COURSES, SKILLS, UNIQUE_SCALING, type SkillEntry, type UniqueScaling } from '../../src/data.js';
 import { normalizeName } from '../../src/lookup.js';
 import basePt from '../../src/base-pt.json';
 import type { OptimizerResult } from '../../src/optimizer.js';
@@ -29,6 +29,18 @@ export interface PlanChain {
 }
 
 /**
+ * 背景技能:**已学习的技能 + 马娘本体固有技能**。
+ * 参与每一次模拟、影响所有候选的边际收益,但**不进候选池、不占预算、不出现在推荐清单**
+ * —— 结果里的马身收益都是在它们基础上的新增收益。不需要 pt(不是要买的东西)。
+ */
+export interface PlanBaseSkill {
+  readonly id: string;
+  readonly name: string;
+  readonly rarity: string;
+  readonly precision: string;
+}
+
+/**
  * 「买金就送下位」的覆盖关系。
  *
  * 与 `PlanChain` 的区别:链是**直接**前置(参与价格抵扣),这条是沿链传递闭包后的
@@ -55,6 +67,13 @@ export interface PlanState {
   /** 季节(仅用于技能条件判定) */
   readonly season: Season;
   readonly skills: readonly PlanSkill[];
+  /** 背景技能(已学 + 本体固有);从模拟器读取或手动添加 */
+  readonly baseSkills: readonly PlanBaseSkill[];
+  /**
+   * 随生效绿技能数增强的本体固有的档位数值,键 = 技能 id。
+   * 初值来自 data/unique-scaling.json(如 100981 小林历奇),界面可改,导出时带走。
+   */
+  readonly greenScaling: Readonly<Record<string, UniqueScaling>>;
   /**
    * 下位技能关系(从模拟器读技能时自动带上)。
    * 金技能的列表价 = 前置价 + 金自己的折后价,不声明这个会把「金+前置」重复计费。
@@ -130,6 +149,31 @@ export function searchSkills(query: string, limit = 14): readonly SkillEntry[] {
     .map(x => x.s);
 }
 
+/**
+ * 背景技能搜索:与 searchSkills 同一套打分,但**不过滤固有本体(unique1~6)**——
+ * 「本体固有」恰恰是要往背景技能里放的东西。继承版仍不收(那是候选,不是背景)。
+ */
+export function searchBaseSkills(query: string, limit = 14): readonly SkillEntry[] {
+  const q = normalizeName(query);
+  if (q === '') return [];
+  const scored: Array<{ s: SkillEntry; score: number }> = [];
+  for (const s of SKILLS) {
+    if (s.cnReleased === false) continue;
+    if (s.rarity === 'uniqueHeir') continue;
+    const names = [s.name, s.nameJa ?? '', s.nameTrad ?? ''].map(normalizeName);
+    let score = -1;
+    if (names[0] === q) score = 0;
+    else if (names.some(n => n === q)) score = 1;
+    else if (names.some(n => n.startsWith(q))) score = 2;
+    else if (names.some(n => n.includes(q))) score = 3;
+    if (score >= 0) scored.push({ s, score });
+  }
+  return scored
+    .sort((a, b) => a.score - b.score || a.s.name.length - b.s.name.length)
+    .slice(0, limit)
+    .map(x => x.s);
+}
+
 export function defaultPt(skill: SkillEntry): number {
   return (basePt.defaultByRarity as Record<string, number>)[skill.rarity] ?? 200;
 }
@@ -169,6 +213,19 @@ export function exportPlan(state: PlanState): string {
           ? { evolveAlternatives: s.evolveAlternatives }
           : {}),
       })),
+      // 背景技能与它的绿缩放档位数值也带走(CLI 同格式:perGreen 挂在条目上)
+      ...(state.baseSkills.length > 0
+        ? {
+            baseSkills: state.baseSkills.map(b => ({
+              id: b.id, name: b.name,
+              ...(state.greenScaling[b.id] !== undefined
+                ? state.greenScaling[b.id]!.tiers !== undefined
+                  ? { tiers: state.greenScaling[b.id]!.tiers }
+                  : { perGreen: state.greenScaling[b.id]!.perGreen }
+                : {}),
+            })),
+          }
+        : {}),
       ...(state.chains.length > 0 ? { chains: state.chains } : {}),
       // 覆盖关系与现场读到的双圈价也要带走:它们是"这局游戏里真实价格/真实机制"的一部分,
       // 导出再导入时丢掉,合计就会重新算错(2026-10-27 多算 81pt 就是这么来的)
@@ -234,6 +291,36 @@ export function importPlan(text: string): PlanState {
     };
   });
   const stats: Stats = { speed: stat('speed'), stamina: stat('stamina'), power: stat('power'), guts: stat('guts'), wisdom: stat('wisdom') };
+  // 背景技能(已学 + 本体固有):固有按名字也要能匹配(unique1~6),不能走 searchSkills 的过滤
+  const baseSkills: PlanBaseSkill[] = [];
+  const greenScaling: Record<string, UniqueScaling> = {};
+  if (Array.isArray(p.baseSkills)) {
+    for (const [i, bs] of (p.baseSkills as unknown[]).entries()) {
+      if (typeof bs !== 'object' || bs === null) throw new Error(`baseSkills[${i}] 格式不正确`);
+      const e = bs as Record<string, unknown>;
+      let entry: SkillEntry | undefined;
+      if (typeof e.id === 'string') entry = SKILLS.find(k => k.id === e.id);
+      else if (typeof e.name === 'string') {
+        const q = normalizeName(e.name);
+        entry = SKILLS.find(k => k.cnReleased !== false
+          && [k.name, k.nameJa ?? '', k.nameTrad ?? ''].map(normalizeName).includes(q));
+      }
+      if (!entry) throw new Error(`baseSkills[${i}]「${String(e.name ?? e.id ?? '?')}」无法匹配到技能,请改用 id`);
+      baseSkills.push({ id: entry.id, name: entry.name, rarity: entry.rarity, precision: entry.precision });
+      // 随绿技能数增强的固有:条目上的 tiers/perGreen 覆盖默认档位(data/unique-scaling.json)
+      const def = UNIQUE_SCALING.get(entry.id);
+      if (Array.isArray(e.tiers) || Array.isArray(e.perGreen)) {
+        greenScaling[entry.id] = {
+          ...(def ?? { base: [], perGreen: [] }),
+          base: def?.base ?? [],
+          ...(Array.isArray(e.tiers) ? { tiers: e.tiers as UniqueScaling['tiers'] } : {}),
+          ...(Array.isArray(e.perGreen) ? { perGreen: e.perGreen as UniqueScaling['perGreen'] } : {}),
+        };
+      } else if (def !== undefined) {
+        greenScaling[entry.id] = def;
+      }
+    }
+  }
   const pick = <T extends string>(v: unknown, allowed: readonly T[], dflt: T): T =>
     typeof v === 'string' && (allowed as readonly string[]).includes(v) ? (v as T) : dflt;
   const int = (v: unknown, min: number, max: number, dflt: number): number =>
@@ -250,6 +337,8 @@ export function importPlan(text: string): PlanState {
     weather: int(r.weather, 1, 4, 1) as Weather,
     season: int(r.season, 1, 5, 1) as Season,
     skills,
+    baseSkills,
+    greenScaling,
     ...(p.circleUp !== undefined && typeof p.circleUp === 'object' && p.circleUp !== null
       ? {
           circleUp: Object.fromEntries(
@@ -327,6 +416,10 @@ export interface RunInput {
     id: string; pt: number; requires?: string;
     evolvesTo?: string; evolveAlternatives?: readonly string[];
   }[];
+  /** 背景技能(已学/本体固有),由 App 从 plan.baseSkills 传下(id 即可,优化器自己查库) */
+  readonly baseSkills?: readonly string[];
+  /** 随绿技能数增强的固有档位数值覆盖;由 App 从 plan.greenScaling 传下 */
+  readonly greenScaling?: Readonly<Record<string, UniqueScaling>>;
 }
 
 function runOnMain(input: RunInput): Promise<OptimizerResult> {
@@ -350,6 +443,10 @@ function runOnMain(input: RunInput): Promise<OptimizerResult> {
       course, runner, candidates: input.skills, budget: input.budget,
       ...(input.circleUp !== undefined ? { circleUpOverride: input.circleUp } : {}),
       ...(input.supersedes !== undefined ? { supersedes: input.supersedes } : {}),
+      ...(input.baseSkills !== undefined && input.baseSkills.length > 0 ? { baseSkills: input.baseSkills } : {}),
+      ...(input.greenScaling !== undefined && Object.keys(input.greenScaling).length > 0
+        ? { greenScaling: input.greenScaling }
+        : {}),
     }));
   } catch (e) {
     return Promise.reject(e as Error);

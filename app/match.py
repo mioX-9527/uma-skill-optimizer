@@ -147,7 +147,14 @@ class SkillIndex:
             return cls(json.load(fh))
 
     def exact(self, text: str) -> list[SkillRef]:
-        return self._by_norm.get(normalize(text), [])
+        hits = self._by_norm.get(normalize(text), [])
+        # 同一技能可能有多个别名归一后相同(如 name 与 nameTrad 同字),按 id 去重:
+        # 否则 exact 返回 [ref, ref] 会被上层当成「同名多分支」而拒绝匹配
+        out: list[SkillRef] = []
+        for r in hits:
+            if all(r.id != k.id for k in out):
+                out.append(r)
+        return out
 
     def prefix(self, text: str, limit: int = 8) -> list[SkillRef]:
         q = normalize(text)
@@ -182,6 +189,137 @@ class SkillIndex:
 def _symbol_variants(base: str) -> list[str]:
     """名字缺等级符号时,补出所有可能的完整名。"""
     return [base + sym for sym in SYMBOLS] + [base]
+
+
+_RAW_SKILLS_CACHE: list[dict] | None = None
+
+
+def _raw_skills() -> list[dict]:
+    global _RAW_SKILLS_CACHE
+    if _RAW_SKILLS_CACHE is None:
+        with open(SKILLS_PATH, encoding="utf-8") as fh:
+            _RAW_SKILLS_CACHE = json.load(fh)
+    return _RAW_SKILLS_CACHE
+
+
+def unique_family(ref_id: str) -> list[SkillRef]:
+    """本体固有的**完整家族**:同一 baseId 的全部分阶段条目。
+
+    多阶段固有在数据里被拆成 -b1/-b2 两个条目(如 Illuminate you:
+    -b1 = 中盘回血+降速,-b2 = 终盘加速,prereq.requiresFirstBlock 要求 -b1 先发动、
+    restriction 要求耐力≥1200)—— 只带 (1) 会丢掉整个第二阶段。
+    引擎的 requiresFirstBlock 找的就是 `${baseId}-b1` 这个 id,两片一起塞进
+    baseSkills 即可正确联动。
+    """
+    base = re.sub(r"-b\d+$", "", ref_id)
+    out: list[SkillRef] = []
+    for s in _raw_skills():
+        if re.sub(r"-b\d+$", "", s["id"]) != base:
+            continue
+        if s.get("cnReleased") is False:
+            continue
+        ref = SkillRef(id=s["id"], name=s["name"], rarity=s.get("rarity", ""), precision=s.get("precision", ""))
+        if all(r.id != ref.id for r in out):
+            out.append(ref)
+    return out
+
+
+class UniqueIndex:
+    """固有技能本体(unique1~6)的独立索引。
+
+    为什么单独立一个:购买页**顶部固定位置**显示马娘本体固有(默认已获得状态、
+    颜色与普通技能行不同、带等级),它没有绿色 + 按钮、也不会进可购买行;
+    而 `SkillIndex` 是故意把本体剔掉的(防止继承版错配本体,收益会高估一倍)。
+    读本体固有时必须绕过那个过滤,但同样只收 cnReleased 的条目。
+    """
+
+    def __init__(self, skills: list[dict]):
+        self._by_norm: dict[str, SkillRef] = {}
+        for s in skills:
+            if s.get("cnReleased") is False:
+                continue
+            if not _UNIQUE_BASE.match(s.get("rarity", "")):
+                continue
+            ref = SkillRef(id=s["id"], name=s["name"], rarity=s.get("rarity", ""), precision=s.get("precision", ""))
+            for alias in (s.get("name"), s.get("nameJa"), s.get("nameTrad")):
+                if alias and normalize(alias) not in self._by_norm:
+                    self._by_norm[normalize(alias)] = ref
+
+    @classmethod
+    def load(cls, path: Path | None = None) -> "UniqueIndex":
+        with open(path or SKILLS_PATH, encoding="utf-8") as fh:
+            return cls(json.load(fh))
+
+    def exact(self, text: str) -> SkillRef | None:
+        return self._by_norm.get(normalize(text))
+
+    def fuzzy(self, text: str, threshold: float = 0.8) -> SkillRef | None:
+        q = normalize(text)
+        if not q:
+            return None
+        best: tuple[SkillRef, float] | None = None
+        for norm_name, ref in self._by_norm.items():
+            score = SequenceMatcher(None, q, norm_name).ratio()
+            if score >= threshold and (best is None or score > best[1]):
+                best = (ref, score)
+        return best[0] if best else None
+
+
+# 已学/可购买卡上会出现的各种角标文字。det 常把它们和技能名并进同一个框
+# (实测「可进化千里之行」「大胃储备 启发等级3 30%OFF」),不剥掉名字就匹配不上。
+# 注意 %OFF 的 OCR 变体很多(30%0F / 35%0FF…),按「数字+%+乱码尾巴」的形状收。
+_BADGE_PATTERNS = (
+    re.compile(r"已获得"),
+    re.compile(r"可进化"),
+    re.compile(r"达成进化条件"),
+    re.compile(r"启发等级\d*"),
+    re.compile(r"\d{1,2}\s*%[0-9A-Za-zOo]{0,4}"),
+    re.compile(r"[LlIvV]{1,2}[.。]?\d"),
+)
+
+
+def strip_owned_badge(text: str) -> str:
+    """剥掉已学卡/可购买卡上会挤进名字带的角标文字,只留技能名。"""
+    for pat in _BADGE_PATTERNS:
+        text = pat.sub("", text)
+    return text.strip()
+
+
+def match_owned(text: str, index: SkillIndex, unique_index: UniqueIndex) -> SkillRef | None:
+    """把一条「已获得」行匹配回技能库(已学技能可能是任何技能,含本体固有)。
+
+    顺序:固有本体精确 > 普通索引精确 > 补符号变体(唯一才收)> 固有模糊 > 普通模糊(唯一才收)。
+    拿不准(○/◎ 两可、多个模糊候选)返回 None —— 已学技能匹配错了会把错误的背景
+    收益带进模拟,宁可少读一项让用户手填,也不猜。
+    """
+    text = strip_owned_badge(text)
+    if not text:
+        return None
+    ref = unique_index.exact(text)
+    if ref is not None:
+        return ref
+    hits = index.exact(text)
+    if len(hits) == 1:
+        return hits[0]
+    if len(hits) > 1:
+        return None                      # 同名多等级/多分支,不猜
+    # 符号被 OCR 吃掉:补符号再精确。命中多个(○/◎ 两可)照样不猜
+    variants: list[SkillRef] = []
+    for variant in _symbol_variants(base_name(text)):
+        for r in index.exact(variant):
+            if r not in variants:
+                variants.append(r)
+    if len(variants) == 1:
+        return variants[0]
+    if len(variants) > 1:
+        return None
+    ref = unique_index.fuzzy(text, threshold=0.85)
+    if ref is not None:
+        return ref
+    fz = index.fuzzy(text, threshold=0.88, limit=2)
+    if fz and len(fz) == 1:
+        return fz[0][0]                  # 模糊也要求唯一,防错配
+    return None
 
 
 def match_row(row: Row, index: SkillIndex) -> Match:
@@ -300,14 +438,22 @@ def evolutions_of(matches: list[Match], index: "SkillIndex",
         if evo is None or m.skill is None:
             continue
         for t in evo.targets:
-            hits = index.exact(t.name) or [r for r, _ in index.fuzzy(t.name, threshold=0.8, limit=3)]
-            if len(hits) != 1:
+            hits = index.exact(t.name)
+            if not hits:
+                # 进化弹窗给的名字不带库内分支尾缀 —— 实测(2026-10-31)「雪花的追击」
+                # 在库里是「雪花的追击(1)/(2)」,exact 落空、模糊 0.769 又够不着 0.8。
+                # 按前缀把分支全找出来:多条分支逐条输出,优化器逐个算收益再择优
+                # (进化后的条目自带装配限制,不适配的方向自然算出 0 收益)。
+                q = normalize(t.name)
+                hits = [r for r in index.prefix(t.name, limit=8) if normalize(r.name).startswith(q)]
+            if not hits:
                 if note is not None:
-                    note(f"进化技能「{t.name}」匹配到 {len(hits)} 个候选,该方向跳过")
+                    note(f"进化技能「{t.name}」匹配不到技能库,该方向跳过")
                 continue
-            out.append({
-                "fromId": m.skill.id, "from": m.skill.name,
-                "toId": hits[0].id, "to": hits[0].name,
-                "conditionMet": t.condition_met,
-            })
+            for ref in hits:
+                out.append({
+                    "fromId": m.skill.id, "from": m.skill.name,
+                    "toId": ref.id, "to": ref.name,
+                    "conditionMet": t.condition_met,
+                })
     return out

@@ -11,10 +11,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from app.match import (  # noqa: E402
-    Row, SkillIndex, base_name, match_row, normalize, resolve_rows, to_plan_skills,
+    Row, SkillIndex, UniqueIndex, base_name, match_owned, match_row, normalize,
+    resolve_rows, strip_owned_badge, to_plan_skills,
 )
 
 INDEX = SkillIndex.load()
+UQ = UniqueIndex.load()
 FAILS: list[str] = []
 
 
@@ -106,6 +108,26 @@ def main() -> int:
           not any(r.rarity in {f"unique{i}" for i in range(1, 7)} for r in INDEX.skills))
     # 直接拿本体 id 去查不该命中
     check("本体 id 100591 不在索引里", not any(r.id == "100591" for r in INDEX.skills))
+
+    print("背景技能:固有本体索引 + 已学行匹配")
+    # 购买页顶部显示的是**本体固有**(默认已获得、带等级),SkillIndex 故意不收它,
+    # 所以要单独一个不过滤 unique1~6 的索引(UniqueIndex)。
+    ref = UQ.exact("时来运转，龙腾九霄")
+    check("固有本体精确命中 100981", ref is not None and ref.id == "100981", str(ref))
+    check("继承版不在固有索引里(900981 是 uniqueHeir)",
+          UQ.exact("璀璨流星(继承)") is None or UQ.exact("璀璨流星(继承)").id != "900981")
+    check("固有索引里没有 uniqueHeir",
+          all(not r.rarity.startswith("uniqueHeir") for r in
+              [UQ.exact(n) for n in ("时来运转，龙腾九霄")] if r))
+    check("strip_owned_badge 剥角标", strip_owned_badge("已获得时来运转，龙腾九霄") == "时来运转，龙腾九霄")
+    ref = match_owned("已获得时来运转，龙腾九霄", INDEX, UQ)
+    check("match_owned:带角标的固有命中本体", ref is not None and ref.id == "100981", str(ref))
+    ref = match_owned("迅疾如风", INDEX, UQ)
+    check("match_owned:普通已学技能命中", ref is not None and ref.name == "迅疾如风", str(ref))
+    ref = match_owned("中距离直线", INDEX, UQ)
+    check("match_owned:同名多等级(○/◎)拿不准不猜", ref is None, str(ref))
+    ref = match_owned("本场比赛中速度略有提升", INDEX, UQ)
+    check("match_owned:描述文字匹配不上返回 None", ref is None, str(ref))
 
     print()
     if FAILS:

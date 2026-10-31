@@ -19,7 +19,7 @@ from PIL import Image
 from .adb import Adb, ScreenMeta
 from .layout import Profile
 from .match import Row, normalize
-from .ocr import Ocr
+from .ocr import Ocr, TextBox
 from .symbol import detect as detect_symbol
 
 
@@ -40,6 +40,13 @@ class CaptureResult:
     # 游戏里加购之后,行内价格显示的是「还需多少」而不是技能原价 —— 整份结果会系统性偏低,
     # 而且**不会报错**,用户看到的就是"合计怎么对不上游戏"。见 cart_state 的亮度判据。
     cart_dirty: bool = False
+    # ── 背景技能(已学 + 本体固有)────────────────────────────────
+    # 已学技能:卡片灰掉、没有绿色 + 按钮,find_rows 天然看不到 —— 反向利用:
+    # 对列表区整块跑 det OCR,文字行的 y 附近没有可购买行锚的就是已学卡。
+    # **本体固有也是其中一行**:真机实测(2026-10-31)它是一张紫卡混在滚动列表最顶部
+    # (带「已获得」角标,名字伸进顶部渐隐带),按名字匹配回固有库(unique1~6)即认出,
+    # 不需要单独定位(main.py 负责把 unique 从 owned 里挑出来)。
+    owned: list[Row] = field(default_factory=list)
 
 
 # 一次读取最多现场补几个双圈价(每个约 2.5 秒,多了用户会等烦)
@@ -108,6 +115,76 @@ def read_page(image: Image.Image, profile: Profile, ocr: Ocr, page: int) -> list
     return rows
 
 
+# 已学卡的文字簇离最近可购买行锚超过这个距离才算已学(名字带中心在 cy-57、
+# 描述在 cy+34、价格在 cy±0,可购买行的三类文字都在 ±70 内 —— 超出就一定是别的卡)
+_OWNED_NEAR_PX = 70
+# 文字簇按 y 聚类的合并半径(det 会把一个名字拆成两三个框)
+_OWNED_CLUSTER_PX = 35
+
+
+def owned_scan_top(profile: Profile) -> int:
+    """已学/固有卡的扫描区顶部:默认伸到渐隐带里(layouts/*.json 的 owned_scan.y0)。"""
+    return int(profile.raw.get("owned_scan", {}).get("y0", profile.list_top))
+
+
+def find_owned_rows(image: Image.Image, profile: Profile, ocr: Ocr,
+                    purchasable_cys: list[int], page: int) -> list[Row]:
+    """读这一屏里的**已获得**行(无绿色 + 按钮的卡:灰掉的已学技能、以及混在列表
+    最顶部的**本体固有紫卡** —— 真机实测 2026-10-31,固有不是固定卡,会随列表滚)。
+
+    锚定思路是 find_rows 的反向:没有按钮可锚 → 对扫描区(owned_scan.y0 起,
+    比 list.top 高,因为固有卡的名字伸进渐隐带)整块跑 det OCR,
+    按 y 把文字框聚成簇;簇中心离任何可购买行锚 ≥ _OWNED_NEAR_PX 的才算已学卡
+    (可购买行自己的名字/价格/描述都在锚的 ±70 内,不会被误收)。
+    「已获得」角标会挤进名字簇 → 在 match.strip_owned_badge 统一剥。
+    描述文字簇也会被收进来,它们匹配不回技能库,由 main.py 的 match_owned 丢弃 ——
+    这里宁滥勿缺:漏一项已学技能会让背景收益算错,多一条匹配不上的只是被扔掉。
+
+    ⚠ `ocr` 必须是**专用的 det-only 实例**(capture_all 里的 scan_ocr):RapidOCR
+    跑过一次 rec-only(read_line)之后,det 对大图会**永久返回空**(实测 720x438
+    连续为空、小裁剪却正常,疑似内部缓存了上一次的输入尺寸)。read_page 的行带
+    det/rec 交替没出事纯粹是因为行带小;整块区域扫描绝不能复用主实例。
+    """
+    from .match import normalize, strip_owned_badge
+
+    y0 = owned_scan_top(profile)
+    region = image.crop((0, y0, image.width, profile.list_bottom))
+    boxes = ocr.read(region)
+    # 「已获得」角标是已学卡的**硬标志**:可购买卡的角标只有 启发等级/%OFF/可进化 这类。
+    # 只认它(或它 70px 内的角标)出现的簇 —— 单靠"离可购买行锚远"会把锚没检出来的
+    # 可购买行(屏幕上下边缘 + 按钮被裁掉那种)整卡误收进来,实测一大片假阳性
+    # (内侧体验/先走一步! 这些候选全被当成了已学,2026-10-31 用户指出)。
+    badge_cys = [b.cy + y0 for b in boxes if "已获得" in b.text]   # TextBox 是裁剪区相对坐标
+    # 按 y 聚簇;TextBox 的坐标是**相对裁剪区**的,要加回 y0 才是原图坐标
+    clusters: list[list[TextBox]] = []
+    for b in sorted(boxes, key=lambda b: b.cy):
+        if clusters and abs(b.cy - clusters[-1][-1].cy) <= _OWNED_CLUSTER_PX:
+            clusters[-1].append(b)
+        else:
+            clusters.append([b])
+    rows: list[Row] = []
+    for group in clusters:
+        cy = int(round(sum(b.cy for b in group) / len(group))) + y0
+        if any(abs(cy - pcy) < _OWNED_NEAR_PX for pcy in purchasable_cys):
+            continue
+        if not any(abs(bcy - cy) <= _OWNED_NEAR_PX for bcy in badge_cys):
+            continue                       # 附近没有「已获得」角标 → 不是已学卡
+        # 整簇一行 + 每个文本框各一行,**都交给匹配层**:
+        # 已学卡的名字常和描述连成一个簇,整串匹配不上会把真技能弄丢;单框 Row 能把
+        # 名字单独捞出。多出来的杂簇(描述碎片)由 match_owned 丢弃。
+        for text in (
+            strip_owned_badge(" ".join(b.text for b in sorted(group, key=lambda b: b.x0) if "已获得" not in b.text)),
+            *(b.text for b in sorted(group, key=lambda b: b.x0) if "已获得" not in b.text),
+        ):
+            text = text.strip()
+            if not text or normalize(text) == "":
+                continue
+            if len(text) < 3 or text.isdigit():
+                continue
+            rows.append(Row(name_text=text, grayed=True, y=cy, page=page))
+    return rows
+
+
 def attach_evolutions(adb: Adb, image: Image.Image, profile: Profile, ocr: Ocr,
                       rows: list[Row], progress=None) -> int:
     """把这一屏里「可进化」的金技能逐个点开读弹窗,结果挂到对应行上。
@@ -134,6 +211,11 @@ def attach_evolutions(adb: Adb, image: Image.Image, profile: Profile, ocr: Ocr,
             if d < best_d:
                 best_i, best_d = i, d
         if best_i < 0 or best_d > 90:
+            # ⓘ 在卡底左下角,行锚(+按钮)在卡右侧中部:金卡高,距离可能超过 90 ——
+            # 静默跳过会让人以为"进化读取根本没跑",必须留痕
+            if progress:
+                near = f"{rows[best_i].name_text}({best_d}px)" if best_i >= 0 else "本屏没有可购买行"
+                progress(f"    ⓘ({bx},{by}) 离最近行 {near} 超过 90px,没读它的进化")
             continue
         used.add(best_i)
         evo = read_evolution(adb, ocr, image, type("Btn", (), {"tap_x": bx, "tap_y": by, "row_cy": by})())
@@ -211,16 +293,25 @@ def check_orientation(adb: Adb, meta: ScreenMeta) -> None:
 
 
 def check_on_skill_page(adb: Adb, profile: Profile, ocr: Ocr) -> None:
-    """确认当前真的停在「技能学习」列表:第一屏至少得读出一个技能名。
+    """确认当前真的停在「技能学习」列表:第一屏至少得读出一个技能名(可购买**或已学**)。
 
     停在别的界面(别的游戏 / 育成已结束的结算页)时,一行技能都找不到。
     不拦的话它会老老实实滚 26 屏、每帧跑一遍 OCR,几十秒后给一堆空结果。
+    ⚠ 只查可购买行不够:列表可能恰好停在一片已学卡中间(2026-10-31 实测,用户停在
+    千里之行/始于足下 两张已学卡上,唯一可购买行的 + 按钮在可视区外)——
+    已学卡(有「已获得」角标)也算数。
     """
-    image = adb.screencap()
-    if not any(r.name_text for r in read_page(image, profile, ocr, 0)):
-        adb.settle(0.5)  # 偶发:截图正落在滑动动画里,补一帧再判
+    def has_rows() -> bool:
         image = adb.screencap()
-        if not any(r.name_text for r in read_page(image, profile, ocr, 0)):
+        if any(r.name_text for r in read_page(image, profile, ocr, 0)):
+            return True
+        # 已学行扫描是 det;此刻主 ocr 还没跑过 rec-only(read_page 没读到行就不会
+        # 走到价格识别),大图 det 是安全的
+        return bool(find_owned_rows(image, profile, ocr, [], 0))
+
+    if not has_rows():
+        adb.settle(0.5)  # 偶发:截图正落在滑动动画里,补一帧再判
+        if not has_rows():
             fg = adb.foreground_package()
             raise RuntimeError(
                 "一行技能都没读到,当前页面不像「技能学习」列表"
@@ -239,6 +330,9 @@ def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
         )
     check_orientation(adb, meta)
     ocr.warmup()
+    # 区域扫描(已学行 / 本体固有)专用实例:见 find_owned_rows 里 rec-only 污染 det 的坑
+    scan_ocr = Ocr()
+    scan_ocr.warmup()
     check_on_skill_page(adb, profile, ocr)
     if progress:
         progress("已确认停在技能列表(竖屏)")
@@ -262,6 +356,8 @@ def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
     # 去重键 = (归一化名字, 价格):只按名字会把 ○/◎ 当同一行合并掉
     # (OCR 常常把两者的符号都读丢),而这两者是不同技能、价格也不同。
     seen: dict[tuple[str, int | None], Row] = {}
+    # 已学行单独去重(键 = 归一化名字,没有价格可拼);与可购买行完全分开放
+    seen_owned: dict[str, Row] = {}
     prev_sig: tuple[str, ...] | None = None
     prev_names: set[str] = set()
     same_streak = 0
@@ -282,6 +378,15 @@ def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
             image = adb.screencap()
             result.frames += 1
             rows = read_page(image, profile, ocr, page)
+
+        # 已学技能 + 本体固有(紫卡):与可购买行同屏但锚定方式不同,单独收;
+        # 固有的认领在 main.py(owned 行里命中 unique1~6 的那一条)
+        for r in find_owned_rows(image, profile, scan_ocr, [row.y for row in rows], page):
+            key = normalize(r.name_text)
+            if key and key not in seen_owned:
+                seen_owned[key] = r
+                if progress:
+                    progress(f"  已学:{r.name_text}")
 
         blank = [r for r in rows if not r.name_text]
         if blank:
@@ -348,6 +453,7 @@ def capture_all(adb: Adb, meta: ScreenMeta, profile: Profile, ocr: Ocr,
         result.stop_reason = f"达到 {limit} 屏上限,可能还有未读到的技能"
 
     result.rows = list(seen.values())
+    result.owned = list(seen_owned.values())
     if result.unread:
         result.stop_reason += (
             f";⚠ {len(result.unread)} 行按钮在但名字没读出来({', '.join(result.unread[:3])}),"

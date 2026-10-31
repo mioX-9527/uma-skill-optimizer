@@ -1,6 +1,7 @@
-import type { Course, SkillConfig } from './engine/index.js';
+import type { Course, SkillConfig, SkillEffect } from './engine/index.js';
 import coursesJson from '../data/courses.json';
 import skillsJson from '../data/skills.json';
+import uniqueScalingJson from '../data/unique-scaling.json';
 
 export interface SkillEntry extends SkillConfig {
   readonly nameJa?: string;
@@ -103,4 +104,36 @@ export const SKILL_CHAINS: ReadonlyMap<string, SkillChainEntry> = (() => {
     });
   }
   return out;
+})();
+
+// ── 随绿技能数增强的本体固有(如小林历奇「时来运转,龙腾九霄」)────────
+// effects = base + perGreen × 生效绿技能数,**替换** skills.json 里压平的 approx 条目。
+// 绿技能数口径与引擎 prereq.counterValue('green') 一致(当前环境下生效的常时被动数);
+// 生效数随购买的绿技能变化 → 绿候选的边际收益自动含"给固有加成"的部分。
+// 数据在 data/unique-scaling.json(本地数据,sync 不覆盖),UI/plan JSON 可逐条覆盖数值。
+export interface UniqueScalingTier {
+  /** 档位下限(生效绿技能数,含) */
+  readonly min: number;
+  /** 档位上限(含);缺省 = 无上限 */
+  readonly max?: number;
+  /** 该档的效果追加 */
+  readonly bonus: readonly SkillEffect[];
+}
+
+export interface UniqueScaling {
+  readonly name?: string;
+  readonly uma?: string;
+  /** 绿技能数 = 0 时的效果(替换 skills.json 条目的 effects) */
+  readonly base: readonly SkillEffect[];
+  /** 分档模型(如小林历奇:0-2 绿无增量 / 3-4 绿 +0.05 / 5 绿 +0.1 / 6 绿+ +0.15)。与 perGreen 二选一,tiers 优先 */
+  readonly tiers?: readonly UniqueScalingTier[];
+  /** 线性模型:每个生效绿技能追加的效果(数值 × 绿技能数) */
+  readonly perGreen?: readonly SkillEffect[];
+  readonly source?: string;
+  readonly note?: string;
+}
+
+export const UNIQUE_SCALING: ReadonlyMap<string, UniqueScaling> = (() => {
+  const raw = (uniqueScalingJson as { uniques: Record<string, UniqueScaling> }).uniques;
+  return new Map(Object.entries(raw));
 })();

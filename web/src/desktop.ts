@@ -6,6 +6,8 @@
  * 所以这部分代码必须在没有壳的情况下**完全惰性**:不引用、不报错、按钮不出现。
  */
 
+import { SKILLS } from '../../src/data.js';
+
 export interface CapturedSkill {
   readonly id: string;
   readonly name: string;
@@ -56,6 +58,10 @@ export interface CaptureResponse {
   readonly evolutions?: readonly EvolutionRow[];
   /** 现场从游戏里读到的双圈实付价:{单圈技能 id: 双圈还需点数} */
   readonly circle_up?: Record<string, number>;
+  /** 已学习的技能(购买页里灰掉/「已获得」的行):进背景技能,不进候选 */
+  readonly owned?: readonly { id: string; name: string }[];
+  /** 马娘本体固有技能(购买页顶部固定位置的那一行);读不到为 null */
+  readonly unique?: { id: string; name: string } | null;
   /** 读取时购物车里有未提交的选择 → 行内价格是「还需多少」,整份数据偏低 */
   readonly cart_dirty?: boolean;
   readonly pt_balance?: number | null;
@@ -188,11 +194,27 @@ export function applyCapture<T>(
   resp: CaptureResponse,
   toSkill: (c: CapturedSkill) => T | null,
 ): { skills: T[]; budget: number; dropped: number; circleUp?: Record<string, number>;
-     supersedes?: readonly { gold: string; lower: string }[] } {
+     supersedes?: readonly { gold: string; lower: string }[];
+     baseSkills?: readonly { id: string; name: string; rarity: string; precision: string }[] } {
   const converted = (resp.skills ?? []).map(toSkill);
   const skills = converted.filter((s): s is T => s !== null);
+  // 已学技能 + 本体固有 → 背景技能(参与模拟、不计预算)。用 SKILLS 回查 rarity/precision 供展示。
+  // unique 是 owned 里固有那条的"指针"(后端也会把它放进 owned),拼接后必须按 id 去重,
+  // 否则界面会出现两个本体固有(2026-10-31 用户指出)。
+  const seen = new Set<string>();
+  const baseRows = [...(resp.owned ?? []), ...(resp.unique !== undefined && resp.unique !== null ? [resp.unique] : [])]
+    .filter(b => (seen.has(b.id) ? false : (seen.add(b.id), true)));
+  const baseSkills = baseRows.length > 0
+    ? baseRows
+        .map(b => {
+          const entry = SKILLS.find(s => s.id === b.id) ?? SKILLS.find(s => s.name === b.name);
+          return entry === undefined ? null : { id: entry.id, name: entry.name, rarity: entry.rarity, precision: entry.precision };
+        })
+        .filter((x): x is NonNullable<typeof x> => x !== null)
+    : undefined;
   return {
     skills,
+    ...(baseSkills !== undefined && baseSkills.length > 0 ? { baseSkills } : {}),
     ...(resp.circle_up !== undefined && Object.keys(resp.circle_up).length > 0
       ? { circleUp: resp.circle_up }
       : {}),
@@ -245,6 +267,10 @@ export function captureSummary(resp: CaptureResponse): string[] {
       + '合计会偏小。请点游戏里的「重置」清空购物车,再读一次。');
   }
   if (resp.pt_balance) out.push(`PT 余额 ${resp.pt_balance}`);
+  if (resp.unique) out.push(`本体固有:${resp.unique.name}`);
+  if (resp.owned !== undefined && resp.owned.length > 0) {
+    out.push(`背景技能(已学,不占预算):${resp.owned.map(o => o.name).join('、')}`);
+  }
   if (resp.stop_reason) out.push(`停止原因:${resp.stop_reason}`);
   for (const n of resp.needs_confirm ?? []) out.push(`需确认:${n.row}`);
   for (const w of resp.warnings ?? []) out.push(`注意:${w}`);

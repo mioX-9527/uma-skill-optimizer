@@ -9,8 +9,9 @@
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { Aptitude, Course, Motivation, RunnerConfig, Stats, Tactic } from './engine/index.js';
-import { COURSES, SKILLS, type SkillEntry } from './data.js';
+import type { Aptitude, Course, Motivation, RunnerConfig, SkillConfig, SkillEffect, Stats, Tactic } from './engine/index.js';
+import { baseIdOf } from './engine/index.js';
+import { COURSES, SKILLS, UNIQUE_SCALING, type SkillEntry, type UniqueScalingTier } from './data.js';
 import { lookup } from './lookup.js';
 import { MUST_CHECK, optimize } from './optimizer.js';
 import { fmtBody, tableRow } from './fmt.js';
@@ -55,6 +56,19 @@ interface PlanInput {
     readonly courseFix?: number | 'auto';
   };
   readonly skills: readonly PlanSkillInput[];
+  /**
+   * 背景技能(可选):**已学习的技能 + 马娘本体固有技能**。
+   * 参与每一次模拟、影响所有候选的边际收益,但不进候选池、不占预算、不出现在推荐清单
+   * —— 输出里的马身收益都是**在它们基础上新增**的收益。
+   * 条目只需 id 或 name(与 skills 同一套解析,不需要 pt);
+   * 随生效绿技能数增强的固有(如小林历奇 100981)可带 perGreen 覆盖默认档位数值。
+   */
+  readonly baseSkills?: readonly (PlanSkillInput & {
+    /** 覆盖档位表(分档模型,如 100981:0-2 绿无增量/3-4 绿 +0.05/5 绿 +0.1/6 绿+ +0.15) */
+    readonly tiers?: readonly { readonly min: number; readonly max?: number; readonly bonus: readonly { readonly type: string; readonly value: number }[] }[];
+    /** 覆盖「每个生效绿技能追加的效果」(线性模型;与 tiers 二选一) */
+    readonly perGreen?: readonly { readonly type: string; readonly value: number }[];
+  })[];
   /**
    * 下位技能关系(可选)。格式 `[{ skillId, prereqId }]`,由游戏界面读取时自动带上。
    * 列表里金技能显示的价格已包含前置价,不声明这个关系会把「金 + 前置」重复计费。
@@ -195,6 +209,27 @@ function main(): void {
   const course = resolveCourse(plan.course);
   const runner = validateRunner(plan.runner);
   const resolved = plan.skills.map((s, i) => resolveSkill(s, i));
+  // 背景技能(已学 + 本体固有):与候选同套解析,不需要 pt
+  const baseResolved = (plan.baseSkills ?? []).map((s, i) => resolveSkill(s, i).skill);
+  // 随生效绿技能数增强的固有(如小林历奇):默认表 UNIQUE_SCALING,plan 的 baseSkills[i].perGreen 逐条覆盖
+  const greenScaling: Record<string, { base: readonly SkillEffect[]; tiers?: readonly UniqueScalingTier[]; perGreen?: readonly SkillEffect[] }> = {};
+  for (const s of baseResolved) {
+    const bid = baseIdOf(s.id);
+    const def = UNIQUE_SCALING.get(bid);
+    const override = (plan.baseSkills ?? []).find(
+      x => (x.id !== undefined && baseIdOf(x.id) === bid) || x.name === s.name,
+    );
+    const tiers = override?.tiers ?? def?.tiers;
+    const perGreen = override?.perGreen ?? def?.perGreen;
+    if (tiers === undefined && perGreen === undefined) continue;
+    greenScaling[bid] = {
+      base: def?.base ?? [],
+      ...(tiers !== undefined ? { tiers: tiers as unknown as readonly UniqueScalingTier[] } : {}),
+      ...(tiers === undefined && perGreen !== undefined
+        ? { perGreen: perGreen as unknown as readonly SkillEffect[] }
+        : {}),
+    };
+  }
   const estPt = resolved.filter(r => r.ptEst).map(r => r.skill.name);
   // 上下位关系:只有当**前置也在候选里**才生效(前置不在=已经买过,显示价里本来就不含它)
   const chainMap = new Map((plan.chains ?? []).map(c => [String(c.skillId), String(c.prereqId)] as const));
@@ -212,12 +247,14 @@ function main(): void {
     evoGroups.set(e.fromId, arr);
   }
 
-  /** 单技能试算:得到某个进化方向下的单项收益(马身) */
+  /** 单技能试算:得到某个进化方向下的单项收益(马身;同样在背景技能基础上算) */
   const soloBodyOf = (fromId: string, toId: string | undefined): number => {
     const pt = ptOf.get(fromId) ?? 0;
     const r = optimize({
       course, runner, budget: 1e9,
       candidates: [toId !== undefined ? { id: fromId, pt, evolvesTo: toId } : { id: fromId, pt }],
+      ...(baseResolved.length > 0 ? { baseSkills: baseResolved } : {}),
+      ...(Object.keys(greenScaling).length > 0 ? { greenScaling } : {}),
     });
     return r.chosen[0]?.soloBody ?? 0;
   };
@@ -248,6 +285,9 @@ function main(): void {
     };
   });
   console.log(`赛道: ${course.name}(${course.id})  跑法: ${TACTIC_LABEL[runner.tactic]}  预算: ${budget}pt  候选: ${candidates.length} 条`);
+  if (baseResolved.length > 0) {
+    console.log(`背景技能: ${baseResolved.map(s => s.name).join('、')}(已计入模拟,不计预算;下面的马身 = 在此基础上的新增收益)`);
+  }
   console.log(`环境: 场地 ${GROUND_LABEL[runner.groundCondition ?? 0]}  天气 ${WEATHER_LABEL[runner.weather ?? 1]}  季节 ${SEASON_LABEL[runner.season ?? 1]}(只影响「绿技能/环境条件类技能」是否生效)`);
   if (estPt.length > 0) {
     console.log(`[注意] 以下技能未提供 pt,使用兜底估算价(游戏内有折扣时请以实际显示价为准):\n  ${estPt.join('、')}`);
@@ -258,6 +298,8 @@ function main(): void {
     runner,
     candidates,
     budget,
+    ...(baseResolved.length > 0 ? { baseSkills: baseResolved } : {}),
+    ...(Object.keys(greenScaling).length > 0 ? { greenScaling } : {}),
     ...(maxSims !== undefined ? { maxSims } : {}),
     ...(plan.circleUp !== undefined ? { circleUpOverride: plan.circleUp } : {}),
     ...(plan.supersedes !== undefined && plan.supersedes.length > 0

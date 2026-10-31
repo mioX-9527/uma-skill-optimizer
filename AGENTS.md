@@ -125,6 +125,32 @@ const r = simulate(course, runner);   // r.finishTimeSec 完赛时间, r.spurtTa
 参数默认值:`maxSims=30000`(单次 ~5ms 起、带技能更慢,最坏远超 40s),`minImprovementSec=0.0005s`(≈0.003 马身),交换搜索 `SWAP_ROUNDS=10` 轮、换入候选池 `SWAP_POOL=50` 剪枝,
 随机取位期望采样 `RANDOM_POSITION_DRAWS=12`(只作用于汇报口径,见 §3)。
 
+**背景技能**(`OptimizerInput.baseSkills`,2026-10-31 加):**已学习技能 + 本体固有**。
+参与每一次模拟(`sim()` 里经 `mergedOf()` 并进 `runner.skills`)、影响所有候选的边际收益,
+但**不进候选池、不计预算、不出现在推荐**——所有马身因此都是**在背景基础上的增量**(基线 `sim([])` 同样含背景)。
+实现要点(改这里之前先读 `mergedOf` 的注释):
+- **与候选撞车**:候选与背景同 `baseIdOf` id → 候选标 blocked「已学习(在背景技能里)」;候选是 ○ 而背景有 ◎
+  同理;但候选是 ◎ / 金而背景只有 ○ / 白时**不剔**(仍可买)。
+- **价格侧**:前置在背景里 = 已付清 —— `costOf`/`totalSpent`/`paidOf` 的 `prereqChosen` 都认
+  `baseOwnedIds`(`ownedBaseCandIds` 是"白同时被误列成候选"的补充口径)。
+- **顶替关系**(`mergedOf`):背景白被组合里的金替换(沿 `SKILL_CHAINS` 单独走链 —— 背景白不在候选池,
+  `supersedePairs` 收不到它);背景单圈被组合里的双圈替换(`CIRCLE_BASE`)。**supersedePairs 的计算因此在
+  baseSim 之前**(从 combine 旁边挪过来的,别挪回去 —— sim 闭包引用它,首次调用是 baseSim)。
+- **随机取位**:`simExpected`/`simSearch` 的 `anyRandom` 与 `positionOverrides` 一律对 **mergedOf 后的列表**
+  计算 —— 固有多是 randomPosition,漏了背景会让固有按"进区段即发动"取位、系统性偏差。
+- **绿缩放固有**(`OptimizerInput.greenScaling`,默认表 `data/unique-scaling.json`,本地数据 sync 不覆盖):
+  效果 = `base + perGreen × 生效绿技能数`,**替换** skills.json 里压平的 approx 条目;绿技能数口径与引擎
+  `prereq.counterValue('green')` 逐字一致(全 passive + raceStart + restriction 满足),所以买的绿技能越多
+  固有越强,绿候选的边际自动含"给固有加成"那部分。派生对象按 `id#绿数` 缓存,不要每模拟重建。
+  **上游 2026-10-31(d068aff)起原生建模**:skill 条目自带 `scaleByGreen: {base, tiers}`,
+  引擎在 `simulate` 开局按 `counterValue('green')` 一次性展开(`skills.expandScaleByGreen`,
+  未落入任何档 = 仅 base)。本仓 `mergedOf` 不再替换——本地 `unique-scaling.json` 覆盖表已清空,
+  只留给上游未建模的新技能/用户临时改数;⚠ 覆盖派生 SkillConfig 时必须**剥掉条目自带的
+  scaleByGreen**,否则引擎按上游档位再缩放一次(双重缩放,scaledOf 里已处理)。
+  小林历奇档位(BWIKI 触发条件表):0-2 绿无增量 / 3-4 绿 +0.05 速度+0.05 加速 / 5 绿 +0.1+0.1 /
+  6 绿+ +0.15+0.15,基础 0.25 速度、中盘后半随机、持续 5s。本仓仍支持 perGreen 线性 / tiers 分档
+  两种覆盖(覆盖项给 perGreen 时自动丢弃默认 tiers)。
+
 流程:
 
 1. **候选解析**:按 id 查 SKILL_INDEX(data.ts 的 SKILLS 建立);重复 id 报错;未知 id 报错。
@@ -135,7 +161,8 @@ const r = simulate(course, runner);   // r.finishTimeSec 完赛时间, r.spurtTa
    若按「组合内无正收益」汇报会被误读成「技能没用」,实际是限制不满足或效果未建模。
    **绿技能(常时被动)自上游 0.8 起是正常候选**,只有两种情况仍 blocked:数据层 `precision==='unsupported'`
    的条件型被动(依赖名次/人数)、带 `prereq` 的非常时被动。
-2. **基准 + 单项收益**:`sim([])` 为基准;逐候选单独模拟得 `soloSec`;`pt > budget` 直接标记(最终归类 unaffordable)。
+   **背景技能撞车剔除也在这之后**(见上)。
+2. **基准 + 单项收益**:`sim([])` 为基准(含背景技能);逐候选单独模拟得 `soloSec`;`pt > budget` 直接标记(最终归类 unaffordable)。
 3. **贪心装入**(greedyFill,会被多次调用):每轮对全部"在池且 pt≤剩余预算"候选重算边际 `sim(S+c)`,选 `gain/pt` 效率最高者装入(gain 必须 > eps);无正收益候选时,把本轮测得 gain≤eps 的标记为 no-gain 并停。**关键:每轮全部重算**,所以联动技能(如"拔得头筹"依赖前面技能建立领先)后装时能被正确捡起——E2E 已观察到"单独 0 收益、组合内转正"的案例。
 4. **交换局部搜索**:每轮尝试所有 (换出 a∈S, 换入 b∈池前50) 组合(pt_b ≤ 剩余+pt_a),gain > eps 的最优交换则执行,然后**再跑一轮 greedyFill 回填预算**;最多 10 轮或无改进为止。
 5. **汇报**:`sim(S)` 为最终结果;对每个已选技能做 leave-one-out 得 finalMarginal(注意符号:t_without − t_final);未选技能分类:
@@ -152,8 +179,15 @@ const r = simulate(course, runner);   // r.finishTimeSec 完赛时间, r.spurtTa
 6. `simsUsed` 接近 maxSims 时打"提前收敛"note。
 
 **回归锚点**(改算法、改示例或跑完 `npm run sync` 后必对):示例输入(`examples/input.example.json`,东京草2400/先行/预算1000/14候选)
-当前应得到:无技能 118.463s → 有技能 **117.177s**,购买 **7 项 970pt**,总收益 **12.15 马身**,**721 次模拟**,
-单项之和 20.01 马身(与 totalBody 差 7.86 = 技能间重叠)。CLI 与网页结果必须一致。
+当前应得到(2026-10-31 同步上游 d068aff「绿技能分档固有 + 不可建模槽丢弃 + 交流重赏归赛场」后):
+无技能 118.283s → 有技能 **117.014s**,购买 **7 项 970pt**,总收益 **12.00 马身**,**765 次模拟**,
+单项之和 20.75 马身。CLI 与网页结果必须一致。
+**示例带 baseSkills(100981 固有 + 良场地○)**;分档固有已由**上游引擎原生建模**(条目自带 scaleByGreen,
+本地 unique-scaling.json 覆盖表已清空)。锚点历史:
+- 加背景功能前(无 baseSkills):118.463s → 117.177s / 12.15 马身 / 721 次;
+- 本地覆盖分档(上游建模前):118.251s → 116.975s / 12.06 马身 / 767 次;
+- 同步上游原生建模后:118.283s → 117.014s / 12.00 马身 / 765 次(数值变化来自上游同批的
+  「不可建模槽丢弃」等改动,**不是**缩放切换导致——切换前后同一绿数的固有 effects 逐字相同)。
 示例特意覆盖了这几类现象:
 - **单项高、集内几乎不减**:`Into High Gear!(继承)(1)` 4.35 → 4.25;
 - **单项被同类挤掉大半**:`Seirios(继承)(1)` 3.24 → 1.78(与其他继承技能重叠);
@@ -260,6 +294,32 @@ npm run web          # 浏览器打开 5183,载入默认示例点"开始计算",
 
 **为什么不走 HTTP 服务**:网页版是纯前端,`file://` 下调不到 adb;桌面壳省掉一个常驻进程,
 也不用改 Vite 打包方式。代价是要 `pip install -r app/requirements.txt`(pywebview + rapidocr + onnxruntime)。
+
+**背景技能读取(2026-10-31 加,真机坐标待核)**:`capture_skills` 还会读两样东西回填前端「背景技能」:
+- **已学技能**(灰卡,无绿色 + 按钮,`find_rows` 天然看不到):反向利用行锚定 —— 对列表可视区整块跑
+  det OCR,文字簇中心离任何可购买行锚 ≥70px 的算已学卡(`capture.find_owned_rows`)。
+  描述文字簇也会被收进来,匹配不回库的由 `main.py`(`match_owned`)丢弃 —— **宁滥勿缺**:
+  漏一项已学会让背景收益算错,多一条杂簇只是被扔掉。`match_owned` 拿不准不猜
+  (○/◎ 两可、多模糊候选 → None + warning)。
+- **本体固有**(购买页顶部固定位置,不随列表滚):对 `layouts/*.json` 的 `unique_zone` 跑 det OCR
+  (`capture.read_unique_skill`),逐框匹配回 unique1~6 本体(`match.match_unique_boxes`,
+  单框/相邻框拼接/全拼接都试,先剥「已获得」「Lv.N」)。**`unique_zone` 的 y0/y1 是按
+  pt_balance 与 list.top 推断的,未经真机核过** —— 跑 `calibrate` 看橙色框,不对就改 JSON 两个数字。
+
+⚠ **RapidOCR 大坑(实测)**:跑过一次 rec-only(`read_line`)之后,同一个 engine 的 det 对**大图**
+(720×438 实测)会**永久返回空**,小裁剪却正常 —— 疑似内部缓存了上一次输入尺寸。行带 det/rec
+交替没出事纯粹因为行带小;所以区域扫描(已学行/固有 zone)用**专用 det-only 实例**(`scan_ocr`,
+`capture_all` 里新建),绝不能复用主实例。
+
+⚠ **进化弹窗绝不碰返回键(2026-10-31 真机三次事故后的最终形态)**:`evolve.read_evolution`
+点 ⓘ → 读弹窗 → 点弹窗底部的「关 闭」按钮(`CLOSE_BTN`,720x1280 实测 (360,1180))→
+**轮询确认**列表带恢复(关窗有动画,不能只等固定时长)。旧记录「关闭按钮点不动、改用
+返回键」是误判 —— 真相是点完 1s 就截图,动画还没播完就被判"没关上"。
+返回键在 ⓘ 被游戏吞 tap(偶发)时会把技能购买页整个退出去,已彻底移除,任何路径不再发
+keyevent;「关闭」连点 3 次都没关掉就抛错中止抓取,由用户手动关。
+判"弹窗开了"只看**列表带(y 560~950)像素差**:没弹窗时列表带完全静止(实测 0.0)。
+两个都别用:① 全屏比 —— 马娘立绘有 Live2D 待机动画,前后两帧全屏差会误判;
+② `card_boxes` 补判 —— 进化区金卡/粉标签的几何范围与弹窗卡片重叠。
 
 **实测环境(2026-10-25)**:雷电 9.5.39,实例 0 = `127.0.0.1:5555`,**720×1280 @320dpi**,Android 9 / SDK 28,
 游戏包名 `com.bilibili.umamusu`。用雷电自带 `E:\leidian\LDPlayer9\adb.exe`(与设备 SDK 同代,比新版 platform-tools 稳)。

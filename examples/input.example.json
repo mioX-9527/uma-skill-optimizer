@@ -26,5 +26,9 @@
     { "name": "Into High Gear!(继承)(1)", "pt": 150 },
     { "name": "王道征途", "pt": 180 },
     { "name": "愿者上钩(继承)", "pt": 120 }
+  ],
+  "baseSkills": [
+    { "id": "100981", "_comment": "本体固有(小林历奇「时来运转,龙腾九霄」):按生效绿技能数增强,默认档位见 data/unique-scaling.json,可在此加 perGreen 覆盖" },
+    { "name": "良场地○", "_comment": "已学习的技能:只参与模拟、不占预算;同名技能若也出现在 skills 里会被标「已学习」剔除" }
   ]
 }
