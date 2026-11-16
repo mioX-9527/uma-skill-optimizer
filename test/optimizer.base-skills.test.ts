@@ -202,6 +202,43 @@ describe('optimize baseSkills(背景技能)', () => {
     expect(r.greenCount).toBe(1);
   });
 
+  it('基线也走期望口径:背景里有 randomPosition 技能时,baselineSec = 12 点期望(不是默认取位)', () => {
+    // 回归 2026-11-16:基线用 sim([])(默认取位=进区段即发动,最有利),单项/总收益用
+    // simExpected(12 点期望) → 基线凭空偏快,每个「单独马身」都是 −4~−5,总收益被拖成负数。
+    const bg = byId('200331');            // 弧线大师:弯道加速,randomPosition
+    expect(bg.randomPosition).toBe(true);
+    // 用长赛道的弯道技能差异才明显(札幌 1400 只有一次弯,期望与默认取位差 1e-4 量级)
+    const longCourse = COURSES.find(c => c.id === 'c10606')!;   // 东京 草 2400m
+    const spans = sampleableSpans(bg.condition, longCourse)!;
+    const def = simulate(longCourse, { ...runner, skills: [bg] }).finishTimeSec;
+    let sum = 0;
+    const N = 12;
+    for (let i = 0; i < N; i++) {
+      const ov = new Map([[bg.id, quantileToMeter(spans as [number, number][], (i + 0.5) / N)]]);
+      sum += simulate(longCourse, { ...runner, skills: [bg] }, { positionOverrides: ov }).finishTimeSec;
+    }
+    const expected = sum / N;
+    // 两种口径确实不同,断言才有意义(实测差 ~0.5s,远超 closeTo 的 6 位小数)
+    expect(Math.abs(expected - def)).toBeGreaterThan(1e-2);
+
+    const cands = SKILLS.filter(s =>
+      s.rarity === 'normal' && s.precision === 'precise'
+      && s.randomPosition !== true
+      && !s.effects.some(e => e.type === 'unsupported')
+      && skillApplicable(s, longCourse, runner))
+      .slice(0, 3)
+      .map(s => ({ id: s.id, pt: 100 }));
+    const r = optimize({
+      course: longCourse, runner, candidates: cands, budget: 500, maxSims: 20000,
+      baseSkills: [bg.id],
+    });
+    expect(r.baselineSec).toBeCloseTo(expected, 6);
+    expect(r.baselineSec).not.toBeCloseTo(def, 3);
+    // 用户可见症状:单项收益不该被系统性压成负数
+    const picked = r.chosen[0]!;
+    expect(picked.soloBody).toBeGreaterThan(0);
+  });
+
   it('randomPosition 固有在背景里:期望口径取位覆盖背景(与手工 12 点期望一致)', () => {
     const uniq = byId('100981');          // randomPosition: true
     expect(uniq.randomPosition).toBe(true);

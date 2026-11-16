@@ -915,7 +915,16 @@ export function optimize(input: OptimizerInput): OptimizerResult {
   }
 
   // ── 基准与单项收益(已标注 blocked 的候选不参与模拟:其收益按定义恒为 0) ──
-  const baseSim = sim([]);
+  /**
+   * 基准必须和下面每一项用**同一个口径**:`simExpected`(12 点期望)。
+   *
+   * 背景技能(已学/本体固有)里也有一堆 randomPosition 技能(实测 17 条里 10 条),而引擎的
+   * 默认取位是「一进区段就发动」= 这个区间里最早、对加速类最有利的位置。拿默认口径当基线、
+   * 拿期望口径算每一项,基线就凭空偏快:东京草2400 实测差 0.532s = 5.14 马身,
+   * 于是每个「单独马身」都是 −4~−5,总收益也被拖成负数(2026-11-16 用户实例)。
+   * 没有随机取位技能时 `simExpected` 会退化成单次 `sim`,所以旧行为不变。
+   */
+  const baseSim = simExpected([]);
   runStage(() => {
     for (const c of cands) {
       if (c.state === 'blocked') continue;
